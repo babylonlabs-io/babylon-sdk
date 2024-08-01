@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
-	"github.com/babylonchain/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

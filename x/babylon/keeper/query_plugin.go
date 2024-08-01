@@ -9,7 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
 )
 
 type (

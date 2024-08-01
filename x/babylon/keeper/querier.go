@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var _ types.QueryServer = &querier{}

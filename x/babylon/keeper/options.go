@@ -1,6 +1,6 @@
 package keeper
 
-import "github.com/babylonchain/babylon-sdk/x/babylon/types"
+import "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 
 // option that is applied after keeper is setup with the VM. Used for decorators mainly.
 type postOptsFn func(*Keeper)

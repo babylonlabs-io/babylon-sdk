@@ -16,9 +16,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/client/cli"
-	"github.com/babylonchain/babylon-sdk/x/babylon/keeper"
-	"github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // ConsensusVersion defines the module's consensus version.

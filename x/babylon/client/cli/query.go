@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 func GetQueryCmd() *cobra.Command {

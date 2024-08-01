@@ -9,7 +9,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/babylonchain/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

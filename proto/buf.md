@@ -1,6 +1,6 @@
 # Protobufs
 
-This is the public protocol buffers API for [Babylon SDK](https://github.com/babylonchain/babylon-sdk).
+This is the public protocol buffers API for [Babylon SDK](https://github.com/babylonlabs-io/babylon-sdk).
 
 ## Download
 

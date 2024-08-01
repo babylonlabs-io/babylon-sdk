@@ -25,5 +25,5 @@ buf generate --template buf.gen.doc.yml
 cd ..
 
 # move proto files to the right places
-cp -r github.com/babylonchain/babylon-sdk/* ./
+cp -r github.com/babylonlabs-io/babylon-sdk/* ./
 rm -rf github.com

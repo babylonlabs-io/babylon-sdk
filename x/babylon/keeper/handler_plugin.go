@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/contract"
-	"github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // AuthSource abstract type that provides contract authorization.

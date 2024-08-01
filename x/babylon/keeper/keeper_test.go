@@ -56,8 +56,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
-	"github.com/babylonchain/babylon-sdk/x/babylon/keeper"
-	"github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 type encodingConfig struct {

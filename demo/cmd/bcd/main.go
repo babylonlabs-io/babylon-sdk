@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"cosmossdk.io/log"
-	"github.com/babylonchain/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

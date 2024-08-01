@@ -11,7 +11,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	appparams "github.com/babylonchain/babylon-sdk/demo/app/params"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -118,9 +118,9 @@ import (
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 
-	babylon "github.com/babylonchain/babylon-sdk/x/babylon"
-	bbnkeeper "github.com/babylonchain/babylon-sdk/x/babylon/keeper"
-	bbntypes "github.com/babylonchain/babylon-sdk/x/babylon/types"
+	babylon "github.com/babylonlabs-io/babylon-sdk/x/babylon"
+	bbnkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 const appName = "ConsumerApp"

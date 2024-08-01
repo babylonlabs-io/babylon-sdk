@@ -7,8 +7,8 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/babylonchain/babylon-sdk/demo/app"
-	bbntypes "github.com/babylonchain/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
