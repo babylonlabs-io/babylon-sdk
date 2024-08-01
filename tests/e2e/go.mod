@@ -224,7 +224,6 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	// github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon-private v0.9.0-rc.3.0.20240801001431-74a24c962ce2
 
 	// local work dirs
 	github.com/babylonlabs-io/babylon-sdk/demo => ../../demo
