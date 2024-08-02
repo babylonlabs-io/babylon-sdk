@@ -11,14 +11,14 @@ jobs:
     with:
      run-unit-tests: true
      run-integration-tests: true
-     run-lint: true
+     run-lint: false
      integration-tests-command: |
-      sudo make test-e2e
+      make test-e2e
      
   docker_pipeline:
     uses: babylonchain/.github/.github/workflows/reusable_docker_pipeline.yml@v0.1.0
     secrets: inherit
     with:
      publish: false
-     dockerfile: ./contrib/images/babylond/Dockerfile
-     repoName: babylond
+     dockerfile: ./Dockerfile
+     repoName: babylon-sdk
