@@ -7,9 +7,9 @@ toolchain go1.21.4
 require (
 	github.com/CosmWasm/wasmd v0.51.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk v0.50.7
+	github.com/cosmos/cosmos-sdk v0.50.8
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gogoproto v1.4.12 // indirect
+	github.com/cosmos/gogoproto v1.5.0 // indirect
 	github.com/cosmos/iavl v1.1.2 // indirect
 	github.com/cosmos/ibc-go/v8 v8.3.2
 	github.com/cosmos/ics23/go v0.10.0 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-00010101000000-000000000000
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-00010101000000-000000000000
 	github.com/btcsuite/btcd v0.24.2
-	github.com/cometbft/cometbft v0.38.7
+	github.com/cometbft/cometbft v0.38.9
 )
 
 require (
@@ -140,6 +140,7 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
