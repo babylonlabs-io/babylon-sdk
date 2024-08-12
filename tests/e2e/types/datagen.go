@@ -17,6 +17,8 @@ import (
 func GenExecMessage() ExecuteMessage {
 	_, newDel := genBTCDelegation()
 
+	addr := datagen.GenRandomAccount().Address
+
 	newFp := NewFinalityProvider{
 		Description: &FinalityProviderDescription{
 			Moniker:         "fp1",
@@ -26,13 +28,10 @@ func GenExecMessage() ExecuteMessage {
 			Details:         "details",
 		},
 		Commission: "0.05",
-		BabylonPK: &PubKey{
-			Key: base64.StdEncoding.EncodeToString([]byte("mock_pub_rand")),
-		},
-		BTCPKHex: newDel.FpBtcPkList[0],
-		Pop: &ProofOfPossession{
+		Addr:       addr,
+		BTCPKHex:   newDel.FpBtcPkList[0],
+		Pop: &ProofOfPossessionBtc{
 			BTCSigType: 0,
-			BabylonSig: base64.StdEncoding.EncodeToString([]byte("mock_pub_rand")),
 			BTCSig:     base64.StdEncoding.EncodeToString([]byte("mock_pub_rand")),
 		},
 		ConsumerID: "osmosis-1",
@@ -158,6 +157,7 @@ func convertBTCDelegationToActiveBtcDelegation(mockDel *bstypes.BTCDelegation) A
 	}
 
 	return ActiveBtcDelegation{
+		StakerAddr:           mockDel.StakerAddr,
 		BTCPkHex:             mockDel.BtcPk.MarshalHex(),
 		FpBtcPkList:          fpBtcPkList,
 		StartHeight:          mockDel.StartHeight,
@@ -177,9 +177,9 @@ func convertBTCDelegationToActiveBtcDelegation(mockDel *bstypes.BTCDelegation) A
 type NewFinalityProvider struct {
 	Description *FinalityProviderDescription `json:"description,omitempty"`
 	Commission  string                       `json:"commission"`
-	BabylonPK   *PubKey                      `json:"babylon_pk,omitempty"`
+	Addr        string                       `json:"addr,omitempty"`
 	BTCPKHex    string                       `json:"btc_pk_hex"`
-	Pop         *ProofOfPossession           `json:"pop,omitempty"`
+	Pop         *ProofOfPossessionBtc        `json:"pop,omitempty"`
 	ConsumerID  string                       `json:"consumer_id"`
 }
 
@@ -191,13 +191,8 @@ type FinalityProviderDescription struct {
 	Details         string `json:"details"`
 }
 
-type PubKey struct {
-	Key string `json:"key"`
-}
-
-type ProofOfPossession struct {
+type ProofOfPossessionBtc struct {
 	BTCSigType int32  `json:"btc_sig_type"`
-	BabylonSig string `json:"babylon_sig"`
 	BTCSig     string `json:"btc_sig"`
 }
 
@@ -221,6 +216,7 @@ type BtcUndelegationInfo struct {
 }
 
 type ActiveBtcDelegation struct {
+	StakerAddr           string                      `json:"staker_addr"`
 	BTCPkHex             string                      `json:"btc_pk_hex"`
 	FpBtcPkList          []string                    `json:"fp_btc_pk_list"`
 	StartHeight          uint64                      `json:"start_height"`

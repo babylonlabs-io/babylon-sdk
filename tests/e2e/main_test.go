@@ -112,8 +112,8 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.NoError(err)
 
 	// send msg to BTC staking contract via admin account
-	_, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
-	s.NoError(err)
+	res, err := s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
+	s.NoError(err, res)
 
 	// ensure the finality provider is on consumer chain
 	consumerFps, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"finality_providers": {}})
