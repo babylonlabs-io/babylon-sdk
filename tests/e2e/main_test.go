@@ -116,12 +116,20 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 
 // TestExample is an example test case
 func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
+	// generate headers
+	headersMsg := types.GenBTCHeadersMsg()
+	headersMsgBytes, err := json.Marshal(headersMsg)
+	s.NoError(err)
+	// send headers to the Babylon contract
+	res, err := s.ConsumerCli.Exec(s.ConsumerContract.Babylon, headersMsgBytes)
+	s.NoError(err, res)
+
 	testMsg = types.GenExecMessage()
 	msgBytes, err := json.Marshal(testMsg)
 	s.NoError(err)
 
 	// send msg to BTC staking contract via admin account
-	res, err := s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
+	res, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
 	s.NoError(err, res)
 
 	// ensure the finality provider is on consumer chain

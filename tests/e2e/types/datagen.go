@@ -14,6 +14,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func GenBTCHeadersMsg() BabylonExecuteMsg {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	chain := datagen.NewBTCHeaderChainWithLength(r, 0, 0, 10)
+	headers := []BtcHeader{}
+	for _, header := range chain.Headers {
+		headers = append(headers, BtcHeader{
+			Version:       header.Version,
+			PrevBlockhash: header.PrevBlock.String(),
+			MerkleRoot:    header.MerkleRoot.String(),
+			Time:          uint32(header.Timestamp.Unix()),
+			Bits:          header.Bits,
+			Nonce:         header.Nonce,
+		})
+	}
+
+	return BabylonExecuteMsg{
+		BtcHeaders: BTCHeadersMsg{
+			Headers: headers,
+		},
+	}
+}
+
 func GenExecMessage() ExecuteMessage {
 	_, newDel := genBTCDelegation()
 
@@ -238,6 +261,23 @@ type SlashedBtcDelegation struct {
 
 type UnbondedBtcDelegation struct {
 	// Define fields as needed
+}
+
+type BabylonExecuteMsg struct {
+	BtcHeaders BTCHeadersMsg `json:"btc_headers"`
+}
+
+type BTCHeadersMsg struct {
+	Headers []BtcHeader `json:"headers"`
+}
+
+type BtcHeader struct {
+	Version       int32  `json:"version"`
+	PrevBlockhash string `json:"prev_blockhash"`
+	MerkleRoot    string `json:"merkle_root"`
+	Time          uint32 `json:"time"`
+	Bits          uint32 `json:"bits"`
+	Nonce         uint32 `json:"nonce"`
 }
 
 type ExecuteMessage struct {
