@@ -120,7 +120,8 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	headersMsg := types.GenBTCHeadersMsg()
 	headersMsgBytes, err := json.Marshal(headersMsg)
 	s.NoError(err)
-	// send headers to the Babylon contract
+	// send headers to the Babylon contract. This is to ensure that the contract is
+	// indexing BTC headers correctly.
 	res, err := s.ConsumerCli.Exec(s.ConsumerContract.Babylon, headersMsgBytes)
 	s.NoError(err, res)
 
@@ -129,8 +130,8 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.NoError(err)
 
 	// send msg to BTC staking contract via admin account
-	res, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
-	s.NoError(err, res)
+	_, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
+	s.NoError(err)
 
 	// ensure the finality provider is on consumer chain
 	consumerFps, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"finality_providers": {}})
