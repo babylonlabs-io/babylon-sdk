@@ -1,4 +1,4 @@
-module github.com/babylonchain/babylon-sdk/demo
+module github.com/babylonlabs-io/babylon-sdk/demo
 
 go 1.21
 
@@ -41,7 +41,8 @@ require (
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/tx v0.13.3
 	cosmossdk.io/x/upgrade v0.1.2
-	github.com/babylonchain/babylon-sdk/x v0.0.0-00010101000000-000000000000
+	github.com/babylonchain/babylon-sdk/demo v0.0.0-20240628002428-0a58d82eef68
+	github.com/babylonchain/babylon-sdk/x v0.0.0-20240628002428-0a58d82eef68
 	github.com/cometbft/cometbft v0.38.6
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
@@ -211,7 +212,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// local work dir
-	github.com/babylonchain/babylon-sdk/x => ../x
+	github.com/babylonlabs-io/babylon-sdk/x => ../x
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// See: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
