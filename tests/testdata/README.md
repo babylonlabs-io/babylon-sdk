@@ -1,1 +1,1 @@
-Contract manually built from https://github.com/osmosis-labs/mesh-security/tree/main/contracts 
+Contract manually built from https://github.com/babylonlabs-io/babylon-contract/tree/main/contracts
