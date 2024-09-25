@@ -11,6 +11,7 @@ import (
 	bbn "github.com/babylonlabs-io/babylon/types"
 	bstypes "github.com/babylonlabs-io/babylon/x/btcstaking/types"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/stretchr/testify/require"
 )
 
@@ -96,15 +97,17 @@ func genBTCDelegation() (*bstypes.Params, ActiveBtcDelegation) {
 	stakingValue := int64(2 * 10e8)
 	slashingAddress, err := datagen.GenRandomBTCAddress(r, net)
 	require.NoError(t, err)
+	slashingPkScript, err := txscript.PayToAddrScript(slashingAddress)
+	require.NoError(t, err)
 
 	slashingRate := sdkmath.LegacyNewDecWithPrec(int64(datagen.RandomInt(r, 41)+10), 2)
 	unbondingTime := uint16(100) + 1
 	slashingChangeLockTime := unbondingTime
 
 	bsParams := &bstypes.Params{
-		CovenantPks:     bbn.NewBIP340PKsFromBTCPKs(covenantPKs),
-		CovenantQuorum:  covenantQuorum,
-		SlashingAddress: slashingAddress.EncodeAddress(),
+		CovenantPks:      bbn.NewBIP340PKsFromBTCPKs(covenantPKs),
+		CovenantQuorum:   covenantQuorum,
+		SlashingPkScript: slashingPkScript,
 	}
 
 	// only the quorum of signers provided the signatures
@@ -120,7 +123,7 @@ func genBTCDelegation() (*bstypes.Params, ActiveBtcDelegation) {
 		covenantSigners,
 		covenantPKs,
 		covenantQuorum,
-		slashingAddress.EncodeAddress(),
+		slashingPkScript,
 		1000,
 		uint64(1000+stakingTimeBlocks),
 		uint64(stakingValue),
