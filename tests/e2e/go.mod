@@ -2,8 +2,6 @@ module github.com/babylonlabs-io/babylon-sdk/tests/e2e
 
 go 1.22
 
-toolchain go1.22.7
-
 require (
 	github.com/CosmWasm/wasmd v0.51.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect

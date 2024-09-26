@@ -1,4 +1,4 @@
-FROM golang:1.21.4-alpine AS go-builder
+FROM golang:1.22.7-alpine AS go-builder
 
 RUN apk add --no-cache ca-certificates build-base git
 
@@ -10,11 +10,11 @@ COPY . /code
 #ADD https://github.com/CosmWasm/wasmvm/releases/download/v$wasmvm/libwasmvm_muslc.$arch.a /lib/libwasmvm_muslc.$arch.a
 ## Download
 RUN WASMVM_VERSION=$(grep github.com/CosmWasm/wasmvm demo/go.mod | cut -d' ' -f2) && \
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
-        -O /lib/libwasmvm_muslc.$(uname -m).a && \
-    # verify checksum
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
-    sha256sum /lib/libwasmvm_muslc.$(uname -m).a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$(uname -m) | cut -d ' ' -f 1)
+  wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
+  -O /lib/libwasmvm_muslc.$(uname -m).a && \
+  # verify checksum
+  wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
+  sha256sum /lib/libwasmvm_muslc.$(uname -m).a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$(uname -m) | cut -d ' ' -f 1)
 
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
 # then log output of file /code/bin/bcd
