@@ -119,6 +119,8 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 		"notify_cosmos_zone":              false,
 		"btc_staking_code_id":             btcStakingContractWasmId,
 		"btc_staking_msg":                 btcStakingInitMsgBytes,
+		"consumer_name":                   "test-consumer",
+		"consumer_description":            "test-consumer-description",
 		"admin":                           p.GetSender().String(),
 	}
 	initMsgBytes, err := json.Marshal(initMsg)
