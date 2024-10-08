@@ -18,7 +18,7 @@ do
   FILE="$CONTRACT.wasm.zip"
   URL="https://github.com/$OWNER/$REPO/releases/download/$TAG/$FILE"
   wget -nv -O "$OUTPUT_FOLDER/$FILE" "$URL"
-  unzip -o "$OUTPUT_FOLDER/$FILE"
+  unzip -p "$OUTPUT_FOLDER/$FILE" >"$OUTPUT_FOLDER/$CONTRACT.wasm"
   rm -f "$OUTPUT_FOLDER/$FILE"
   echo "done." >&2
 done
