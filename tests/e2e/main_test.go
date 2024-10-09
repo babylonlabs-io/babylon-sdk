@@ -83,27 +83,33 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.NotEmpty(providerCli.Chain.ChainID)
 	s.NotEmpty(consumerContracts.Babylon)
 	s.NotEmpty(consumerContracts.BTCStaking)
+	s.NotEmpty(consumerContracts.BTCFinality)
 
 	s.ProviderCli = providerCli
 	s.ConsumerCli = consumerCli
 	s.ConsumerContract = consumerContracts
 
-	// query admin
-	adminResp, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"admin": {}})
+	// query admins
+	adminRespStaking, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"admin": {}})
 	s.NoError(err)
-	s.Equal(adminResp["admin"], s.ConsumerCli.GetSender().String())
+	s.Equal(adminRespStaking["admin"], s.ConsumerCli.GetSender().String())
+	adminRespFinality, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{"admin": {}})
+	s.NoError(err)
+	s.Equal(adminRespFinality["admin"], s.ConsumerCli.GetSender().String())
 
-	// get Babylon contract address
+	// get contract addresses
 	babylonContractAddress := s.ConsumerContract.Babylon.String()
 	btcStakingContractAddress := s.ConsumerContract.BTCStaking.String()
+	btcFinalityContractAddress := s.ConsumerContract.BTCFinality.String()
 
 	// update the contract address in parameters
 	msgUpdateParams := &bbntypes.MsgUpdateParams{
 		Authority: s.ConsumerApp.BabylonKeeper.GetAuthority(),
 		Params: bbntypes.Params{
-			MaxGasBeginBlocker:        500_000,
-			BabylonContractAddress:    babylonContractAddress,
-			BtcStakingContractAddress: btcStakingContractAddress,
+			MaxGasBeginBlocker:         500_000,
+			BabylonContractAddress:     babylonContractAddress,
+			BtcStakingContractAddress:  btcStakingContractAddress,
+			BtcFinalityContractAddress: btcFinalityContractAddress,
 		},
 	}
 	s.ConsumerCli.MustExecGovProposal(msgUpdateParams)
@@ -112,9 +118,9 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	params := s.ConsumerApp.BabylonKeeper.GetParams(s.ConsumerChain.GetContext())
 	s.Equal(babylonContractAddress, params.BabylonContractAddress)
 	s.Equal(btcStakingContractAddress, params.BtcStakingContractAddress)
+	s.Equal(btcFinalityContractAddress, params.BtcFinalityContractAddress)
 }
 
-// TestExample is an example test case
 func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	// generate headers
 	headersMsg := types.GenBTCHeadersMsg()
@@ -165,7 +171,7 @@ func (s *BabylonSDKTestSuite) Test5NextBlock() {
 	// get current height
 	height := s.ConsumerChain.GetContext().BlockHeight()
 	// ensure the current block is not indexed yet
-	_, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{
+	_, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{
 		"block": {
 			"height": uint64(height),
 		},
@@ -176,7 +182,7 @@ func (s *BabylonSDKTestSuite) Test5NextBlock() {
 	s.ConsumerChain.NextBlock()
 
 	// ensure the current block is indexed
-	_, err = s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{
+	_, err = s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{
 		"block": {
 			"height": uint64(height),
 		},
