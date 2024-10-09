@@ -89,8 +89,9 @@ func NewConsumerClient(t *testing.T, chain *ibctesting.TestChain) *TestConsumerC
 }
 
 type ConsumerContract struct {
-	Babylon    sdk.AccAddress
-	BTCStaking sdk.AccAddress
+	Babylon     sdk.AccAddress
+	BTCStaking  sdk.AccAddress
+	BTCFinality sdk.AccAddress
 }
 
 func (p *TestConsumerClient) GetSender() sdk.AccAddress {
@@ -101,6 +102,7 @@ func (p *TestConsumerClient) GetSender() sdk.AccAddress {
 func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	babylonContractWasmId := p.Chain.StoreCodeFile("../testdata/babylon_contract.wasm").CodeID
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
+	btcFinalityContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_finality.wasm").CodeID
 
 	// Instantiate the contract
 	// TODO: parameterise
@@ -108,6 +110,13 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 		"admin": p.GetSender().String(),
 	}
 	btcStakingInitMsgBytes, err := json.Marshal(btcStakingInitMsg)
+	if err != nil {
+		return nil, err
+	}
+	btcFinalityInitMsg := map[string]interface{}{
+		"admin": p.GetSender().String(),
+	}
+	btcFinalityInitMsgBytes, err := json.Marshal(btcFinalityInitMsg)
 	if err != nil {
 		return nil, err
 	}
@@ -121,6 +130,8 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 		"btc_staking_msg":                 btcStakingInitMsgBytes,
 		"consumer_name":                   "test-consumer",
 		"consumer_description":            "test-consumer-description",
+		"btc_finality_code_id":            btcFinalityContractWasmId,
+		"btc_finality_msg":                btcFinalityInitMsgBytes,
 		"admin":                           p.GetSender().String(),
 	}
 	initMsgBytes, err := json.Marshal(initMsg)
@@ -137,10 +148,15 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	if !ok {
 		return nil, fmt.Errorf("failed to instantiate BTC staking contract")
 	}
+	btcFinalityContractAddr, ok := res["btc_finality"]
+	if !ok {
+		return nil, fmt.Errorf("failed to instantiate BTC finality contract")
+	}
 
 	r := ConsumerContract{
-		Babylon:    babylonContractAddr,
-		BTCStaking: sdk.MustAccAddressFromBech32(btcStakingContractAddr.(string)),
+		Babylon:     babylonContractAddr,
+		BTCStaking:  sdk.MustAccAddressFromBech32(btcStakingContractAddr.(string)),
+		BTCFinality: sdk.MustAccAddressFromBech32(btcFinalityContractAddr.(string)),
 	}
 	p.Contracts = r
 	return &r, nil
