@@ -17,7 +17,7 @@ build-linux-static:
 	$(MAKE) -C demo build-linux-static
 
 build-docker:
-	$(DOCKER) build --tag babylonchain/bcd -f Dockerfile \
+	$(DOCKER) build --tag babylonlabs-io/bcd -f Dockerfile \
 		$(shell git rev-parse --show-toplevel)
 
 ########################################
