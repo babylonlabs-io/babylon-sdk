@@ -1,7 +1,7 @@
 syntax = "proto3";
-package babylonchain.babylon.v1beta1;
+package babylonlabs.babylon.v1beta1;
 
-import "babylonchain/babylon/v1beta1/babylon.proto";
+import "babylonlabs/babylon/v1beta1/babylon.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
 

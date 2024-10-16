@@ -4,36 +4,36 @@
 
 ## Table of Contents
 
-- [babylonchain/babylon/v1beta1/babylon.proto](#babylonchain/babylon/v1beta1/babylon.proto)
-    - [Params](#babylonchain.babylon.v1beta1.Params)
+- [babylonlabs/babylon/v1beta1/babylon.proto](#babylonlabs/babylon/v1beta1/babylon.proto)
+    - [Params](#babylonlabs.babylon.v1beta1.Params)
   
-- [babylonchain/babylon/v1beta1/genesis.proto](#babylonchain/babylon/v1beta1/genesis.proto)
-    - [GenesisState](#babylonchain.babylon.v1beta1.GenesisState)
+- [babylonlabs/babylon/v1beta1/genesis.proto](#babylonlabs/babylon/v1beta1/genesis.proto)
+    - [GenesisState](#babylonlabs.babylon.v1beta1.GenesisState)
   
-- [babylonchain/babylon/v1beta1/query.proto](#babylonchain/babylon/v1beta1/query.proto)
-    - [QueryParamsRequest](#babylonchain.babylon.v1beta1.QueryParamsRequest)
-    - [QueryParamsResponse](#babylonchain.babylon.v1beta1.QueryParamsResponse)
+- [babylonlabs/babylon/v1beta1/query.proto](#babylonlabs/babylon/v1beta1/query.proto)
+    - [QueryParamsRequest](#babylonlabs.babylon.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#babylonlabs.babylon.v1beta1.QueryParamsResponse)
   
-    - [Query](#babylonchain.babylon.v1beta1.Query)
+    - [Query](#babylonlabs.babylon.v1beta1.Query)
   
-- [babylonchain/babylon/v1beta1/tx.proto](#babylonchain/babylon/v1beta1/tx.proto)
-    - [MsgUpdateParams](#babylonchain.babylon.v1beta1.MsgUpdateParams)
-    - [MsgUpdateParamsResponse](#babylonchain.babylon.v1beta1.MsgUpdateParamsResponse)
+- [babylonlabs/babylon/v1beta1/tx.proto](#babylonlabs/babylon/v1beta1/tx.proto)
+    - [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams)
+    - [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse)
   
-    - [Msg](#babylonchain.babylon.v1beta1.Msg)
+    - [Msg](#babylonlabs.babylon.v1beta1.Msg)
   
 - [Scalar Value Types](#scalar-value-types)
 
 
 
-<a name="babylonchain/babylon/v1beta1/babylon.proto"></a>
+<a name="babylonlabs/babylon/v1beta1/babylon.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## babylonchain/babylon/v1beta1/babylon.proto
+## babylonlabs/babylon/v1beta1/babylon.proto
 
 
 
-<a name="babylonchain.babylon.v1beta1.Params"></a>
+<a name="babylonlabs.babylon.v1beta1.Params"></a>
 
 ### Params
 Params defines the parameters for the x/babylon module.
@@ -60,14 +60,14 @@ Params defines the parameters for the x/babylon module.
 
 
 
-<a name="babylonchain/babylon/v1beta1/genesis.proto"></a>
+<a name="babylonlabs/babylon/v1beta1/genesis.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## babylonchain/babylon/v1beta1/genesis.proto
+## babylonlabs/babylon/v1beta1/genesis.proto
 
 
 
-<a name="babylonchain.babylon.v1beta1.GenesisState"></a>
+<a name="babylonlabs.babylon.v1beta1.GenesisState"></a>
 
 ### GenesisState
 GenesisState defines babylon module's genesis state.
@@ -75,7 +75,7 @@ GenesisState defines babylon module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#babylonchain.babylon.v1beta1.Params) |  |  |
+| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  |  |
 
 
 
@@ -91,14 +91,14 @@ GenesisState defines babylon module's genesis state.
 
 
 
-<a name="babylonchain/babylon/v1beta1/query.proto"></a>
+<a name="babylonlabs/babylon/v1beta1/query.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## babylonchain/babylon/v1beta1/query.proto
+## babylonlabs/babylon/v1beta1/query.proto
 
 
 
-<a name="babylonchain.babylon.v1beta1.QueryParamsRequest"></a>
+<a name="babylonlabs.babylon.v1beta1.QueryParamsRequest"></a>
 
 ### QueryParamsRequest
 QueryParamsRequest is the request type for the
@@ -109,7 +109,7 @@ Query/Params RPC method
 
 
 
-<a name="babylonchain.babylon.v1beta1.QueryParamsResponse"></a>
+<a name="babylonlabs.babylon.v1beta1.QueryParamsResponse"></a>
 
 ### QueryParamsResponse
 QueryParamsResponse is the response type for the
@@ -118,7 +118,7 @@ Query/Params RPC method
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#babylonchain.babylon.v1beta1.Params) |  |  |
+| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  |  |
 
 
 
@@ -131,27 +131,27 @@ Query/Params RPC method
  <!-- end HasExtensions -->
 
 
-<a name="babylonchain.babylon.v1beta1.Query"></a>
+<a name="babylonlabs.babylon.v1beta1.Query"></a>
 
 ### Query
 Query provides defines the gRPC querier service
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `Params` | [QueryParamsRequest](#babylonchain.babylon.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#babylonchain.babylon.v1beta1.QueryParamsResponse) | Params queries the parameters of x/babylon module. | GET|/babylonchain/babylon/v1beta1/params|
+| `Params` | [QueryParamsRequest](#babylonlabs.babylon.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#babylonlabs.babylon.v1beta1.QueryParamsResponse) | Params queries the parameters of x/babylon module. | GET|/babylonlabs/babylon/v1beta1/params|
 
  <!-- end services -->
 
 
 
-<a name="babylonchain/babylon/v1beta1/tx.proto"></a>
+<a name="babylonlabs/babylon/v1beta1/tx.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## babylonchain/babylon/v1beta1/tx.proto
+## babylonlabs/babylon/v1beta1/tx.proto
 
 
 
-<a name="babylonchain.babylon.v1beta1.MsgUpdateParams"></a>
+<a name="babylonlabs.babylon.v1beta1.MsgUpdateParams"></a>
 
 ### MsgUpdateParams
 MsgUpdateParams is the Msg/UpdateParams request type.
@@ -160,7 +160,7 @@ MsgUpdateParams is the Msg/UpdateParams request type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority is the address that controls the module (defaults to x/gov unless overwritten). |
-| `params` | [Params](#babylonchain.babylon.v1beta1.Params) |  | params defines the x/auth parameters to update.
+| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  | params defines the x/auth parameters to update.
 
 NOTE: All parameters must be supplied. |
 
@@ -169,7 +169,7 @@ NOTE: All parameters must be supplied. |
 
 
 
-<a name="babylonchain.babylon.v1beta1.MsgUpdateParamsResponse"></a>
+<a name="babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse"></a>
 
 ### MsgUpdateParamsResponse
 MsgUpdateParamsResponse defines the response structure for executing a
@@ -186,14 +186,14 @@ MsgUpdateParams message.
  <!-- end HasExtensions -->
 
 
-<a name="babylonchain.babylon.v1beta1.Msg"></a>
+<a name="babylonlabs.babylon.v1beta1.Msg"></a>
 
 ### Msg
 Msg defines the wasm Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `UpdateParams` | [MsgUpdateParams](#babylonchain.babylon.v1beta1.MsgUpdateParams) | [MsgUpdateParamsResponse](#babylonchain.babylon.v1beta1.MsgUpdateParamsResponse) | UpdateParams defines a (governance) operation for updating the x/auth module parameters. The authority defaults to the x/gov module account. | |
+| `UpdateParams` | [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams) | [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse) | UpdateParams defines a (governance) operation for updating the x/auth module parameters. The authority defaults to the x/gov module account. | |
 
  <!-- end services -->
 
