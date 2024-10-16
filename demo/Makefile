@@ -98,8 +98,8 @@ build-vendored:
 build-linux-static:
 	go mod vendor  # quick hack to make local dependencies work in Docker
 	mkdir -p $(BUILD_DIR)
-	docker build --tag babylonchain/bcd:local ./
-	docker create --name bcd_temp babylonchain/bcd:local
+	docker build --tag babylonlabs-io/bcd:local ./
+	docker create --name bcd_temp babylonlabs-io/bcd:local
 	docker cp bcd_temp:/usr/bin/bcd $(BUILD_DIR)/
 	docker rm -f bcd_temp
 	rm -rf vendor/
