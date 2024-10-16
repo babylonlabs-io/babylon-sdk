@@ -20,6 +20,9 @@ build-docker:
 	$(DOCKER) build --tag babylonlabs-io/bcd -f Dockerfile \
 		$(shell git rev-parse --show-toplevel)
 
+ibcsim-bcd:
+	docker build --tag babylonlabs-io/ibcsim-bcd -f contrib/images/ibcsim-bcd/Dockerfile .
+
 ########################################
 ### Testing
 
@@ -78,4 +81,5 @@ proto-lint:
 
 .PHONY: all install \
 	build build-linux-static test test-all test-e2e \
-	proto-all proto-format proto-swagger-gen proto-lint
+	proto-all proto-format proto-swagger-gen proto-lint \
+	ibcsim-bcd
