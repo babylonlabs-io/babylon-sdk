@@ -30,7 +30,7 @@ require (
 
 require (
 	cosmossdk.io/math v1.3.0
-	github.com/babylonlabs-io/babylon v0.9.3-0.20240925223611-a98269d17887
+	github.com/babylonlabs-io/babylon v0.13.0
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
 	github.com/btcsuite/btcd v0.24.2
