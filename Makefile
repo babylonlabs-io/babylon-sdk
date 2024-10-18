@@ -21,15 +21,8 @@ build-docker:
 		$(shell git rev-parse --show-toplevel)
 
 # A local bcd image with users and funds for testing / development / integration purposes
-build-local:
+build-bcd:
 	$(DOCKER) build --tag babylonlabs-io/local-bcd -f contrib/images/local-bcd/Dockerfile .
-
-run-local: build-local stop-local
-	$(DOCKER) run --name local-bcd babylonlabs-io/local-bcd
-
-stop-local:
-	$(DOCKER) stop local-bcd || true
-	$(DOCKER) container rm -f local-bcd || true
 
 ########################################
 ### Testing
