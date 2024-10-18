@@ -17,8 +17,11 @@ build-linux-static:
 	$(MAKE) -C demo build-linux-static
 
 build-docker:
-	$(DOCKER) build --tag babylonchain/bcd -f Dockerfile \
-		$(shell git rev-parse --show-toplevel)
+	$(DOCKER) build --tag babylonlabs-io/bcd -f contrib/images/bcd/Dockerfile .
+
+# A local bcd image with users and funds for testing / development / integration purposes
+build-bcd:
+	$(DOCKER) build --tag babylonlabs-io/local-bcd -f contrib/images/local-bcd/Dockerfile .
 
 ########################################
 ### Testing

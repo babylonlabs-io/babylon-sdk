@@ -10,8 +10,8 @@ The `buf` CLI comes with an export command. Use `buf export -h` for details
 
 Download Babylon SDK protos for a commit:
 ```bash
-## todo: not published, yet
-buf export buf.build/babylonchain/babylon-sdk:${commit} --output ./tmp
+## TODO: not published, yet
+buf export buf.build/babylonlabs/babylon-sdk:${commit} --output ./tmp
 ```
 
 Download all project protos:

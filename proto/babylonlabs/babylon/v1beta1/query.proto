@@ -1,7 +1,7 @@
 syntax = "proto3";
-package babylonchain.babylon.v1beta1;
+package babylonlabs.babylon.v1beta1;
 
-import "babylonchain/babylon/v1beta1/babylon.proto";
+import "babylonlabs/babylon/v1beta1/babylon.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "amino/amino.proto";
@@ -14,7 +14,7 @@ option (gogoproto.equal_all) = false;
 service Query {
   // Params queries the parameters of x/babylon module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/babylonchain/babylon/v1beta1/params";
+    option (google.api.http).get = "/babylonlabs/babylon/v1beta1/params";
   }
 }
 
