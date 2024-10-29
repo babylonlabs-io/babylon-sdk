@@ -1,11 +1,10 @@
 package contract
 
 // CustomMsg is a message sent from a smart contract to the Babylon module
-// TODO: implement
-type CustomMsg struct {
-	Test *TestMsg `json:"test,omitempty"`
-}
-
-type TestMsg struct {
-	Placeholder string `json:"placeholder,omitempty"`
-}
+type (
+	CustomMsg struct {
+		MintRewards *MintRewardsMsg `json:"mint_rewards,omitempty"`
+	}
+	// MintRewardsMsg mints block rewards to the staking contract
+	MintRewardsMsg struct{}
+)

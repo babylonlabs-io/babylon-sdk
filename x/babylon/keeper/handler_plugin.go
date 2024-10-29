@@ -55,7 +55,7 @@ func (h CustomMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 	if err := json.Unmarshal(msg.Custom, &customMsg); err != nil {
 		return nil, nil, nil, sdkerrors.ErrJSONUnmarshal.Wrap("custom message")
 	}
-	if customMsg.Test == nil {
+	if customMsg.MintRewards == nil {
 		// not our message type
 		return nil, nil, nil, wasmtypes.ErrUnknownMsg
 	}
@@ -64,10 +64,10 @@ func (h CustomMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("contract has no permission for Babylon operations")
 	}
 
-	return h.handleTestMsg(ctx, contractAddr, customMsg.Test)
+	return h.handleMintRewardsMsg(ctx, contractAddr, customMsg.MintRewards)
 }
 
-func (h CustomMsgHandler) handleTestMsg(ctx sdk.Context, actor sdk.AccAddress, testMsg *contract.TestMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
+func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAddress, mintRewardsMsg *contract.MintRewardsMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
 	return []sdk.Event{}, nil, nil, nil
 }
 
