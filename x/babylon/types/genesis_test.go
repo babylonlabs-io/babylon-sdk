@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"testing"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
@@ -20,7 +21,9 @@ func TestValidateGenesis(t *testing.T) {
 		"custom param, should pass": {
 			state: types.GenesisState{
 				Params: types.Params{
-					MaxGasBeginBlocker: 600_000,
+					MaxGasBeginBlocker:    600_000,
+					BlocksPerYear:         6_000_000,
+					FinalityInflationRate: sdkmath.LegacyNewDecWithPrec(1, 1),
 				},
 			},
 			expErr: false,
@@ -28,7 +31,9 @@ func TestValidateGenesis(t *testing.T) {
 		"custom small value param, should pass": {
 			state: types.GenesisState{
 				Params: types.Params{
-					MaxGasBeginBlocker: 10_000,
+					MaxGasBeginBlocker:    10_000,
+					BlocksPerYear:         6_000,
+					FinalityInflationRate: sdkmath.LegacyNewDecWithPrec(1, 10),
 				},
 			},
 			expErr: false,
@@ -41,18 +46,21 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			expErr: true,
 		},
-		"invalid max cap coin denom, should fail": {
+		"invalid blocks per year, should fail": {
 			state: types.GenesisState{
 				Params: types.Params{
-					MaxGasBeginBlocker: 0,
+					MaxGasBeginBlocker: 1,
+					BlocksPerYear:      0,
 				},
 			},
 			expErr: true,
 		},
-		"invalid max cap coin amount, should fail": {
+		"invalid finality inflation rate, should fail": {
 			state: types.GenesisState{
 				Params: types.Params{
-					MaxGasBeginBlocker: 0,
+					MaxGasBeginBlocker:    1,
+					BlocksPerYear:         1,
+					FinalityInflationRate: sdkmath.LegacyNewDec(-1),
 				},
 			},
 			expErr: true,

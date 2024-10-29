@@ -19,6 +19,7 @@ func TestInitGenesis(t *testing.T) {
 		"custom param, should pass": {
 			state: types.GenesisState{
 				Params: types.Params{
+					BlocksPerYear:      6_000_000,
 					MaxGasBeginBlocker: 600_000,
 				},
 			},
@@ -27,6 +28,7 @@ func TestInitGenesis(t *testing.T) {
 		"custom small value param, should pass": {
 			state: types.GenesisState{
 				Params: types.Params{
+					BlocksPerYear:      6_000,
 					MaxGasBeginBlocker: 10_000,
 				},
 			},

@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"testing"
 
@@ -106,6 +107,8 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	msgUpdateParams := &bbntypes.MsgUpdateParams{
 		Authority: s.ConsumerApp.BabylonKeeper.GetAuthority(),
 		Params: bbntypes.Params{
+			FinalityInflationRate:      sdkmath.LegacyNewDecWithPrec(7, 2),
+			BlocksPerYear:              60 * 60 * 25 * 365 / 5, // 5 seconds per block
 			MaxGasBeginBlocker:         500_000,
 			BabylonContractAddress:     babylonContractAddress,
 			BtcStakingContractAddress:  btcStakingContractAddress,

@@ -44,6 +44,8 @@ Params defines the parameters for the x/babylon module.
 | `babylon_contract_address` | [string](#string) |  | babylon_contract_address is the address of the Babylon contract |
 | `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
 | `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
+| `finality_inflation_rate` | [string](#string) |  | Finality inflation rate target |
+| `blocks_per_year` | [uint64](#uint64) |  | expected blocks per year |
 | `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
 
 

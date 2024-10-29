@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,6 +29,14 @@ func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 
 	k.cdc.MustUnmarshal(bz, &params)
 	return params
+}
+
+func (k Keeper) GetFinalityInflationRate(ctx sdk.Context) sdkmath.LegacyDec {
+	return k.GetParams(ctx).FinalityInflationRate
+}
+
+func (k Keeper) GetExpectedBlocksPerYear(ctx sdk.Context) uint64 {
+	return k.GetParams(ctx).BlocksPerYear
 }
 
 func (k Keeper) GetMaxSudoGas(ctx sdk.Context) storetypes.Gas {

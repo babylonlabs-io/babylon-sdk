@@ -21,6 +21,14 @@ message Params {
   // btc_finality_contract_address is the address of the BTC finality contract
   string btc_finality_contract_address = 3
   [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // Finality inflation rate target
+  string finality_inflation_rate = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  // expected blocks per year
+  uint64 blocks_per_year = 6;
   // max_gas_begin_blocker defines the maximum gas that can be spent in a
   // contract sudo callback
   uint32 max_gas_begin_blocker = 4;
