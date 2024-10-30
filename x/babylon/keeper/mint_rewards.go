@@ -7,10 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MintBlockRewards mints new "virtual" bonding tokens and sends them to the staking contract for distribution.
-// The amount minted is removed from the SupplyOffset (so that it will become negative), when supported.
-// Authorization of the actor/recipient should be handled before entering this method.
-// The amount is computed based on the finality inflation rate and the total staking token supply, in the bonded denom
+// MintBlockRewards mints new tokens and sends them to the staking contract for distribution.
+// Authorization of the actor and recipient should be handled before entering this method.
+// The amount is computed based on the inflation rate, the blocks per year, and the total staking token supply,
+// in the bonded denom
 func (k Keeper) MintBlockRewards(pCtx sdk.Context, recipient sdk.AccAddress, inflationRate sdkmath.LegacyDec, blocksPerYear int64) (sdkmath.Int, error) {
 	bondDenom, err := k.Staking.BondDenom(pCtx)
 	totalSupply, err := k.Staking.StakingTokenSupply(pCtx)
