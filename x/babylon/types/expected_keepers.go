@@ -2,6 +2,7 @@ package types
 
 import (
 	context "context"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,6 +19,8 @@ type BankKeeper interface {
 
 // StakingKeeper expected staking keeper.
 type StakingKeeper interface {
+	BondDenom(ctx context.Context) (string, error)
+	StakingTokenSupply(ctx context.Context) (sdkmath.Int, error)
 }
 
 // AccountKeeper interface contains functions for getting accounts and the module address
