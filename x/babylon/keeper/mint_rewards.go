@@ -12,12 +12,15 @@ import (
 // The amount is computed based on the inflation rate, the blocks per year, and the total staking token supply,
 // in the bonded denom
 func (k Keeper) MintBlockRewards(pCtx sdk.Context, recipient sdk.AccAddress, inflationRate sdkmath.LegacyDec, blocksPerYear int64) (sdkmath.Int, error) {
+	if inflationRate.IsNil() || inflationRate.IsNegative() {
+		return sdkmath.ZeroInt(), errors.ErrInvalidRequest.Wrap("inflation rate")
+	}
 	bondDenom, err := k.Staking.BondDenom(pCtx)
 	totalSupply, err := k.Staking.StakingTokenSupply(pCtx)
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}
-	blockRewards := inflationRate.MulInt(totalSupply).QuoInt64(blocksPerYear).MulInt64(1e6).TruncateInt()
+	blockRewards := inflationRate.MulInt(totalSupply).QuoInt64(blocksPerYear).TruncateInt()
 	amt := sdk.NewCoin(bondDenom, blockRewards)
 
 	if amt.Amount.IsNil() || amt.Amount.IsZero() || amt.Amount.IsNegative() {
