@@ -68,6 +68,21 @@ func TestMintBlockRewards(t *testing.T) {
 			expectAmount:  sdkmath.ZeroInt(),
 			expectErr:     true,
 		},
+		{
+			name: "zero blocks per year",
+			setup: func(ctx sdk.Context) {
+				initialSupply := sdkmath.NewInt(100_000_000_000) // 100_000 tokens
+				bondDenom, _ := k.StakingKeeper.BondDenom(ctx)
+				coins := sdk.NewCoins(sdk.NewCoin(bondDenom, initialSupply))
+				err := k.BankKeeper.MintCoins(ctx, types.ModuleName, coins)
+				require.NoError(t, err)
+			},
+			recipient:     sdk.AccAddress("test_recipient"),
+			inflationRate: sdkmath.LegacyNewDecWithPrec(-5, 2),
+			blocksPerYear: 0,
+			expectAmount:  sdkmath.ZeroInt(),
+			expectErr:     true,
+		},
 	}
 
 	for _, tc := range tests {
