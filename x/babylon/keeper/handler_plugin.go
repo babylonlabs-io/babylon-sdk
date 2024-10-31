@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
@@ -22,10 +22,13 @@ type AuthSource interface {
 }
 
 // abstract keeper
-type msKeeper interface{}
+type babylonKeeper interface {
+	GetParams(ctx sdk.Context) types.Params
+	MintBlockRewards(ctx sdk.Context, recipient sdk.AccAddress, amount sdk.Coin) (sdkmath.Int, error)
+}
 
 type CustomMsgHandler struct {
-	k    msKeeper
+	k    babylonKeeper
 	auth AuthSource
 }
 
@@ -36,7 +39,7 @@ func NewDefaultCustomMsgHandler(k *Keeper) *CustomMsgHandler {
 
 // NewCustomMsgHandler constructor to set up CustomMsgHandler with an individual auth source.
 // This is an extension point for non default contract authorization logic.
-func NewCustomMsgHandler(k msKeeper, auth AuthSource) *CustomMsgHandler {
+func NewCustomMsgHandler(k babylonKeeper, auth AuthSource) *CustomMsgHandler {
 	return &CustomMsgHandler{k: k, auth: auth}
 }
 
@@ -67,8 +70,37 @@ func (h CustomMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 	return h.handleMintRewardsMsg(ctx, contractAddr, customMsg.MintRewards)
 }
 
-func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAddress, mintRewardsMsg *contract.MintRewardsMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
-	return []sdk.Event{}, nil, nil, nil
+func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAddress, mintMsg *contract.MintRewardsMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
+	coin, err := wasmkeeper.ConvertWasmCoinToSdkCoin(mintMsg.Amount)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	params := h.k.GetParams(ctx)
+	// Validate actor
+	if actor.String() != params.BtcFinalityContractAddress {
+		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("minter must be the finality contract")
+	}
+
+	// Define recipient
+	recipient, err := sdk.AccAddressFromBech32(mintMsg.Recipient)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	rewards, err := h.k.MintBlockRewards(ctx, recipient, coin)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return []sdk.Event{sdk.NewEvent(
+		types.EventTypeMintRewards,
+		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		sdk.NewAttribute(sdk.AttributeKeySender, actor.String()),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
+	)}, nil, nil, nil
 }
 
 // AuthSourceFn is helper for simple AuthSource types
