@@ -86,21 +86,9 @@ func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAdd
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	if err != nil {
-		return nil, nil, nil, err
-	}
 
-	rewards, err := h.k.MintBlockRewards(ctx, recipient, coin)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return []sdk.Event{sdk.NewEvent(
-		types.EventTypeMintRewards,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		sdk.NewAttribute(sdk.AttributeKeySender, actor.String()),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
-	)}, nil, nil, nil
+	_, err = h.k.MintBlockRewards(ctx, recipient, coin)
+	return nil, nil, nil, err
 }
 
 // AuthSourceFn is helper for simple AuthSource types
