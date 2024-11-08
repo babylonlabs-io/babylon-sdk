@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
-
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
@@ -22,10 +22,13 @@ type AuthSource interface {
 }
 
 // abstract keeper
-type msKeeper interface{}
+type babylonKeeper interface {
+	GetParams(ctx sdk.Context) types.Params
+	MintBlockRewards(ctx sdk.Context, recipient sdk.AccAddress, amount sdk.Coin) (sdkmath.Int, error)
+}
 
 type CustomMsgHandler struct {
-	k    msKeeper
+	k    babylonKeeper
 	auth AuthSource
 }
 
@@ -36,7 +39,7 @@ func NewDefaultCustomMsgHandler(k *Keeper) *CustomMsgHandler {
 
 // NewCustomMsgHandler constructor to set up CustomMsgHandler with an individual auth source.
 // This is an extension point for non default contract authorization logic.
-func NewCustomMsgHandler(k msKeeper, auth AuthSource) *CustomMsgHandler {
+func NewCustomMsgHandler(k babylonKeeper, auth AuthSource) *CustomMsgHandler {
 	return &CustomMsgHandler{k: k, auth: auth}
 }
 
@@ -55,7 +58,7 @@ func (h CustomMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 	if err := json.Unmarshal(msg.Custom, &customMsg); err != nil {
 		return nil, nil, nil, sdkerrors.ErrJSONUnmarshal.Wrap("custom message")
 	}
-	if customMsg.Test == nil {
+	if customMsg.MintRewards == nil {
 		// not our message type
 		return nil, nil, nil, wasmtypes.ErrUnknownMsg
 	}
@@ -64,11 +67,28 @@ func (h CustomMsgHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("contract has no permission for Babylon operations")
 	}
 
-	return h.handleTestMsg(ctx, contractAddr, customMsg.Test)
+	return h.handleMintRewardsMsg(ctx, contractAddr, customMsg.MintRewards)
 }
 
-func (h CustomMsgHandler) handleTestMsg(ctx sdk.Context, actor sdk.AccAddress, testMsg *contract.TestMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
-	return []sdk.Event{}, nil, nil, nil
+func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAddress, mintMsg *contract.MintRewardsMsg) ([]sdk.Event, [][]byte, [][]*codectypes.Any, error) {
+	coin, err := wasmkeeper.ConvertWasmCoinToSdkCoin(mintMsg.Amount)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	params := h.k.GetParams(ctx)
+	// Validate actor
+	if actor.String() != params.BtcFinalityContractAddress {
+		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("minter must be the finality contract")
+	}
+
+	// Define recipient
+	recipient, err := sdk.AccAddressFromBech32(mintMsg.Recipient)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	_, err = h.k.MintBlockRewards(ctx, recipient, coin)
+	return nil, nil, nil, err
 }
 
 // AuthSourceFn is helper for simple AuthSource types
