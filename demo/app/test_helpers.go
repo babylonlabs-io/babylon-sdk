@@ -66,6 +66,7 @@ func setup(t testing.TB, chainID string, withGenesis bool, invCheckPeriod uint, 
 
 	appOptions := make(simsutils.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = nodeHome // ensure unique folder
+	appOptions[server.FlagTrace] = true
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
 	app := NewConsumerApp(log.NewNopLogger(), db, nil, true, appOptions, opts, bam.SetChainID(chainID), bam.SetSnapshot(snapshotStore, snapshottypes.SnapshotOptions{KeepRecent: 2}))
 	if withGenesis {

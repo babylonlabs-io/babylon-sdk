@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
@@ -113,6 +114,6 @@ func (k Keeper) doSudoCall(ctx sdk.Context, contractAddr sdk.AccAddress, msg con
 		return errorsmod.Wrap(err, "marshal sudo msg")
 	}
 	resp, err := k.wasm.Sudo(ctx, contractAddr, bz)
-	k.Logger(ctx).Debug("response of sudo call %v to contract %s: %v", bz, contractAddr.String(), resp)
+	k.Logger(ctx).Debug(fmt.Sprintf("response of sudo call %v to contract %s: %v", bz, contractAddr.String(), resp))
 	return err
 }

@@ -12,6 +12,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	appwasm "github.com/babylonlabs-io/babylon-sdk/demo/app/wasm"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -492,6 +493,9 @@ func NewConsumerApp(
 		// add support for the custom queries
 		wasmkeeper.WithQueryHandlerDecorator(bbnkeeper.NewQueryDecorator(app.BabylonKeeper)),
 	)
+	// Add grpc query support for the whitelisted grpc queries
+	wasmOpts = append(wasmOpts, appwasm.RegisterGrpcQueries(bApp, appCodec)...)
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	availableCapabilities := AllCapabilities()
