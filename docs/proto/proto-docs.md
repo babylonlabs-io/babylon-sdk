@@ -168,7 +168,15 @@ type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `signer` | [string](#string) |  | signer is the address who submits the message. |
-| `init_msg` | [bytes](#bytes) |  | init_msg is the instantiation message for the Babylon contract. |
+| `network` | [string](#string) |  | network is the Bitcoin network to connect to (e.g. "regtest", "testnet", "mainnet") |
+| `babylon_tag` | [string](#string) |  | babylon_tag is a unique identifier for this Babylon instance |
+| `btc_confirmation_depth` | [uint32](#uint32) |  | btc_confirmation_depth is the number of confirmations required for Bitcoin transactions |
+| `checkpoint_finalization_timeout` | [uint32](#uint32) |  | checkpoint_finalization_timeout is the timeout in blocks for checkpoint finalization |
+| `notify_cosmos_zone` | [bool](#bool) |  | notify_cosmos_zone indicates whether to notify the Cosmos zone of events |
+| `btc_staking_msg` | [bytes](#bytes) |  | btc_staking_msg is the initialization message for the BTC staking contract |
+| `btc_finality_msg` | [bytes](#bytes) |  | btc_finality_msg is the initialization message for the BTC finality contract |
+| `consumer_name` | [string](#string) |  | consumer_name is the name of this consumer chain |
+| `consumer_description` | [string](#string) |  | consumer_description is a description of this consumer chain |
 
 
 

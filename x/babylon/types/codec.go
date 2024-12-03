@@ -10,12 +10,18 @@ import (
 
 // RegisterLegacyAminoCodec register types with legacy amino
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(&MsgStoreBabylonContractCodes{}, "babylon/MsgStoreBabylonContractCodes", nil)
+	cdc.RegisterConcrete(&MsgInstantiateBabylonContracts{}, "babylon/MsgInstantiateBabylonContracts", nil)
+	cdc.RegisterConcrete(&MsgUpdateParams{}, "babylon/MsgUpdateParams", nil)
 }
 
 // RegisterInterfaces register types with interface registry
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
+		&MsgStoreBabylonContractCodes{},
+		&MsgInstantiateBabylonContracts{},
+		&MsgUpdateParams{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

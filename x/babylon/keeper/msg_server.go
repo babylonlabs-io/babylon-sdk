@@ -57,8 +57,26 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "only authority can override instantiated contracts; expected %s, got %s", ms.k.authority, req.Signer)
 	}
 
+	// construct the init message
+	initMsg, err := types.NewInitMsg(
+		ms.k.authority,
+		&params,
+		req.Network,
+		req.BabylonTag,
+		req.BtcConfirmationDepth,
+		req.CheckpointFinalizationTimeout,
+		req.NotifyCosmosZone,
+		req.BtcStakingMsg,
+		req.BtcFinalityMsg,
+		req.ConsumerName,
+		req.ConsumerDescription,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// instantiate the contracts
-	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.InitMsg)
+	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, initMsg)
 	if err != nil {
 		return nil, err
 	}

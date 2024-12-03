@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 // Config represents the configuration for the Babylon contract
 type BabylonContractConfig struct {
 	Network                       string `json:"network"`
@@ -20,36 +22,37 @@ type BabylonContractConfig struct {
 	ConsumerDescription string `json:"consumer_description,omitempty"`
 }
 
-type BabylonContractInitMsg struct {
-	// Network represents the Bitcoin network (mainnet, testnet, etc.)
-	Network string `json:"network"`
-	// BabylonTag is a string encoding four bytes used for identification / tagging of the Babylon zone.
-	// NOTE: this is a hex string, not raw bytes
-	BabylonTag string `json:"babylon_tag"`
-	// BTCConfirmationDepth is the number of confirmations required for BTC headers
-	BTCConfirmationDepth uint32 `json:"btc_confirmation_depth"`
-	// CheckpointFinalizationTimeout is the timeout period for checkpoint finalization
-	CheckpointFinalizationTimeout uint32 `json:"checkpoint_finalization_timeout"`
-	// NotifyCosmosZone indicates whether to send Cosmos zone messages notifying BTC-finalised headers.
-	// NOTE: If set to true, then the Cosmos zone needs to integrate the corresponding message handler
-	// as well
-	NotifyCosmosZone bool `json:"notify_cosmos_zone"`
-	// BTCStakingCodeID is the code ID for the BTC staking contract, if set
-	BTCStakingCodeID *uint64 `json:"btc_staking_code_id,omitempty"`
-	// BTCStakingMsg is the instantiation message for the BTC staking contract.
-	// This message is opaque to the Babylon contract, and depends on the specific staking contract
-	// being instantiated
-	BTCStakingMsg []byte `json:"btc_staking_msg,omitempty"`
-	// BTCFinalityCodeID is the code ID for the BTC finality contract, if set
-	BTCFinalityCodeID *uint64 `json:"btc_finality_code_id,omitempty"`
-	// BTCFinalityMsg is the instantiation message for the BTC finality contract.
-	// This message is opaque to the Babylon contract, and depends on the specific finality contract
-	// being instantiated
-	BTCFinalityMsg []byte `json:"btc_finality_msg,omitempty"`
-	// Admin is the Wasm migration / upgrade admin of the BTC staking contract and the BTC finality contract
-	Admin string `json:"admin,omitempty"`
-	// ConsumerName represents the name of the Consumer
-	ConsumerName string `json:"consumer_name,omitempty"`
-	// ConsumerDescription represents the description of the Consumer
-	ConsumerDescription string `json:"consumer_description,omitempty"`
+// NewInitMsg creates the init message for the Babylon contract
+func NewInitMsg(
+	govAccount string,
+	params *Params,
+	network string,
+	babylonTag string,
+	btcConfirmationDepth uint32,
+	checkpointFinalizationTimeout uint32,
+	notifyCosmosZone bool,
+	btcStakingInitMsgBytes []byte,
+	btcFinalityInitMsgBytes []byte,
+	consumerName string,
+	consumerDescription string,
+) ([]byte, error) {
+	initMsg := map[string]interface{}{
+		"network":                         network,
+		"babylon_tag":                     babylonTag,
+		"btc_confirmation_depth":          btcConfirmationDepth,
+		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
+		"notify_cosmos_zone":              notifyCosmosZone,
+		"btc_staking_code_id":             params.BtcStakingContractCodeId,
+		"btc_staking_msg":                 btcStakingInitMsgBytes,
+		"consumer_name":                   consumerName,
+		"consumer_description":            consumerDescription,
+		"btc_finality_code_id":            params.BtcFinalityContractCodeId,
+		"btc_finality_msg":                btcFinalityInitMsgBytes,
+		"admin":                           govAccount,
+	}
+	initMsgBytes, err := json.Marshal(initMsg)
+	if err != nil {
+		return nil, err
+	}
+	return initMsgBytes, nil
 }

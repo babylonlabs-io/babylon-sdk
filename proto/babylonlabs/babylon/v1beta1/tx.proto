@@ -57,8 +57,29 @@ message MsgInstantiateBabylonContracts {
 
   // signer is the address who submits the message.
   string signer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  // init_msg is the instantiation message for the Babylon contract.
-  bytes init_msg = 2;
+
+  // network is the Bitcoin network to connect to (e.g. "regtest", "testnet",
+  // "mainnet")
+  string network = 2;
+  // babylon_tag is a unique identifier for this Babylon instance
+  string babylon_tag = 3;
+  // btc_confirmation_depth is the number of confirmations required for Bitcoin
+  // transactions
+  uint32 btc_confirmation_depth = 4;
+  // checkpoint_finalization_timeout is the timeout in blocks for checkpoint
+  // finalization
+  uint32 checkpoint_finalization_timeout = 5;
+  // notify_cosmos_zone indicates whether to notify the Cosmos zone of events
+  bool notify_cosmos_zone = 6;
+  // btc_staking_msg is the initialization message for the BTC staking contract
+  bytes btc_staking_msg = 7;
+  // btc_finality_msg is the initialization message for the BTC finality
+  // contract
+  bytes btc_finality_msg = 8;
+  // consumer_name is the name of this consumer chain
+  string consumer_name = 9;
+  // consumer_description is a description of this consumer chain
+  string consumer_description = 10;
 }
 
 // MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
