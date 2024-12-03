@@ -20,33 +20,6 @@ func NewMsgServer(k *Keeper) *msgServer {
 	return &msgServer{k: k}
 }
 
-func (ms msgServer) StoreBabylonContractCodes(goCtx context.Context, req *types.MsgStoreBabylonContractCodes) (*types.MsgStoreBabylonContractCodesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	params := ms.k.GetParams(ctx)
-
-	// only the authority can override the contract codes
-	if params.IsCodeStored() && req.Signer != ms.k.authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "only authority can override stored codes; expected %s, got %s", ms.k.authority, req.Signer)
-	}
-
-	// store the contract codes
-	babylonContractCodeID, btcStakingContractCodeID, btcFinalityContractCodeID, err := ms.k.StoreBabylonContractCodes(ctx, req.BabylonContractCode, req.BtcStakingContractCode, req.BtcFinalityContractCode)
-	if err != nil {
-		return nil, err
-	}
-
-	// update params
-	params.BabylonContractCodeId = babylonContractCodeID
-	params.BtcStakingContractCodeId = btcStakingContractCodeID
-	params.BtcFinalityContractCodeId = btcFinalityContractCodeID
-	if err := ms.k.SetParams(ctx, params); err != nil {
-		panic(err)
-	}
-
-	return &types.MsgStoreBabylonContractCodesResponse{}, nil
-}
-
 func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *types.MsgInstantiateBabylonContracts) (*types.MsgInstantiateBabylonContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -59,29 +32,33 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 
 	// construct the init message
 	initMsg, err := types.NewInitMsg(
-		ms.k.authority,
-		&params,
 		req.Network,
 		req.BabylonTag,
 		req.BtcConfirmationDepth,
 		req.CheckpointFinalizationTimeout,
 		req.NotifyCosmosZone,
+		req.BtcStakingContractCodeId,
 		req.BtcStakingMsg,
+		req.BtcFinalityContractCodeId,
 		req.BtcFinalityMsg,
 		req.ConsumerName,
 		req.ConsumerDescription,
+		req.Admin,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	// instantiate the contracts
-	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, initMsg)
+	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, initMsg)
 	if err != nil {
 		return nil, err
 	}
 
 	// update params
+	params.BabylonContractCodeId = req.BabylonContractCodeId
+	params.BtcStakingContractCodeId = req.BtcStakingContractCodeId
+	params.BtcFinalityContractCodeId = req.BtcFinalityContractCodeId
 	params.BabylonContractAddress = babylonContractAddr
 	params.BtcStakingContractAddress = btcStakingContractAddr
 	params.BtcFinalityContractAddress = btcFinalityContractAddr

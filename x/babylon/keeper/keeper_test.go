@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -16,7 +14,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/CosmWasm/wasmd/x/wasm/ioutils"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/keeper/wasmtesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -335,35 +332,16 @@ const (
 	BtcFinalityContractCodePath = TestDataPath + "/btc_finality.wasm"
 )
 
-func GetGZippedContractCode(path string) ([]byte, error) {
-	wasm, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	// gzip the wasm file
-	if ioutils.IsWasm(wasm) {
-		wasm, err = ioutils.GzipIt(wasm)
-
-		if err != nil {
-			return nil, err
-		}
-	} else if !ioutils.IsGzip(wasm) {
-		return nil, fmt.Errorf("invalid input file. Use wasm binary or gzip")
-	}
-
-	return wasm, nil
-}
-
 func GetGZippedContractCodes() ([]byte, []byte, []byte) {
-	babylonContractCode, err := GetGZippedContractCode(BabylonContractCodePath)
+	babylonContractCode, err := types.GetGZippedContractCode(BabylonContractCodePath)
 	if err != nil {
 		panic(err)
 	}
-	btcStakingContractCode, err := GetGZippedContractCode(BtcStakingContractCodePath)
+	btcStakingContractCode, err := types.GetGZippedContractCode(BtcStakingContractCodePath)
 	if err != nil {
 		panic(err)
 	}
-	btcFinalityContractCode, err := GetGZippedContractCode(BtcFinalityContractCodePath)
+	btcFinalityContractCode, err := types.GetGZippedContractCode(BtcFinalityContractCodePath)
 	if err != nil {
 		panic(err)
 	}

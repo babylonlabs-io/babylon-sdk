@@ -4,60 +4,36 @@ import (
 	"encoding/json"
 	"testing"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestStoreBabylonContractCodes(t *testing.T) {
-	keepers := NewTestKeepers(t)
-	msgServer := keepers.BabylonMsgServer
-
-	babylonContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
-
-	// store Babylon contract codes
-	_, err := msgServer.StoreBabylonContractCodes(keepers.Ctx, &types.MsgStoreBabylonContractCodes{
-		BabylonContractCode:     babylonContractCode,
-		BtcStakingContractCode:  btcStakingContractCode,
-		BtcFinalityContractCode: btcFinalityContractCode,
-	})
-	require.NoError(t, err)
-
-	// ensure params are set
-	params := keepers.BabylonKeeper.GetParams(keepers.Ctx)
-	require.Positive(t, params.BabylonContractCodeId)
-	require.Positive(t, params.BtcStakingContractCodeId)
-	require.Positive(t, params.BtcFinalityContractCodeId)
-
-	// ensure non-gov account cannot override
-	_, err = msgServer.StoreBabylonContractCodes(keepers.Ctx, &types.MsgStoreBabylonContractCodes{
-		BabylonContractCode:     babylonContractCode,
-		BtcStakingContractCode:  btcStakingContractCode,
-		BtcFinalityContractCode: btcFinalityContractCode,
-	})
-	require.Error(t, err)
-
-	// gov can override
-	_, err = msgServer.StoreBabylonContractCodes(keepers.Ctx, &types.MsgStoreBabylonContractCodes{
-		Signer:                  keepers.BabylonKeeper.GetAuthority(),
-		BabylonContractCode:     babylonContractCode,
-		BtcStakingContractCode:  btcStakingContractCode,
-		BtcFinalityContractCode: btcFinalityContractCode,
-	})
-	require.NoError(t, err)
-}
 
 // TODO: fix this test
 func TestInstantiateBabylonContracts(t *testing.T) {
 	keepers := NewTestKeepers(t)
 	msgServer := keepers.BabylonMsgServer
+	wasmMsgServer := keepers.WasmMsgServer
 
 	// store Babylon contract codes
 	babylonContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
-	_, err := msgServer.StoreBabylonContractCodes(keepers.Ctx, &types.MsgStoreBabylonContractCodes{
-		BabylonContractCode:     babylonContractCode,
-		BtcStakingContractCode:  btcStakingContractCode,
-		BtcFinalityContractCode: btcFinalityContractCode,
+	resp, err := wasmMsgServer.StoreCode(keepers.Ctx, &wasmtypes.MsgStoreCode{
+		Sender:       keepers.BabylonKeeper.GetAuthority(),
+		WASMByteCode: babylonContractCode,
 	})
+	babylonContractCodeID := resp.CodeID
+	require.NoError(t, err)
+	resp, err = wasmMsgServer.StoreCode(keepers.Ctx, &wasmtypes.MsgStoreCode{
+		Sender:       keepers.BabylonKeeper.GetAuthority(),
+		WASMByteCode: btcStakingContractCode,
+	})
+	btcStakingContractCodeID := resp.CodeID
+	require.NoError(t, err)
+	resp, err = wasmMsgServer.StoreCode(keepers.Ctx, &wasmtypes.MsgStoreCode{
+		Sender:       keepers.BabylonKeeper.GetAuthority(),
+		WASMByteCode: btcFinalityContractCode,
+	})
+	btcFinalityContractCodeID := resp.CodeID
 	require.NoError(t, err)
 
 	// BTC staking init message
@@ -76,6 +52,9 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	// instantiate Babylon contract
 	_, err = msgServer.InstantiateBabylonContracts(keepers.Ctx, &types.MsgInstantiateBabylonContracts{
 		Network:                       "regtest",
+		BabylonContractCodeId:         babylonContractCodeID,
+		BtcStakingContractCodeId:      btcStakingContractCodeID,
+		BtcFinalityContractCodeId:     btcFinalityContractCodeID,
 		BabylonTag:                    "01020304",
 		BtcConfirmationDepth:          1,
 		CheckpointFinalizationTimeout: 2,
@@ -84,6 +63,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 		BtcFinalityMsg:                btcFinalityInitMsgBytes,
 		ConsumerName:                  "test-consumer",
 		ConsumerDescription:           "test-consumer-description",
+		Admin:                         keepers.BabylonKeeper.GetAuthority(),
 	})
 	require.NoError(t, err)
 }

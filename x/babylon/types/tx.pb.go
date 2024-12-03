@@ -30,127 +30,48 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgStoreBabylonContractCodes is the Msg/StoreBabylonContractCodes request
-// type.
-type MsgStoreBabylonContractCodes struct {
-	// signer is the address who submits the message.
-	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	// babylon_contract_code is the bytecode for the Babylon contract.
-	// WASMByteCode can be raw or gzip compressed
-	BabylonContractCode []byte `protobuf:"bytes,2,opt,name=babylon_contract_code,json=babylonContractCode,proto3" json:"babylon_contract_code,omitempty"`
-	// btc_staking_contract_code is the bytecode for the BTC staking contract.
-	// WASMByteCode can be raw or gzip compressed
-	BtcStakingContractCode []byte `protobuf:"bytes,3,opt,name=btc_staking_contract_code,json=btcStakingContractCode,proto3" json:"btc_staking_contract_code,omitempty"`
-	// btc_finality_contract_code is the bytecode for the BTC finality contract.
-	// WASMByteCode can be raw or gzip compressed
-	BtcFinalityContractCode []byte `protobuf:"bytes,4,opt,name=btc_finality_contract_code,json=btcFinalityContractCode,proto3" json:"btc_finality_contract_code,omitempty"`
-}
-
-func (m *MsgStoreBabylonContractCodes) Reset()         { *m = MsgStoreBabylonContractCodes{} }
-func (m *MsgStoreBabylonContractCodes) String() string { return proto.CompactTextString(m) }
-func (*MsgStoreBabylonContractCodes) ProtoMessage()    {}
-func (*MsgStoreBabylonContractCodes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{0}
-}
-func (m *MsgStoreBabylonContractCodes) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgStoreBabylonContractCodes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgStoreBabylonContractCodes.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgStoreBabylonContractCodes) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgStoreBabylonContractCodes.Merge(m, src)
-}
-func (m *MsgStoreBabylonContractCodes) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgStoreBabylonContractCodes) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgStoreBabylonContractCodes.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgStoreBabylonContractCodes proto.InternalMessageInfo
-
-// MsgStoreBabylonContractCodesResponse is the Msg/StoreBabylonContractCodes
-// response type.
-type MsgStoreBabylonContractCodesResponse struct {
-}
-
-func (m *MsgStoreBabylonContractCodesResponse) Reset()         { *m = MsgStoreBabylonContractCodesResponse{} }
-func (m *MsgStoreBabylonContractCodesResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgStoreBabylonContractCodesResponse) ProtoMessage()    {}
-func (*MsgStoreBabylonContractCodesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{1}
-}
-func (m *MsgStoreBabylonContractCodesResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgStoreBabylonContractCodesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgStoreBabylonContractCodesResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgStoreBabylonContractCodesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgStoreBabylonContractCodesResponse.Merge(m, src)
-}
-func (m *MsgStoreBabylonContractCodesResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgStoreBabylonContractCodesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgStoreBabylonContractCodesResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgStoreBabylonContractCodesResponse proto.InternalMessageInfo
-
 // MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
 // type.
 type MsgInstantiateBabylonContracts struct {
 	// signer is the address who submits the message.
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// babylon_contract_code_id is the code ID for the Babylon contract.
+	BabylonContractCodeId uint64 `protobuf:"varint,2,opt,name=babylon_contract_code_id,json=babylonContractCodeId,proto3" json:"babylon_contract_code_id,omitempty"`
+	// btc_staking_contract_code_id is the code ID for the BTC staking contract.
+	BtcStakingContractCodeId uint64 `protobuf:"varint,3,opt,name=btc_staking_contract_code_id,json=btcStakingContractCodeId,proto3" json:"btc_staking_contract_code_id,omitempty"`
+	// btc_finality_contract_code_id is the code ID for the BTC finality contract.
+	BtcFinalityContractCodeId uint64 `protobuf:"varint,4,opt,name=btc_finality_contract_code_id,json=btcFinalityContractCodeId,proto3" json:"btc_finality_contract_code_id,omitempty"`
 	// network is the Bitcoin network to connect to (e.g. "regtest", "testnet",
 	// "mainnet")
-	Network string `protobuf:"bytes,2,opt,name=network,proto3" json:"network,omitempty"`
+	Network string `protobuf:"bytes,5,opt,name=network,proto3" json:"network,omitempty"`
 	// babylon_tag is a unique identifier for this Babylon instance
-	BabylonTag string `protobuf:"bytes,3,opt,name=babylon_tag,json=babylonTag,proto3" json:"babylon_tag,omitempty"`
+	BabylonTag string `protobuf:"bytes,6,opt,name=babylon_tag,json=babylonTag,proto3" json:"babylon_tag,omitempty"`
 	// btc_confirmation_depth is the number of confirmations required for Bitcoin
 	// transactions
-	BtcConfirmationDepth uint32 `protobuf:"varint,4,opt,name=btc_confirmation_depth,json=btcConfirmationDepth,proto3" json:"btc_confirmation_depth,omitempty"`
+	BtcConfirmationDepth uint32 `protobuf:"varint,7,opt,name=btc_confirmation_depth,json=btcConfirmationDepth,proto3" json:"btc_confirmation_depth,omitempty"`
 	// checkpoint_finalization_timeout is the timeout in blocks for checkpoint
 	// finalization
-	CheckpointFinalizationTimeout uint32 `protobuf:"varint,5,opt,name=checkpoint_finalization_timeout,json=checkpointFinalizationTimeout,proto3" json:"checkpoint_finalization_timeout,omitempty"`
+	CheckpointFinalizationTimeout uint32 `protobuf:"varint,8,opt,name=checkpoint_finalization_timeout,json=checkpointFinalizationTimeout,proto3" json:"checkpoint_finalization_timeout,omitempty"`
 	// notify_cosmos_zone indicates whether to notify the Cosmos zone of events
-	NotifyCosmosZone bool `protobuf:"varint,6,opt,name=notify_cosmos_zone,json=notifyCosmosZone,proto3" json:"notify_cosmos_zone,omitempty"`
+	NotifyCosmosZone bool `protobuf:"varint,9,opt,name=notify_cosmos_zone,json=notifyCosmosZone,proto3" json:"notify_cosmos_zone,omitempty"`
 	// btc_staking_msg is the initialization message for the BTC staking contract
-	BtcStakingMsg []byte `protobuf:"bytes,7,opt,name=btc_staking_msg,json=btcStakingMsg,proto3" json:"btc_staking_msg,omitempty"`
+	BtcStakingMsg []byte `protobuf:"bytes,10,opt,name=btc_staking_msg,json=btcStakingMsg,proto3" json:"btc_staking_msg,omitempty"`
 	// btc_finality_msg is the initialization message for the BTC finality
 	// contract
-	BtcFinalityMsg []byte `protobuf:"bytes,8,opt,name=btc_finality_msg,json=btcFinalityMsg,proto3" json:"btc_finality_msg,omitempty"`
+	BtcFinalityMsg []byte `protobuf:"bytes,11,opt,name=btc_finality_msg,json=btcFinalityMsg,proto3" json:"btc_finality_msg,omitempty"`
 	// consumer_name is the name of this consumer chain
-	ConsumerName string `protobuf:"bytes,9,opt,name=consumer_name,json=consumerName,proto3" json:"consumer_name,omitempty"`
+	ConsumerName string `protobuf:"bytes,12,opt,name=consumer_name,json=consumerName,proto3" json:"consumer_name,omitempty"`
 	// consumer_description is a description of this consumer chain
-	ConsumerDescription string `protobuf:"bytes,10,opt,name=consumer_description,json=consumerDescription,proto3" json:"consumer_description,omitempty"`
+	ConsumerDescription string `protobuf:"bytes,13,opt,name=consumer_description,json=consumerDescription,proto3" json:"consumer_description,omitempty"`
+	// admin is the address that controls the Babylon module
+	Admin string `protobuf:"bytes,14,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
 func (m *MsgInstantiateBabylonContracts) Reset()         { *m = MsgInstantiateBabylonContracts{} }
 func (m *MsgInstantiateBabylonContracts) String() string { return proto.CompactTextString(m) }
 func (*MsgInstantiateBabylonContracts) ProtoMessage()    {}
 func (*MsgInstantiateBabylonContracts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{2}
+	return fileDescriptor_406c9f025b2f9448, []int{0}
 }
 func (m *MsgInstantiateBabylonContracts) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -190,7 +111,7 @@ func (m *MsgInstantiateBabylonContractsResponse) Reset() {
 func (m *MsgInstantiateBabylonContractsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgInstantiateBabylonContractsResponse) ProtoMessage()    {}
 func (*MsgInstantiateBabylonContractsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{3}
+	return fileDescriptor_406c9f025b2f9448, []int{1}
 }
 func (m *MsgInstantiateBabylonContractsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -234,7 +155,7 @@ func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
 func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParams) ProtoMessage()    {}
 func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{4}
+	return fileDescriptor_406c9f025b2f9448, []int{2}
 }
 func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -272,7 +193,7 @@ func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse
 func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{5}
+	return fileDescriptor_406c9f025b2f9448, []int{3}
 }
 func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -302,8 +223,6 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgStoreBabylonContractCodes)(nil), "babylonlabs.babylon.v1beta1.MsgStoreBabylonContractCodes")
-	proto.RegisterType((*MsgStoreBabylonContractCodesResponse)(nil), "babylonlabs.babylon.v1beta1.MsgStoreBabylonContractCodesResponse")
 	proto.RegisterType((*MsgInstantiateBabylonContracts)(nil), "babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts")
 	proto.RegisterType((*MsgInstantiateBabylonContractsResponse)(nil), "babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse")
 	proto.RegisterType((*MsgUpdateParams)(nil), "babylonlabs.babylon.v1beta1.MsgUpdateParams")
@@ -315,54 +234,52 @@ func init() {
 }
 
 var fileDescriptor_406c9f025b2f9448 = []byte{
-	// 739 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcf, 0x4f, 0xdb, 0x48,
-	0x14, 0x8e, 0x09, 0x04, 0x32, 0xfc, 0x94, 0xc9, 0x2e, 0x4e, 0xd8, 0x35, 0x28, 0x20, 0x94, 0x45,
-	0x10, 0x6f, 0x58, 0xb6, 0x12, 0x70, 0x22, 0x41, 0x48, 0x3d, 0xa4, 0xaa, 0x1c, 0x7a, 0xe1, 0x12,
-	0x8d, 0xed, 0xc1, 0x19, 0x05, 0xcf, 0x58, 0x9e, 0x09, 0x25, 0x9c, 0xaa, 0xde, 0x7a, 0xeb, 0xb5,
-	0x52, 0xa5, 0xfe, 0x0b, 0x1c, 0x7a, 0xee, 0x99, 0x23, 0xea, 0xa9, 0xa7, 0xaa, 0x85, 0x03, 0xd7,
-	0xfe, 0x09, 0x95, 0xc7, 0x76, 0xe2, 0xa4, 0xaa, 0x51, 0xe9, 0xc9, 0x33, 0xfe, 0xbe, 0x6f, 0xde,
-	0x7b, 0xdf, 0x7b, 0xf6, 0x80, 0x55, 0x03, 0x1a, 0xdd, 0x53, 0x4a, 0x4e, 0xa1, 0xc1, 0xb4, 0x70,
-	0xad, 0x9d, 0x55, 0x0c, 0xc4, 0x61, 0x45, 0xe3, 0xe7, 0x65, 0xd7, 0xa3, 0x9c, 0xca, 0x8b, 0x31,
-	0x56, 0x39, 0x5c, 0x97, 0x43, 0x56, 0x21, 0x67, 0x53, 0x9b, 0x0a, 0x9e, 0xe6, 0xaf, 0x02, 0x49,
-	0x61, 0xc1, 0xa4, 0xcc, 0xa1, 0x4c, 0x73, 0x98, 0xad, 0x9d, 0x55, 0xfc, 0x47, 0x08, 0xe4, 0x03,
-	0xa0, 0x19, 0x28, 0x82, 0x4d, 0x08, 0xfd, 0x93, 0x94, 0x4c, 0x14, 0x56, 0x50, 0x8b, 0xaf, 0x46,
-	0xc0, 0x5f, 0x75, 0x66, 0x37, 0x38, 0xf5, 0x50, 0x35, 0x40, 0x6a, 0x94, 0x70, 0x0f, 0x9a, 0xbc,
-	0x46, 0x2d, 0xc4, 0xe4, 0x7f, 0x41, 0x86, 0x61, 0x9b, 0x20, 0x4f, 0x91, 0x96, 0xa5, 0x52, 0xb6,
-	0xaa, 0x7c, 0x7c, 0xbf, 0x99, 0x0b, 0xa3, 0xed, 0x5b, 0x96, 0x87, 0x18, 0x6b, 0x70, 0x0f, 0x13,
-	0x5b, 0x0f, 0x79, 0xf2, 0x16, 0xf8, 0x23, 0x8c, 0xd1, 0x34, 0xc3, 0xa3, 0x9a, 0x26, 0xb5, 0x90,
-	0x32, 0xb2, 0x2c, 0x95, 0xa6, 0xf4, 0x79, 0xe3, 0xc7, 0x30, 0xf2, 0x0e, 0xc8, 0x1b, 0xdc, 0x6c,
-	0x32, 0x0e, 0xdb, 0x98, 0xd8, 0x43, 0xba, 0xb4, 0xd0, 0xfd, 0x69, 0x70, 0xb3, 0x11, 0xe0, 0x03,
-	0xd2, 0x3d, 0x50, 0xf0, 0xa5, 0x27, 0x98, 0xc0, 0x53, 0xcc, 0xbb, 0x43, 0xda, 0x51, 0xa1, 0x5d,
-	0x30, 0xb8, 0x79, 0x18, 0x12, 0xe2, 0xe2, 0xdd, 0xc9, 0x97, 0x77, 0x97, 0xeb, 0x61, 0xe2, 0xc5,
-	0x35, 0xb0, 0x9a, 0x64, 0x85, 0x8e, 0x98, 0x4b, 0x09, 0x43, 0xc5, 0x6f, 0x69, 0xa0, 0xd6, 0x99,
-	0xfd, 0x98, 0x30, 0x0e, 0x09, 0xc7, 0x90, 0x0f, 0xd3, 0x1f, 0xe2, 0x9a, 0x02, 0xc6, 0x09, 0xe2,
-	0xcf, 0xa9, 0xd7, 0x16, 0x3e, 0x65, 0xf5, 0x68, 0x2b, 0x2f, 0x81, 0xc9, 0xc8, 0x4f, 0x0e, 0x6d,
-	0xe1, 0x46, 0x56, 0x07, 0xe1, 0xab, 0x23, 0x68, 0xcb, 0xdb, 0xc0, 0xf7, 0xc6, 0x2f, 0xfc, 0x04,
-	0x7b, 0x0e, 0xe4, 0x98, 0x92, 0xa6, 0x85, 0x5c, 0xde, 0x12, 0xd5, 0x4f, 0xeb, 0x39, 0x83, 0x9b,
-	0xb5, 0x18, 0x78, 0xe0, 0x63, 0xf2, 0x21, 0x58, 0x32, 0x5b, 0xc8, 0x6c, 0xbb, 0x14, 0x13, 0x1e,
-	0xda, 0x77, 0x11, 0x88, 0x39, 0x76, 0x10, 0xed, 0x70, 0x65, 0x4c, 0xc8, 0xff, 0xee, 0xd3, 0x0e,
-	0x63, 0xac, 0xa3, 0x80, 0x24, 0x6f, 0x00, 0x99, 0x50, 0x8e, 0x4f, 0x7c, 0xe7, 0xc5, 0x40, 0x5e,
-	0x50, 0x82, 0x94, 0xcc, 0xb2, 0x54, 0x9a, 0xd0, 0xe7, 0x02, 0xa4, 0x26, 0x80, 0x63, 0x4a, 0x90,
-	0xbc, 0x06, 0x66, 0xe3, 0x8d, 0x76, 0x98, 0xad, 0x8c, 0x8b, 0x16, 0x4d, 0xf7, 0xdb, 0x5b, 0x67,
-	0xb6, 0x5c, 0x02, 0x73, 0x03, 0x5d, 0xf5, 0x89, 0x13, 0x82, 0x38, 0x13, 0xeb, 0xa5, 0xcf, 0x5c,
-	0x01, 0xd3, 0x26, 0x25, 0xac, 0xe3, 0x20, 0xaf, 0x49, 0xa0, 0x83, 0x94, 0xac, 0x30, 0x68, 0x2a,
-	0x7a, 0xf9, 0x04, 0x3a, 0x48, 0xae, 0x80, 0x5c, 0x8f, 0x64, 0x21, 0x66, 0x7a, 0xd8, 0xf5, 0x6b,
-	0x50, 0x80, 0xe0, 0xce, 0x47, 0xd8, 0x41, 0x1f, 0x1a, 0x1c, 0x8d, 0x12, 0x58, 0x4b, 0xee, 0x78,
-	0x6f, 0x38, 0xde, 0x4a, 0x60, 0xb6, 0xce, 0xec, 0x67, 0xae, 0x05, 0x39, 0x7a, 0x0a, 0x3d, 0xe8,
-	0x30, 0xf9, 0x11, 0xc8, 0xc2, 0x0e, 0x6f, 0x51, 0x0f, 0xf3, 0xee, 0xbd, 0x03, 0xd1, 0xa7, 0xca,
-	0xfb, 0x20, 0xe3, 0x8a, 0x13, 0xc4, 0x48, 0x4c, 0x6e, 0xad, 0x94, 0x13, 0xfe, 0x1f, 0xe5, 0x20,
-	0x58, 0x75, 0xf4, 0xea, 0xf3, 0x52, 0x4a, 0x0f, 0x85, 0xbb, 0x33, 0x7e, 0x15, 0xfd, 0x23, 0x8b,
-	0x79, 0xb0, 0x30, 0x94, 0x5d, 0x94, 0xf9, 0xd6, 0x87, 0x34, 0x48, 0xfb, 0x86, 0xbe, 0x91, 0x40,
-	0xfe, 0xe7, 0xff, 0x83, 0x9d, 0xc4, 0x1c, 0x92, 0xbe, 0x9f, 0xc2, 0xfe, 0x83, 0xa5, 0x51, 0x8e,
-	0xf2, 0x3b, 0x09, 0x2c, 0x26, 0x7d, 0x77, 0x7b, 0xf7, 0x85, 0x48, 0x10, 0x17, 0x6a, 0xbf, 0x21,
-	0xee, 0x65, 0xe8, 0x81, 0xa9, 0x81, 0xde, 0x6f, 0xdc, 0x77, 0x68, 0x9c, 0x5d, 0xd8, 0xfe, 0x15,
-	0x76, 0x14, 0xb3, 0x30, 0xf6, 0xe2, 0xee, 0x72, 0x5d, 0xaa, 0x36, 0xae, 0xbe, 0xaa, 0xa9, 0xab,
-	0x1b, 0x55, 0xba, 0xbe, 0x51, 0xa5, 0x2f, 0x37, 0xaa, 0xf4, 0xfa, 0x56, 0x4d, 0x5d, 0xdf, 0xaa,
-	0xa9, 0x4f, 0xb7, 0x6a, 0xea, 0xf8, 0x7f, 0x1b, 0xf3, 0x56, 0xc7, 0x28, 0x9b, 0xd4, 0xd1, 0x62,
-	0x41, 0x36, 0x31, 0x8d, 0xb6, 0x9b, 0xcc, 0x6a, 0x6b, 0xe7, 0xbd, 0x0b, 0x83, 0x77, 0x5d, 0xc4,
-	0x8c, 0x8c, 0xb8, 0x27, 0xfe, 0xfb, 0x1e, 0x00, 0x00, 0xff, 0xff, 0x43, 0xc9, 0xb7, 0x23, 0xe1,
-	0x06, 0x00, 0x00,
+	// 716 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0x4f, 0x4b, 0x1b, 0x4d,
+	0x1c, 0xc7, 0xb3, 0x6a, 0xa2, 0x4e, 0x12, 0x95, 0x79, 0xf2, 0x3c, 0x8e, 0xf1, 0x71, 0x0d, 0xb1,
+	0x48, 0x2a, 0x9a, 0x6d, 0xac, 0x6d, 0xc1, 0x42, 0xa9, 0x89, 0x08, 0x1e, 0x2c, 0x65, 0xb5, 0x17,
+	0x2f, 0x61, 0x76, 0x77, 0xdc, 0x0c, 0x71, 0x67, 0x96, 0x9d, 0x89, 0x35, 0x9e, 0x4a, 0x5f, 0x41,
+	0x5f, 0x40, 0xa1, 0xd0, 0x57, 0xe0, 0xa1, 0x2f, 0xc2, 0xa3, 0xf4, 0x54, 0x28, 0x94, 0x56, 0x0f,
+	0xbe, 0x8d, 0xb2, 0xbb, 0xb3, 0x26, 0x2a, 0x44, 0x4a, 0x4f, 0x99, 0xd9, 0xef, 0xe7, 0xfb, 0xfb,
+	0x97, 0xdf, 0x2e, 0x78, 0x60, 0x61, 0xab, 0x7b, 0xc8, 0xd9, 0x21, 0xb6, 0x84, 0xa1, 0xce, 0xc6,
+	0x51, 0xcd, 0x22, 0x12, 0xd7, 0x0c, 0x79, 0x5c, 0xf5, 0x03, 0x2e, 0x39, 0x9c, 0xed, 0xa3, 0xaa,
+	0xea, 0x5c, 0x55, 0x54, 0xb1, 0xe0, 0x72, 0x97, 0x47, 0x9c, 0x11, 0x9e, 0x62, 0x4b, 0x71, 0xda,
+	0xe6, 0xc2, 0xe3, 0xc2, 0xf0, 0x84, 0x6b, 0x1c, 0xd5, 0xc2, 0x1f, 0x25, 0xcc, 0xc4, 0x42, 0x33,
+	0x76, 0xc4, 0x17, 0x25, 0x3d, 0x1c, 0x54, 0x4c, 0x92, 0x36, 0x42, 0xcb, 0xdf, 0xd3, 0x40, 0xdf,
+	0x11, 0xee, 0x36, 0x13, 0x12, 0x33, 0x49, 0xb1, 0x24, 0xf5, 0x58, 0x6f, 0x70, 0x26, 0x03, 0x6c,
+	0x4b, 0x01, 0x1f, 0x81, 0x8c, 0xa0, 0x2e, 0x23, 0x01, 0xd2, 0x4a, 0x5a, 0x65, 0xbc, 0x8e, 0xbe,
+	0x7e, 0x59, 0x29, 0xa8, 0x7c, 0x1b, 0x8e, 0x13, 0x10, 0x21, 0x76, 0x65, 0x40, 0x99, 0x6b, 0x2a,
+	0x0e, 0x3e, 0x03, 0x48, 0x65, 0x69, 0xda, 0x2a, 0x4c, 0xd3, 0xe6, 0x0e, 0x69, 0x52, 0x07, 0x0d,
+	0x95, 0xb4, 0xca, 0x88, 0xf9, 0xaf, 0x75, 0x33, 0x4b, 0x83, 0x3b, 0x64, 0xdb, 0x81, 0x2f, 0xc0,
+	0xff, 0x96, 0xb4, 0x9b, 0x42, 0xe2, 0x36, 0x65, 0xee, 0x5d, 0xf3, 0x70, 0x64, 0x46, 0x96, 0xb4,
+	0x77, 0x63, 0xe4, 0x96, 0xff, 0x25, 0x98, 0x0b, 0xfd, 0x07, 0x94, 0xe1, 0x43, 0x2a, 0xbb, 0x77,
+	0x03, 0x8c, 0x44, 0x01, 0x66, 0x2c, 0x69, 0x6f, 0x29, 0xe6, 0x56, 0x04, 0x04, 0x46, 0x19, 0x91,
+	0x6f, 0x79, 0xd0, 0x46, 0xe9, 0xb0, 0x5b, 0x33, 0xb9, 0xc2, 0x79, 0x90, 0x4d, 0x9a, 0x92, 0xd8,
+	0x45, 0x99, 0x48, 0x05, 0xea, 0xd1, 0x1e, 0x76, 0xe1, 0x1a, 0xf8, 0x2f, 0x4c, 0x6e, 0x73, 0x76,
+	0x40, 0x03, 0x0f, 0x4b, 0xca, 0x59, 0xd3, 0x21, 0xbe, 0x6c, 0xa1, 0xd1, 0x92, 0x56, 0xc9, 0x9b,
+	0x05, 0x4b, 0xda, 0x8d, 0x3e, 0x71, 0x33, 0xd4, 0xe0, 0x16, 0x98, 0xb7, 0x5b, 0xc4, 0x6e, 0xfb,
+	0x9c, 0x32, 0xa9, 0x2a, 0x3f, 0x89, 0xcd, 0x92, 0x7a, 0x84, 0x77, 0x24, 0x1a, 0x8b, 0xec, 0x73,
+	0x3d, 0x6c, 0xab, 0x8f, 0xda, 0x8b, 0x21, 0xb8, 0x0c, 0x20, 0xe3, 0x92, 0x1e, 0x84, 0x4d, 0x47,
+	0x7b, 0x71, 0xc2, 0x19, 0x41, 0xe3, 0x25, 0xad, 0x32, 0x66, 0x4e, 0xc5, 0x4a, 0x23, 0x12, 0xf6,
+	0x39, 0x23, 0x70, 0x11, 0x4c, 0xf6, 0x0f, 0xda, 0x13, 0x2e, 0x02, 0x25, 0xad, 0x92, 0x33, 0xf3,
+	0xbd, 0xd9, 0xee, 0x08, 0x17, 0x56, 0xc0, 0xd4, 0x8d, 0x81, 0x86, 0x60, 0x36, 0x02, 0x27, 0xfa,
+	0x66, 0x18, 0x92, 0x0b, 0x20, 0x6f, 0x73, 0x26, 0x3a, 0x1e, 0x09, 0x9a, 0x0c, 0x7b, 0x04, 0xe5,
+	0xa2, 0x01, 0xe5, 0x92, 0x87, 0xaf, 0xb0, 0x47, 0x60, 0x0d, 0x14, 0xae, 0x21, 0x87, 0x08, 0x3b,
+	0xa0, 0x7e, 0xd8, 0x03, 0xca, 0x47, 0xec, 0x3f, 0x89, 0xb6, 0xd9, 0x93, 0x60, 0x15, 0xa4, 0xb1,
+	0xe3, 0x51, 0x86, 0x26, 0xee, 0x59, 0xbe, 0x18, 0x5b, 0xcf, 0xbe, 0xbf, 0x3a, 0x5d, 0x52, 0x8b,
+	0x58, 0xae, 0x80, 0xc5, 0xc1, 0xcb, 0x6d, 0x12, 0xe1, 0x73, 0x26, 0x48, 0xf9, 0xa3, 0x06, 0x26,
+	0x77, 0x84, 0xfb, 0xc6, 0x77, 0xb0, 0x24, 0xaf, 0x71, 0x80, 0x3d, 0x01, 0x9f, 0x82, 0x71, 0xdc,
+	0x91, 0x2d, 0x1e, 0x50, 0xd9, 0xbd, 0x77, 0xf7, 0x7b, 0x28, 0xdc, 0x00, 0x19, 0x3f, 0x8a, 0x10,
+	0x2d, 0x7b, 0x76, 0x75, 0xa1, 0x3a, 0xe0, 0xb5, 0xaf, 0xc6, 0xc9, 0xea, 0x23, 0x67, 0x3f, 0xe6,
+	0x53, 0xa6, 0x32, 0xae, 0x4f, 0x84, 0x5d, 0xf4, 0x42, 0x96, 0x67, 0xc0, 0xf4, 0xad, 0xea, 0x92,
+	0xca, 0x57, 0x3f, 0x0f, 0x81, 0xe1, 0xf0, 0x0f, 0xf8, 0xa4, 0x81, 0xd9, 0x41, 0xaf, 0xf1, 0xf3,
+	0x81, 0x55, 0x0c, 0x1e, 0x53, 0xb1, 0xf1, 0x17, 0xe6, 0xa4, 0x52, 0x18, 0x80, 0xdc, 0x8d, 0xf9,
+	0x2e, 0xdf, 0x17, 0xb4, 0x9f, 0x2e, 0xae, 0xfd, 0x09, 0x9d, 0xe4, 0x2c, 0xa6, 0xdf, 0x5d, 0x9d,
+	0x2e, 0x69, 0xf5, 0xdd, 0xb3, 0x5f, 0x7a, 0xea, 0xec, 0x42, 0xd7, 0xce, 0x2f, 0x74, 0xed, 0xe7,
+	0x85, 0xae, 0x7d, 0xb8, 0xd4, 0x53, 0xe7, 0x97, 0x7a, 0xea, 0xdb, 0xa5, 0x9e, 0xda, 0x7f, 0xe2,
+	0x52, 0xd9, 0xea, 0x58, 0x55, 0x9b, 0x7b, 0x46, 0x5f, 0x92, 0x15, 0xca, 0x93, 0xeb, 0x8a, 0x70,
+	0xda, 0xc6, 0xf1, 0xf5, 0xb7, 0x54, 0x76, 0x7d, 0x22, 0xac, 0x4c, 0xf4, 0x09, 0x7d, 0xfc, 0x3b,
+	0x00, 0x00, 0xff, 0xff, 0x2b, 0x2a, 0x0c, 0x4d, 0xfc, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -377,9 +294,6 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// StoreBabylonContractCodes defines an operation for storing the Babylon
-	// contract codes.
-	StoreBabylonContractCodes(ctx context.Context, in *MsgStoreBabylonContractCodes, opts ...grpc.CallOption) (*MsgStoreBabylonContractCodesResponse, error)
 	// InstantiateBabylonContracts defines an operation for instantiating the
 	// Babylon contracts.
 	InstantiateBabylonContracts(ctx context.Context, in *MsgInstantiateBabylonContracts, opts ...grpc.CallOption) (*MsgInstantiateBabylonContractsResponse, error)
@@ -394,15 +308,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) StoreBabylonContractCodes(ctx context.Context, in *MsgStoreBabylonContractCodes, opts ...grpc.CallOption) (*MsgStoreBabylonContractCodesResponse, error) {
-	out := new(MsgStoreBabylonContractCodesResponse)
-	err := c.cc.Invoke(ctx, "/babylonlabs.babylon.v1beta1.Msg/StoreBabylonContractCodes", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) InstantiateBabylonContracts(ctx context.Context, in *MsgInstantiateBabylonContracts, opts ...grpc.CallOption) (*MsgInstantiateBabylonContractsResponse, error) {
@@ -425,9 +330,6 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// StoreBabylonContractCodes defines an operation for storing the Babylon
-	// contract codes.
-	StoreBabylonContractCodes(context.Context, *MsgStoreBabylonContractCodes) (*MsgStoreBabylonContractCodesResponse, error)
 	// InstantiateBabylonContracts defines an operation for instantiating the
 	// Babylon contracts.
 	InstantiateBabylonContracts(context.Context, *MsgInstantiateBabylonContracts) (*MsgInstantiateBabylonContractsResponse, error)
@@ -440,9 +342,6 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) StoreBabylonContractCodes(ctx context.Context, req *MsgStoreBabylonContractCodes) (*MsgStoreBabylonContractCodesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StoreBabylonContractCodes not implemented")
-}
 func (*UnimplementedMsgServer) InstantiateBabylonContracts(ctx context.Context, req *MsgInstantiateBabylonContracts) (*MsgInstantiateBabylonContractsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InstantiateBabylonContracts not implemented")
 }
@@ -452,24 +351,6 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_StoreBabylonContractCodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgStoreBabylonContractCodes)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).StoreBabylonContractCodes(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/babylonlabs.babylon.v1beta1.Msg/StoreBabylonContractCodes",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).StoreBabylonContractCodes(ctx, req.(*MsgStoreBabylonContractCodes))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_InstantiateBabylonContracts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -513,10 +394,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "StoreBabylonContractCodes",
-			Handler:    _Msg_StoreBabylonContractCodes_Handler,
-		},
-		{
 			MethodName: "InstantiateBabylonContracts",
 			Handler:    _Msg_InstantiateBabylonContracts_Handler,
 		},
@@ -527,80 +404,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "babylonlabs/babylon/v1beta1/tx.proto",
-}
-
-func (m *MsgStoreBabylonContractCodes) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgStoreBabylonContractCodes) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgStoreBabylonContractCodes) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.BtcFinalityContractCode) > 0 {
-		i -= len(m.BtcFinalityContractCode)
-		copy(dAtA[i:], m.BtcFinalityContractCode)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcFinalityContractCode)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.BtcStakingContractCode) > 0 {
-		i -= len(m.BtcStakingContractCode)
-		copy(dAtA[i:], m.BtcStakingContractCode)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcStakingContractCode)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.BabylonContractCode) > 0 {
-		i -= len(m.BabylonContractCode)
-		copy(dAtA[i:], m.BabylonContractCode)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.BabylonContractCode)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Signer) > 0 {
-		i -= len(m.Signer)
-		copy(dAtA[i:], m.Signer)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgStoreBabylonContractCodesResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgStoreBabylonContractCodesResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgStoreBabylonContractCodesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
 }
 
 func (m *MsgInstantiateBabylonContracts) Marshal() (dAtA []byte, err error) {
@@ -623,33 +426,40 @@ func (m *MsgInstantiateBabylonContracts) MarshalToSizedBuffer(dAtA []byte) (int,
 	_ = i
 	var l int
 	_ = l
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x72
+	}
 	if len(m.ConsumerDescription) > 0 {
 		i -= len(m.ConsumerDescription)
 		copy(dAtA[i:], m.ConsumerDescription)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.ConsumerDescription)))
 		i--
-		dAtA[i] = 0x52
+		dAtA[i] = 0x6a
 	}
 	if len(m.ConsumerName) > 0 {
 		i -= len(m.ConsumerName)
 		copy(dAtA[i:], m.ConsumerName)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.ConsumerName)))
 		i--
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x62
 	}
 	if len(m.BtcFinalityMsg) > 0 {
 		i -= len(m.BtcFinalityMsg)
 		copy(dAtA[i:], m.BtcFinalityMsg)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcFinalityMsg)))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x5a
 	}
 	if len(m.BtcStakingMsg) > 0 {
 		i -= len(m.BtcStakingMsg)
 		copy(dAtA[i:], m.BtcStakingMsg)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcStakingMsg)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x52
 	}
 	if m.NotifyCosmosZone {
 		i--
@@ -659,31 +469,46 @@ func (m *MsgInstantiateBabylonContracts) MarshalToSizedBuffer(dAtA []byte) (int,
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x48
 	}
 	if m.CheckpointFinalizationTimeout != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.CheckpointFinalizationTimeout))
 		i--
-		dAtA[i] = 0x28
+		dAtA[i] = 0x40
 	}
 	if m.BtcConfirmationDepth != 0 {
 		i = encodeVarintTx(dAtA, i, uint64(m.BtcConfirmationDepth))
 		i--
-		dAtA[i] = 0x20
+		dAtA[i] = 0x38
 	}
 	if len(m.BabylonTag) > 0 {
 		i -= len(m.BabylonTag)
 		copy(dAtA[i:], m.BabylonTag)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.BabylonTag)))
 		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x32
 	}
 	if len(m.Network) > 0 {
 		i -= len(m.Network)
 		copy(dAtA[i:], m.Network)
 		i = encodeVarintTx(dAtA, i, uint64(len(m.Network)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x2a
+	}
+	if m.BtcFinalityContractCodeId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.BtcFinalityContractCodeId))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.BtcStakingContractCodeId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.BtcStakingContractCodeId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.BabylonContractCodeId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.BabylonContractCodeId))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Signer) > 0 {
 		i -= len(m.Signer)
@@ -792,40 +617,6 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgStoreBabylonContractCodes) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Signer)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.BabylonContractCode)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.BtcStakingContractCode)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.BtcFinalityContractCode)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgStoreBabylonContractCodesResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgInstantiateBabylonContracts) Size() (n int) {
 	if m == nil {
 		return 0
@@ -835,6 +626,15 @@ func (m *MsgInstantiateBabylonContracts) Size() (n int) {
 	l = len(m.Signer)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.BabylonContractCodeId != 0 {
+		n += 1 + sovTx(uint64(m.BabylonContractCodeId))
+	}
+	if m.BtcStakingContractCodeId != 0 {
+		n += 1 + sovTx(uint64(m.BtcStakingContractCodeId))
+	}
+	if m.BtcFinalityContractCodeId != 0 {
+		n += 1 + sovTx(uint64(m.BtcFinalityContractCodeId))
 	}
 	l = len(m.Network)
 	if l > 0 {
@@ -866,6 +666,10 @@ func (m *MsgInstantiateBabylonContracts) Size() (n int) {
 		n += 1 + l + sovTx(uint64(l))
 	}
 	l = len(m.ConsumerDescription)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Admin)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -910,240 +714,6 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MsgStoreBabylonContractCodes) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgStoreBabylonContractCodes: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgStoreBabylonContractCodes: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Signer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BabylonContractCode", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BabylonContractCode = append(m.BabylonContractCode[:0], dAtA[iNdEx:postIndex]...)
-			if m.BabylonContractCode == nil {
-				m.BabylonContractCode = []byte{}
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BtcStakingContractCode", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BtcStakingContractCode = append(m.BtcStakingContractCode[:0], dAtA[iNdEx:postIndex]...)
-			if m.BtcStakingContractCode == nil {
-				m.BtcStakingContractCode = []byte{}
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BtcFinalityContractCode", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BtcFinalityContractCode = append(m.BtcFinalityContractCode[:0], dAtA[iNdEx:postIndex]...)
-			if m.BtcFinalityContractCode == nil {
-				m.BtcFinalityContractCode = []byte{}
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgStoreBabylonContractCodesResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgStoreBabylonContractCodesResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgStoreBabylonContractCodesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1207,6 +777,63 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 			m.Signer = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BabylonContractCodeId", wireType)
+			}
+			m.BabylonContractCodeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BabylonContractCodeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BtcStakingContractCodeId", wireType)
+			}
+			m.BtcStakingContractCodeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BtcStakingContractCodeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BtcFinalityContractCodeId", wireType)
+			}
+			m.BtcFinalityContractCodeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BtcFinalityContractCodeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Network", wireType)
 			}
@@ -1238,7 +865,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 			}
 			m.Network = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BabylonTag", wireType)
 			}
@@ -1270,7 +897,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 			}
 			m.BabylonTag = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 4:
+		case 7:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BtcConfirmationDepth", wireType)
 			}
@@ -1289,7 +916,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 5:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CheckpointFinalizationTimeout", wireType)
 			}
@@ -1308,7 +935,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NotifyCosmosZone", wireType)
 			}
@@ -1328,7 +955,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.NotifyCosmosZone = bool(v != 0)
-		case 7:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BtcStakingMsg", wireType)
 			}
@@ -1362,7 +989,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 				m.BtcStakingMsg = []byte{}
 			}
 			iNdEx = postIndex
-		case 8:
+		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BtcFinalityMsg", wireType)
 			}
@@ -1396,7 +1023,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 				m.BtcFinalityMsg = []byte{}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConsumerName", wireType)
 			}
@@ -1428,7 +1055,7 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 			}
 			m.ConsumerName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 10:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ConsumerDescription", wireType)
 			}
@@ -1459,6 +1086,38 @@ func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.ConsumerDescription = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

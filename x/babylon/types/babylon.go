@@ -24,17 +24,18 @@ type BabylonContractConfig struct {
 
 // NewInitMsg creates the init message for the Babylon contract
 func NewInitMsg(
-	govAccount string,
-	params *Params,
 	network string,
 	babylonTag string,
 	btcConfirmationDepth uint32,
 	checkpointFinalizationTimeout uint32,
 	notifyCosmosZone bool,
+	btcStakingCodeId uint64,
 	btcStakingInitMsgBytes []byte,
+	btcFinalityCodeId uint64,
 	btcFinalityInitMsgBytes []byte,
 	consumerName string,
 	consumerDescription string,
+	admin string,
 ) ([]byte, error) {
 	initMsg := map[string]interface{}{
 		"network":                         network,
@@ -42,13 +43,13 @@ func NewInitMsg(
 		"btc_confirmation_depth":          btcConfirmationDepth,
 		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
 		"notify_cosmos_zone":              notifyCosmosZone,
-		"btc_staking_code_id":             params.BtcStakingContractCodeId,
+		"btc_staking_code_id":             btcStakingCodeId,
 		"btc_staking_msg":                 btcStakingInitMsgBytes,
 		"consumer_name":                   consumerName,
 		"consumer_description":            consumerDescription,
-		"btc_finality_code_id":            params.BtcFinalityContractCodeId,
+		"btc_finality_code_id":            btcFinalityCodeId,
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
-		"admin":                           govAccount,
+		"admin":                           admin,
 	}
 	initMsgBytes, err := json.Marshal(initMsg)
 	if err != nil {
