@@ -279,7 +279,7 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		memKeys[types.MemStoreKey],
 		bankKeeper,
 		stakingKeeper,
-		wasmKeeper,
+		&wasmKeeper,
 		authority,
 		opts...,
 	)

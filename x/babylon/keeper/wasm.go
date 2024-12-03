@@ -11,6 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func (k Keeper) StoreBabylonContracts(ctx sdk.Context) error {
+	return nil
+}
+
 func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {
 	// get address of the BTC staking contract
 	addrStr := k.GetParams(ctx).BtcStakingContractAddress
