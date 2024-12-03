@@ -30,6 +30,175 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgStoreBabylonContractCodes is the Msg/StoreBabylonContractCodes request
+// type.
+type MsgStoreBabylonContractCodes struct {
+	// signer is the address who submits the message.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// babylon_contract_code is the bytecode for the Babylon contract.
+	// WASMByteCode can be raw or gzip compressed
+	BabylonContractCode []byte `protobuf:"bytes,2,opt,name=babylon_contract_code,json=babylonContractCode,proto3" json:"babylon_contract_code,omitempty"`
+	// btc_staking_contract_code is the bytecode for the BTC staking contract.
+	// WASMByteCode can be raw or gzip compressed
+	BtcStakingContractCode []byte `protobuf:"bytes,3,opt,name=btc_staking_contract_code,json=btcStakingContractCode,proto3" json:"btc_staking_contract_code,omitempty"`
+	// btc_finality_contract_code is the bytecode for the BTC finality contract.
+	// WASMByteCode can be raw or gzip compressed
+	BtcFinalityContractCode []byte `protobuf:"bytes,4,opt,name=btc_finality_contract_code,json=btcFinalityContractCode,proto3" json:"btc_finality_contract_code,omitempty"`
+}
+
+func (m *MsgStoreBabylonContractCodes) Reset()         { *m = MsgStoreBabylonContractCodes{} }
+func (m *MsgStoreBabylonContractCodes) String() string { return proto.CompactTextString(m) }
+func (*MsgStoreBabylonContractCodes) ProtoMessage()    {}
+func (*MsgStoreBabylonContractCodes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_406c9f025b2f9448, []int{0}
+}
+func (m *MsgStoreBabylonContractCodes) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgStoreBabylonContractCodes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgStoreBabylonContractCodes.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgStoreBabylonContractCodes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgStoreBabylonContractCodes.Merge(m, src)
+}
+func (m *MsgStoreBabylonContractCodes) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgStoreBabylonContractCodes) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgStoreBabylonContractCodes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgStoreBabylonContractCodes proto.InternalMessageInfo
+
+// MsgStoreBabylonContractCodesResponse is the Msg/StoreBabylonContractCodes
+// response type.
+type MsgStoreBabylonContractCodesResponse struct {
+}
+
+func (m *MsgStoreBabylonContractCodesResponse) Reset()         { *m = MsgStoreBabylonContractCodesResponse{} }
+func (m *MsgStoreBabylonContractCodesResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgStoreBabylonContractCodesResponse) ProtoMessage()    {}
+func (*MsgStoreBabylonContractCodesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_406c9f025b2f9448, []int{1}
+}
+func (m *MsgStoreBabylonContractCodesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgStoreBabylonContractCodesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgStoreBabylonContractCodesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgStoreBabylonContractCodesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgStoreBabylonContractCodesResponse.Merge(m, src)
+}
+func (m *MsgStoreBabylonContractCodesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgStoreBabylonContractCodesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgStoreBabylonContractCodesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgStoreBabylonContractCodesResponse proto.InternalMessageInfo
+
+// MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
+// type.
+type MsgInstantiateBabylonContracts struct {
+	// signer is the address who submits the message.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// init_msg is the instantiation message for the Babylon contract.
+	InitMsg []byte `protobuf:"bytes,2,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
+}
+
+func (m *MsgInstantiateBabylonContracts) Reset()         { *m = MsgInstantiateBabylonContracts{} }
+func (m *MsgInstantiateBabylonContracts) String() string { return proto.CompactTextString(m) }
+func (*MsgInstantiateBabylonContracts) ProtoMessage()    {}
+func (*MsgInstantiateBabylonContracts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_406c9f025b2f9448, []int{2}
+}
+func (m *MsgInstantiateBabylonContracts) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgInstantiateBabylonContracts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgInstantiateBabylonContracts.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgInstantiateBabylonContracts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgInstantiateBabylonContracts.Merge(m, src)
+}
+func (m *MsgInstantiateBabylonContracts) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgInstantiateBabylonContracts) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgInstantiateBabylonContracts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgInstantiateBabylonContracts proto.InternalMessageInfo
+
+// MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
+// response type.
+type MsgInstantiateBabylonContractsResponse struct {
+}
+
+func (m *MsgInstantiateBabylonContractsResponse) Reset() {
+	*m = MsgInstantiateBabylonContractsResponse{}
+}
+func (m *MsgInstantiateBabylonContractsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgInstantiateBabylonContractsResponse) ProtoMessage()    {}
+func (*MsgInstantiateBabylonContractsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_406c9f025b2f9448, []int{3}
+}
+func (m *MsgInstantiateBabylonContractsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgInstantiateBabylonContractsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgInstantiateBabylonContractsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgInstantiateBabylonContractsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgInstantiateBabylonContractsResponse.Merge(m, src)
+}
+func (m *MsgInstantiateBabylonContractsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgInstantiateBabylonContractsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgInstantiateBabylonContractsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgInstantiateBabylonContractsResponse proto.InternalMessageInfo
+
 // MsgUpdateParams is the Msg/UpdateParams request type.
 type MsgUpdateParams struct {
 	// authority is the address that controls the module (defaults to x/gov unless
@@ -45,7 +214,7 @@ func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
 func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParams) ProtoMessage()    {}
 func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{0}
+	return fileDescriptor_406c9f025b2f9448, []int{4}
 }
 func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -83,7 +252,7 @@ func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse
 func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_406c9f025b2f9448, []int{1}
+	return fileDescriptor_406c9f025b2f9448, []int{5}
 }
 func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -113,6 +282,10 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgStoreBabylonContractCodes)(nil), "babylonlabs.babylon.v1beta1.MsgStoreBabylonContractCodes")
+	proto.RegisterType((*MsgStoreBabylonContractCodesResponse)(nil), "babylonlabs.babylon.v1beta1.MsgStoreBabylonContractCodesResponse")
+	proto.RegisterType((*MsgInstantiateBabylonContracts)(nil), "babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts")
+	proto.RegisterType((*MsgInstantiateBabylonContractsResponse)(nil), "babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse")
 	proto.RegisterType((*MsgUpdateParams)(nil), "babylonlabs.babylon.v1beta1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse")
 }
@@ -122,29 +295,42 @@ func init() {
 }
 
 var fileDescriptor_406c9f025b2f9448 = []byte{
-	// 337 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x49, 0x4a, 0x4c, 0xaa,
-	0xcc, 0xc9, 0xcf, 0xcb, 0x49, 0x4c, 0x2a, 0xd6, 0x87, 0xb2, 0xf5, 0xcb, 0x0c, 0x93, 0x52, 0x4b,
-	0x12, 0x0d, 0xf5, 0x4b, 0x2a, 0xf4, 0x0a, 0x8a, 0xf2, 0x4b, 0xf2, 0x85, 0xa4, 0x91, 0x54, 0xe9,
-	0x41, 0xd9, 0x7a, 0x50, 0x55, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x60, 0x75, 0xfa, 0x20, 0x16,
-	0x44, 0x8b, 0x94, 0x78, 0x72, 0x7e, 0x71, 0x6e, 0x7e, 0xb1, 0x7e, 0x6e, 0x71, 0xba, 0x7e, 0x99,
-	0x21, 0x88, 0x82, 0x4a, 0x48, 0x42, 0x24, 0xe2, 0x21, 0x3a, 0x20, 0x1c, 0xa8, 0x94, 0x26, 0x3e,
-	0xc7, 0xc0, 0xac, 0x05, 0x2b, 0x55, 0x9a, 0xc3, 0xc8, 0xc5, 0xef, 0x5b, 0x9c, 0x1e, 0x5a, 0x90,
-	0x92, 0x58, 0x92, 0x1a, 0x90, 0x58, 0x94, 0x98, 0x5b, 0x2c, 0x64, 0xc6, 0xc5, 0x99, 0x58, 0x5a,
-	0x92, 0x91, 0x5f, 0x94, 0x59, 0x52, 0x29, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe9, 0x24, 0x71, 0x69,
-	0x8b, 0xae, 0x08, 0xd4, 0x0e, 0xc7, 0x94, 0x94, 0xa2, 0xd4, 0xe2, 0xe2, 0xe0, 0x92, 0xa2, 0xcc,
-	0xbc, 0xf4, 0x20, 0x84, 0x52, 0x21, 0x47, 0x2e, 0xb6, 0x02, 0xb0, 0x09, 0x12, 0x4c, 0x0a, 0x8c,
-	0x1a, 0xdc, 0x46, 0xca, 0x7a, 0x78, 0xbc, 0xab, 0x07, 0xb1, 0xcc, 0x89, 0xe5, 0xc4, 0x3d, 0x79,
-	0x86, 0x20, 0xa8, 0x46, 0x2b, 0xbe, 0xa6, 0xe7, 0x1b, 0xb4, 0x10, 0x46, 0x2a, 0x49, 0x72, 0x89,
-	0xa3, 0xb9, 0x2e, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0xd5, 0xa8, 0x81, 0x91, 0x8b, 0xd9,
-	0xb7, 0x38, 0x5d, 0xa8, 0x88, 0x8b, 0x07, 0xc5, 0xf5, 0x3a, 0x78, 0x6d, 0x45, 0x33, 0x4d, 0xca,
-	0x84, 0x14, 0xd5, 0x30, 0xbb, 0xa5, 0x58, 0x1b, 0x9e, 0x6f, 0xd0, 0x62, 0x74, 0x0a, 0x3e, 0xf1,
-	0x50, 0x8e, 0xe1, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c,
-	0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x4c, 0xd3, 0x33,
-	0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x91, 0x2c, 0xd1, 0xcd, 0xcc, 0x87, 0x71,
-	0x75, 0x8b, 0x53, 0xb2, 0xf5, 0x2b, 0xe0, 0x31, 0x54, 0x52, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06,
-	0x8e, 0x18, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xcd, 0x42, 0xc9, 0x7e, 0x52, 0x02, 0x00,
-	0x00,
+	// 551 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcf, 0x6b, 0x13, 0x41,
+	0x14, 0xc7, 0xb3, 0x4d, 0x8d, 0x76, 0x5a, 0x14, 0xd6, 0x6a, 0x92, 0xad, 0xac, 0x25, 0x96, 0x12,
+	0x8b, 0xd9, 0x35, 0xf1, 0x07, 0xb4, 0x3d, 0x25, 0x01, 0xc1, 0x43, 0x40, 0x12, 0xbc, 0x78, 0x09,
+	0xb3, 0x3f, 0x9c, 0x0e, 0x4d, 0x66, 0xc2, 0xbe, 0xd7, 0xd2, 0x78, 0x12, 0x6f, 0xde, 0xbc, 0x0a,
+	0x82, 0xff, 0x42, 0x0f, 0x9e, 0x3d, 0xe7, 0x58, 0x3c, 0x79, 0x12, 0x4d, 0x0e, 0xfd, 0x37, 0x24,
+	0xbb, 0xb3, 0x69, 0x12, 0x71, 0x83, 0xf5, 0xb4, 0x33, 0xbc, 0xef, 0xe7, 0x7d, 0xbf, 0x3b, 0xf3,
+	0x18, 0xb2, 0xe5, 0x50, 0xa7, 0xdf, 0x91, 0xa2, 0x43, 0x1d, 0xb0, 0xd5, 0xda, 0x3e, 0x2e, 0x3b,
+	0x3e, 0xd2, 0xb2, 0x8d, 0x27, 0x56, 0x2f, 0x90, 0x28, 0xf5, 0x8d, 0x29, 0x95, 0xa5, 0xd6, 0x96,
+	0x52, 0x19, 0xeb, 0x4c, 0x32, 0x19, 0xea, 0xec, 0xf1, 0x2a, 0x42, 0x8c, 0xac, 0x2b, 0xa1, 0x2b,
+	0xc1, 0xee, 0x02, 0xb3, 0x8f, 0xcb, 0xe3, 0x8f, 0x2a, 0xe4, 0xa3, 0x42, 0x3b, 0x22, 0xa2, 0x8d,
+	0x2a, 0xdd, 0x4f, 0x0a, 0x13, 0xdb, 0x86, 0xd2, 0xc2, 0xfb, 0x25, 0x72, 0xa7, 0x01, 0xac, 0x85,
+	0x32, 0xf0, 0x6b, 0x51, 0xa5, 0x2e, 0x05, 0x06, 0xd4, 0xc5, 0xba, 0xf4, 0x7c, 0xd0, 0x1f, 0x92,
+	0x0c, 0x70, 0x26, 0xfc, 0x20, 0xa7, 0x6d, 0x6a, 0xc5, 0x95, 0x5a, 0xee, 0xdb, 0x97, 0xd2, 0xba,
+	0x72, 0xab, 0x7a, 0x5e, 0xe0, 0x03, 0xb4, 0x30, 0xe0, 0x82, 0x35, 0x95, 0x4e, 0xaf, 0x90, 0x5b,
+	0xca, 0xa3, 0xed, 0xaa, 0x56, 0x6d, 0x57, 0x7a, 0x7e, 0x6e, 0x69, 0x53, 0x2b, 0xae, 0x35, 0x6f,
+	0x3a, 0x7f, 0xda, 0xe8, 0xbb, 0x24, 0xef, 0xa0, 0xdb, 0x06, 0xa4, 0x87, 0x5c, 0xb0, 0x39, 0x2e,
+	0x1d, 0x72, 0xb7, 0x1d, 0x74, 0x5b, 0x51, 0x7d, 0x06, 0xdd, 0x27, 0xc6, 0x18, 0x7d, 0xcd, 0x05,
+	0xed, 0x70, 0xec, 0xcf, 0xb1, 0xcb, 0x21, 0x9b, 0x75, 0xd0, 0x7d, 0xa6, 0x04, 0xd3, 0xf0, 0xde,
+	0xea, 0xbb, 0xf3, 0xd3, 0x1d, 0x15, 0xbc, 0xb0, 0x4d, 0xb6, 0x92, 0x8e, 0xa2, 0xe9, 0x43, 0x4f,
+	0x0a, 0xf0, 0x0b, 0x6f, 0x88, 0xd9, 0x00, 0xf6, 0x5c, 0x00, 0x52, 0x81, 0x9c, 0xe2, 0xbc, 0xfa,
+	0x32, 0x87, 0x96, 0x27, 0xd7, 0xb8, 0xe0, 0xd8, 0xee, 0x02, 0x53, 0xe7, 0x74, 0x75, 0xbc, 0x6f,
+	0x00, 0x9b, 0xcd, 0x58, 0x24, 0xdb, 0xc9, 0xde, 0x93, 0x94, 0x9f, 0x34, 0x72, 0xa3, 0x01, 0xec,
+	0x65, 0xcf, 0xa3, 0xe8, 0xbf, 0xa0, 0x01, 0xed, 0x82, 0xfe, 0x94, 0xac, 0xd0, 0x23, 0x3c, 0x90,
+	0x01, 0xc7, 0xfe, 0xc2, 0x68, 0x17, 0x52, 0xbd, 0x4a, 0x32, 0xbd, 0xb0, 0x43, 0x98, 0x6d, 0xb5,
+	0x72, 0xcf, 0x4a, 0x18, 0x64, 0x2b, 0x32, 0xab, 0x2d, 0x0f, 0x7e, 0xdc, 0x4d, 0x35, 0x15, 0xb8,
+	0x77, 0x7d, 0xfc, 0x17, 0x17, 0x2d, 0x0b, 0x79, 0x92, 0x9d, 0x4b, 0x17, 0x27, 0xaf, 0x7c, 0x4d,
+	0x93, 0x74, 0x03, 0x98, 0xfe, 0x51, 0x23, 0xf9, 0xbf, 0x0f, 0xe6, 0x6e, 0x62, 0x86, 0xa4, 0x8b,
+	0x34, 0xaa, 0x97, 0x46, 0xe3, 0x8c, 0xfa, 0x67, 0x8d, 0x6c, 0x24, 0x4d, 0xc0, 0xfe, 0x22, 0x8b,
+	0x04, 0xd8, 0xa8, 0xff, 0x07, 0x3c, 0x49, 0x18, 0x90, 0xb5, 0x99, 0xbb, 0x7f, 0xb0, 0xa8, 0xe9,
+	0xb4, 0xda, 0x78, 0xfc, 0x2f, 0xea, 0xd8, 0xd3, 0xb8, 0xf2, 0xf6, 0xfc, 0x74, 0x47, 0xab, 0xb5,
+	0x06, 0xbf, 0xcc, 0xd4, 0x60, 0x68, 0x6a, 0x67, 0x43, 0x53, 0xfb, 0x39, 0x34, 0xb5, 0x0f, 0x23,
+	0x33, 0x75, 0x36, 0x32, 0x53, 0xdf, 0x47, 0x66, 0xea, 0xd5, 0x13, 0xc6, 0xf1, 0xe0, 0xc8, 0xb1,
+	0x5c, 0xd9, 0xb5, 0xa7, 0x4c, 0x4a, 0x5c, 0xc6, 0xdb, 0x12, 0x78, 0x87, 0xf6, 0xc9, 0xe4, 0xe5,
+	0xc2, 0x7e, 0xcf, 0x07, 0x27, 0x13, 0x3e, 0x58, 0x8f, 0x7e, 0x07, 0x00, 0x00, 0xff, 0xff, 0x53,
+	0x29, 0x66, 0x64, 0x6a, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -159,6 +345,12 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	// StoreBabylonContractCodes defines an operation for storing the Babylon
+	// contract codes.
+	StoreBabylonContractCodes(ctx context.Context, in *MsgStoreBabylonContractCodes, opts ...grpc.CallOption) (*MsgStoreBabylonContractCodesResponse, error)
+	// InstantiateBabylonContracts defines an operation for instantiating the
+	// Babylon contracts.
+	InstantiateBabylonContracts(ctx context.Context, in *MsgInstantiateBabylonContracts, opts ...grpc.CallOption) (*MsgInstantiateBabylonContractsResponse, error)
 	// UpdateParams defines a (governance) operation for updating the x/auth
 	// module parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
@@ -172,6 +364,24 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
+func (c *msgClient) StoreBabylonContractCodes(ctx context.Context, in *MsgStoreBabylonContractCodes, opts ...grpc.CallOption) (*MsgStoreBabylonContractCodesResponse, error) {
+	out := new(MsgStoreBabylonContractCodesResponse)
+	err := c.cc.Invoke(ctx, "/babylonlabs.babylon.v1beta1.Msg/StoreBabylonContractCodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) InstantiateBabylonContracts(ctx context.Context, in *MsgInstantiateBabylonContracts, opts ...grpc.CallOption) (*MsgInstantiateBabylonContractsResponse, error) {
+	out := new(MsgInstantiateBabylonContractsResponse)
+	err := c.cc.Invoke(ctx, "/babylonlabs.babylon.v1beta1.Msg/InstantiateBabylonContracts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
 	out := new(MsgUpdateParamsResponse)
 	err := c.cc.Invoke(ctx, "/babylonlabs.babylon.v1beta1.Msg/UpdateParams", in, out, opts...)
@@ -183,6 +393,12 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	// StoreBabylonContractCodes defines an operation for storing the Babylon
+	// contract codes.
+	StoreBabylonContractCodes(context.Context, *MsgStoreBabylonContractCodes) (*MsgStoreBabylonContractCodesResponse, error)
+	// InstantiateBabylonContracts defines an operation for instantiating the
+	// Babylon contracts.
+	InstantiateBabylonContracts(context.Context, *MsgInstantiateBabylonContracts) (*MsgInstantiateBabylonContractsResponse, error)
 	// UpdateParams defines a (governance) operation for updating the x/auth
 	// module parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
@@ -192,12 +408,54 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) StoreBabylonContractCodes(ctx context.Context, req *MsgStoreBabylonContractCodes) (*MsgStoreBabylonContractCodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreBabylonContractCodes not implemented")
+}
+func (*UnimplementedMsgServer) InstantiateBabylonContracts(ctx context.Context, req *MsgInstantiateBabylonContracts) (*MsgInstantiateBabylonContractsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InstantiateBabylonContracts not implemented")
+}
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_StoreBabylonContractCodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgStoreBabylonContractCodes)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).StoreBabylonContractCodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/babylonlabs.babylon.v1beta1.Msg/StoreBabylonContractCodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).StoreBabylonContractCodes(ctx, req.(*MsgStoreBabylonContractCodes))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_InstantiateBabylonContracts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgInstantiateBabylonContracts)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).InstantiateBabylonContracts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/babylonlabs.babylon.v1beta1.Msg/InstantiateBabylonContracts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).InstantiateBabylonContracts(ctx, req.(*MsgInstantiateBabylonContracts))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -223,12 +481,154 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "StoreBabylonContractCodes",
+			Handler:    _Msg_StoreBabylonContractCodes_Handler,
+		},
+		{
+			MethodName: "InstantiateBabylonContracts",
+			Handler:    _Msg_InstantiateBabylonContracts_Handler,
+		},
+		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "babylonlabs/babylon/v1beta1/tx.proto",
+}
+
+func (m *MsgStoreBabylonContractCodes) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgStoreBabylonContractCodes) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgStoreBabylonContractCodes) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BtcFinalityContractCode) > 0 {
+		i -= len(m.BtcFinalityContractCode)
+		copy(dAtA[i:], m.BtcFinalityContractCode)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcFinalityContractCode)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.BtcStakingContractCode) > 0 {
+		i -= len(m.BtcStakingContractCode)
+		copy(dAtA[i:], m.BtcStakingContractCode)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BtcStakingContractCode)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BabylonContractCode) > 0 {
+		i -= len(m.BabylonContractCode)
+		copy(dAtA[i:], m.BabylonContractCode)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BabylonContractCode)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgStoreBabylonContractCodesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgStoreBabylonContractCodesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgStoreBabylonContractCodesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgInstantiateBabylonContracts) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgInstantiateBabylonContracts) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgInstantiateBabylonContracts) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.InitMsg) > 0 {
+		i -= len(m.InitMsg)
+		copy(dAtA[i:], m.InitMsg)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.InitMsg)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgInstantiateBabylonContractsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgInstantiateBabylonContractsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgInstantiateBabylonContractsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgUpdateParams) Marshal() (dAtA []byte, err error) {
@@ -305,6 +705,66 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgStoreBabylonContractCodes) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.BabylonContractCode)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.BtcStakingContractCode)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.BtcFinalityContractCode)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgStoreBabylonContractCodesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgInstantiateBabylonContracts) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.InitMsg)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgInstantiateBabylonContractsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgUpdateParams) Size() (n int) {
 	if m == nil {
 		return 0
@@ -334,6 +794,406 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgStoreBabylonContractCodes) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgStoreBabylonContractCodes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgStoreBabylonContractCodes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BabylonContractCode", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BabylonContractCode = append(m.BabylonContractCode[:0], dAtA[iNdEx:postIndex]...)
+			if m.BabylonContractCode == nil {
+				m.BabylonContractCode = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BtcStakingContractCode", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BtcStakingContractCode = append(m.BtcStakingContractCode[:0], dAtA[iNdEx:postIndex]...)
+			if m.BtcStakingContractCode == nil {
+				m.BtcStakingContractCode = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BtcFinalityContractCode", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BtcFinalityContractCode = append(m.BtcFinalityContractCode[:0], dAtA[iNdEx:postIndex]...)
+			if m.BtcFinalityContractCode == nil {
+				m.BtcFinalityContractCode = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgStoreBabylonContractCodesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgStoreBabylonContractCodesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgStoreBabylonContractCodesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgInstantiateBabylonContracts) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgInstantiateBabylonContracts: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgInstantiateBabylonContracts: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitMsg", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.InitMsg = append(m.InitMsg[:0], dAtA[iNdEx:postIndex]...)
+			if m.InitMsg == nil {
+				m.InitMsg = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgInstantiateBabylonContractsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgInstantiateBabylonContractsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgInstantiateBabylonContractsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

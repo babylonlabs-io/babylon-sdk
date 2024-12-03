@@ -7,12 +7,92 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	types "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) StoreBabylonContracts(ctx sdk.Context) error {
-	return nil
+// StoreBabylonContractCodes stores the Babylon contract codes
+func (k Keeper) StoreBabylonContractCodes(
+	ctx sdk.Context,
+	babylonContractCode []byte,
+	btcStakingContractCode []byte,
+	btcFinalityContractCode []byte,
+) (uint64, uint64, uint64, error) {
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
+	instantiateConfig := wasmtypes.AccessConfig{
+		Permission: wasmtypes.AccessTypeAnyOfAddresses,
+		Addresses:  []string{k.authority},
+	}
+
+	// gov address
+	govAddr, err := sdk.AccAddressFromBech32(k.authority)
+	if err != nil {
+		panic(err)
+	}
+
+	// store Babylon contract
+	babylonContractCodeID, _, err := contractKeeper.Create(ctx, govAddr, babylonContractCode, &instantiateConfig)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	// store BTC staking contract
+	btcStakingContractCodeID, _, err := contractKeeper.Create(ctx, govAddr, btcStakingContractCode, &instantiateConfig)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	// store BTC finality contract
+	btcFinalityContractCodeID, _, err := contractKeeper.Create(ctx, govAddr, btcFinalityContractCode, &instantiateConfig)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return babylonContractCodeID, btcStakingContractCodeID, btcFinalityContractCodeID, nil
+}
+
+func (k Keeper) InstantiateBabylonContracts(ctx sdk.Context, initMsg []byte) (string, string, string, error) {
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
+
+	// get params
+	params := k.GetParams(ctx)
+
+	// check that the contract codes are stored
+	if !params.IsCodeStored() {
+		return "", "", "", types.ErrInvalid.Wrapf("Babylon contract code ID is not set")
+	}
+
+	// gov address
+	govAddr, err := sdk.AccAddressFromBech32(k.authority)
+	if err != nil {
+		panic(err)
+	}
+
+	// instantiate Babylon contract
+	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, params.BabylonContractCodeId, govAddr, govAddr, initMsg, "Babylon contract", nil)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	// get contract addresses
+	res, err := k.wasm.QuerySmart(ctx, babylonContractAddr, []byte(`"config":{}`))
+	if err != nil {
+		return "", "", "", err
+	}
+	var config types.BabylonContractConfig
+	err = json.Unmarshal(res, &config)
+	if err != nil {
+		return "", "", "", err
+	}
+	if len(config.BTCStaking) == 0 {
+		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
+	}
+	if len(config.BTCFinality) == 0 {
+		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
+	}
+
+	return babylonContractAddr.String(), config.BTCStaking, config.BTCFinality, nil
 }
 
 func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {

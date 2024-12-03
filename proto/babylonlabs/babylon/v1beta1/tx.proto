@@ -13,10 +13,57 @@ option (gogoproto.goproto_getters_all) = false;
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
+  // StoreBabylonContractCodes defines an operation for storing the Babylon
+  // contract codes.
+  rpc StoreBabylonContractCodes(MsgStoreBabylonContractCodes)
+      returns (MsgStoreBabylonContractCodesResponse);
+
+  // InstantiateBabylonContracts defines an operation for instantiating the
+  // Babylon contracts.
+  rpc InstantiateBabylonContracts(MsgInstantiateBabylonContracts)
+      returns (MsgInstantiateBabylonContractsResponse);
+
   // UpdateParams defines a (governance) operation for updating the x/auth
   // module parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
+
+// MsgStoreBabylonContractCodes is the Msg/StoreBabylonContractCodes request
+// type.
+message MsgStoreBabylonContractCodes {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address who submits the message.
+  string signer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // babylon_contract_code is the bytecode for the Babylon contract.
+  // WASMByteCode can be raw or gzip compressed
+  bytes babylon_contract_code = 2;
+  // btc_staking_contract_code is the bytecode for the BTC staking contract.
+  // WASMByteCode can be raw or gzip compressed
+  bytes btc_staking_contract_code = 3;
+  // btc_finality_contract_code is the bytecode for the BTC finality contract.
+  // WASMByteCode can be raw or gzip compressed
+  bytes btc_finality_contract_code = 4;
+}
+
+// MsgStoreBabylonContractCodesResponse is the Msg/StoreBabylonContractCodes
+// response type.
+message MsgStoreBabylonContractCodesResponse {}
+
+// MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
+// type.
+message MsgInstantiateBabylonContracts {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address who submits the message.
+  string signer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // init_msg is the instantiation message for the Babylon contract.
+  bytes init_msg = 2;
+}
+
+// MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
+// response type.
+message MsgInstantiateBabylonContractsResponse {}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

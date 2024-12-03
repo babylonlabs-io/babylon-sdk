@@ -14,3 +14,16 @@ func (p Params) ValidateBasic() error {
 	}
 	return nil
 }
+
+func (p Params) IsCodeStored() bool {
+	return p.BabylonContractCodeId != 0 &&
+		p.BtcStakingContractCodeId != 0 &&
+		p.BtcFinalityContractCodeId != 0
+}
+
+func (p Params) IsContractInstantiated() bool {
+	return p.IsCodeStored() &&
+		len(p.BabylonContractAddress) > 0 &&
+		len(p.BtcStakingContractAddress) > 0 &&
+		len(p.BtcFinalityContractAddress) > 0
+}
