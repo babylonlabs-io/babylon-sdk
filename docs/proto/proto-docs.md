@@ -17,6 +17,8 @@
     - [Query](#babylonlabs.babylon.v1beta1.Query)
   
 - [babylonlabs/babylon/v1beta1/tx.proto](#babylonlabs/babylon/v1beta1/tx.proto)
+    - [MsgInstantiateBabylonContracts](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts)
+    - [MsgInstantiateBabylonContractsResponse](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse)
     - [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams)
     - [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse)
   
@@ -41,6 +43,9 @@ Params defines the parameters for the x/babylon module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID of the Babylon contract |
+| `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID of the BTC staking contract |
+| `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID of the BTC finality contract |
 | `babylon_contract_address` | [string](#string) |  | babylon_contract_address is the address of the Babylon contract |
 | `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
 | `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
@@ -151,6 +156,46 @@ Query provides defines the gRPC querier service
 
 
 
+<a name="babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts"></a>
+
+### MsgInstantiateBabylonContracts
+MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
+type.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `signer` | [string](#string) |  | signer is the address who submits the message. |
+| `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID for the Babylon contract. |
+| `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID for the BTC staking contract. |
+| `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID for the BTC finality contract. |
+| `network` | [string](#string) |  | network is the Bitcoin network to connect to (e.g. "regtest", "testnet", "mainnet") |
+| `babylon_tag` | [string](#string) |  | babylon_tag is a unique identifier for this Babylon instance |
+| `btc_confirmation_depth` | [uint32](#uint32) |  | btc_confirmation_depth is the number of confirmations required for Bitcoin transactions |
+| `checkpoint_finalization_timeout` | [uint32](#uint32) |  | checkpoint_finalization_timeout is the timeout in blocks for checkpoint finalization |
+| `notify_cosmos_zone` | [bool](#bool) |  | notify_cosmos_zone indicates whether to notify the Cosmos zone of events |
+| `btc_staking_msg` | [bytes](#bytes) |  | btc_staking_msg is the initialization message for the BTC staking contract |
+| `btc_finality_msg` | [bytes](#bytes) |  | btc_finality_msg is the initialization message for the BTC finality contract |
+| `consumer_name` | [string](#string) |  | consumer_name is the name of this consumer chain |
+| `consumer_description` | [string](#string) |  | consumer_description is a description of this consumer chain |
+| `admin` | [string](#string) |  | admin is the address that controls the Babylon module |
+
+
+
+
+
+
+<a name="babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse"></a>
+
+### MsgInstantiateBabylonContractsResponse
+MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
+response type.
+
+
+
+
+
+
 <a name="babylonlabs.babylon.v1beta1.MsgUpdateParams"></a>
 
 ### MsgUpdateParams
@@ -193,6 +238,7 @@ Msg defines the wasm Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `InstantiateBabylonContracts` | [MsgInstantiateBabylonContracts](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts) | [MsgInstantiateBabylonContractsResponse](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse) | InstantiateBabylonContracts defines an operation for instantiating the Babylon contracts. | |
 | `UpdateParams` | [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams) | [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse) | UpdateParams defines a (governance) operation for updating the x/auth module parameters. The authority defaults to the x/gov module account. | |
 
  <!-- end services -->

@@ -1,17 +1,23 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/require"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 var emptyWasmOpts []wasm.Option
@@ -60,4 +66,90 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 func TestGetMaccPerms(t *testing.T) {
 	dup := GetMaccPerms()
 	require.Equal(t, maccPerms, dup, "duplicated module account permissions differed from actual module account permissions")
+}
+
+const (
+	TestDataPath                = "../../tests/testdata"
+	BabylonContractCodePath     = TestDataPath + "/babylon_contract.wasm"
+	BtcStakingContractCodePath  = TestDataPath + "/btc_staking.wasm"
+	BtcFinalityContractCodePath = TestDataPath + "/btc_finality.wasm"
+)
+
+func GetGZippedContractCodes() ([]byte, []byte, []byte) {
+	babylonContractCode, err := types.GetGZippedContractCode(BabylonContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+	btcStakingContractCode, err := types.GetGZippedContractCode(BtcStakingContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+	btcFinalityContractCode, err := types.GetGZippedContractCode(BtcFinalityContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+
+	return babylonContractCode, btcStakingContractCode, btcFinalityContractCode
+}
+
+func TestInstantiateBabylonContracts(t *testing.T) {
+	consumerApp := Setup(t)
+	ctx := consumerApp.NewContext(false)
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	babylonKeeper := consumerApp.BabylonKeeper
+	babylonMsgServer := babylonkeeper.NewMsgServer(babylonKeeper)
+	wasmKeeper := consumerApp.WasmKeeper
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
+
+	// store Babylon contract codes
+	babylonContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
+	resp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		WASMByteCode: babylonContractCode,
+	})
+	babylonContractCodeID := resp.CodeID
+	require.NoError(t, err)
+	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		WASMByteCode: btcStakingContractCode,
+	})
+	btcStakingContractCodeID := resp.CodeID
+	require.NoError(t, err)
+	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		WASMByteCode: btcFinalityContractCode,
+	})
+	btcFinalityContractCodeID := resp.CodeID
+	require.NoError(t, err)
+
+	// BTC staking init message
+	btcStakingInitMsg := map[string]interface{}{
+		"admin": consumerApp.BabylonKeeper.GetAuthority(),
+	}
+	btcStakingInitMsgBytes, err := json.Marshal(btcStakingInitMsg)
+	require.NoError(t, err)
+	// BTC finality init message
+	btcFinalityInitMsg := map[string]interface{}{
+		"admin": consumerApp.BabylonKeeper.GetAuthority(),
+	}
+	btcFinalityInitMsgBytes, err := json.Marshal(btcFinalityInitMsg)
+	require.NoError(t, err)
+
+	// instantiate Babylon contract
+	_, err = babylonMsgServer.InstantiateBabylonContracts(ctx, &types.MsgInstantiateBabylonContracts{
+		Network:                       "regtest",
+		BabylonContractCodeId:         babylonContractCodeID,
+		BtcStakingContractCodeId:      btcStakingContractCodeID,
+		BtcFinalityContractCodeId:     btcFinalityContractCodeID,
+		BabylonTag:                    "01020304",
+		BtcConfirmationDepth:          1,
+		CheckpointFinalizationTimeout: 2,
+		NotifyCosmosZone:              false,
+		BtcStakingMsg:                 btcStakingInitMsgBytes,
+		BtcFinalityMsg:                btcFinalityInitMsgBytes,
+		ConsumerName:                  "test-consumer",
+		ConsumerDescription:           "test-consumer-description",
+		Admin:                         babylonKeeper.GetAuthority(),
+	})
+	require.NoError(t, err)
 }

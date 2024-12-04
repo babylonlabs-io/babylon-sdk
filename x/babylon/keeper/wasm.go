@@ -7,9 +7,51 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	types "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func (k Keeper) InstantiateBabylonContracts(
+	ctx sdk.Context,
+	babylonContractCodeId uint64,
+	initMsg []byte,
+) (string, string, string, error) {
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
+
+	// gov address
+	govAddr, err := sdk.AccAddressFromBech32(k.authority)
+	if err != nil {
+		panic(err)
+	}
+
+	// instantiate Babylon contract
+	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, initMsg, "Babylon contract", nil)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	// get contract addresses
+	configQuery := []byte(`{"config":{}}`)
+	res, err := k.wasm.QuerySmart(ctx, babylonContractAddr, configQuery)
+	if err != nil {
+		return "", "", "", err
+	}
+	var config types.BabylonContractConfig
+	err = json.Unmarshal(res, &config)
+	if err != nil {
+		return "", "", "", err
+	}
+	if len(config.BTCStaking) == 0 {
+		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
+	}
+	if len(config.BTCFinality) == 0 {
+		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
+	}
+
+	return babylonContractAddr.String(), config.BTCStaking, config.BTCFinality, nil
+}
 
 func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {
 	// get address of the BTC staking contract

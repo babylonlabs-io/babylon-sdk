@@ -8,8 +8,10 @@ import (
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/evidence"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
+	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -30,10 +32,13 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -41,17 +46,21 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
@@ -70,11 +79,20 @@ type encodingConfig struct {
 var moduleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	bank.AppModuleBasic{},
+	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
+	distribution.AppModuleBasic{},
 	gov.NewAppModuleBasic([]govclient.ProposalHandler{
 		paramsclient.ProposalHandler,
 	}),
+	params.AppModuleBasic{},
+	crisis.AppModuleBasic{},
+	slashing.AppModuleBasic{},
+	ibc.AppModuleBasic{},
+	upgrade.AppModuleBasic{},
+	evidence.AppModuleBasic{},
+	vesting.AppModuleBasic{},
 )
 
 func makeEncodingConfig(_ testing.TB) encodingConfig {
@@ -86,6 +104,9 @@ func makeEncodingConfig(_ testing.TB) encodingConfig {
 
 	moduleBasics.RegisterLegacyAminoCodec(amino)
 	moduleBasics.RegisterInterfaces(interfaceRegistry)
+	// add wasm types
+	wasmtypes.RegisterInterfaces(interfaceRegistry)
+	wasmtypes.RegisterLegacyAminoCodec(amino)
 	// add babylon types
 	types.RegisterInterfaces(interfaceRegistry)
 	types.RegisterLegacyAminoCodec(amino)
@@ -99,17 +120,18 @@ func makeEncodingConfig(_ testing.TB) encodingConfig {
 }
 
 type TestKeepers struct {
-	Ctx            sdk.Context
-	StakingKeeper  *stakingkeeper.Keeper
-	SlashingKeeper slashingkeeper.Keeper
-	BankKeeper     bankkeeper.Keeper
-	StoreKey       *storetypes.KVStoreKey
-	EncodingConfig encodingConfig
-	BabylonKeeper  *keeper.Keeper
-	AccountKeeper  authkeeper.AccountKeeper
-	WasmKeeper     *wasmkeeper.Keeper
-	WasmMsgServer  wasmtypes.MsgServer
-	Faucet         *wasmkeeper.TestFaucet
+	Ctx              sdk.Context
+	StakingKeeper    *stakingkeeper.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
+	BankKeeper       bankkeeper.Keeper
+	StoreKey         *storetypes.KVStoreKey
+	EncodingConfig   encodingConfig
+	BabylonKeeper    *keeper.Keeper
+	BabylonMsgServer types.MsgServer
+	AccountKeeper    authkeeper.AccountKeeper
+	WasmKeeper       *wasmkeeper.Keeper
+	WasmMsgServer    wasmtypes.MsgServer
+	Faucet           *wasmkeeper.TestFaucet
 }
 
 func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
@@ -267,7 +289,7 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		querier,
 		t.TempDir(),
 		wasmtypes.DefaultWasmConfig(),
-		[]string{"iterator", "staking", "stargate", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "virtual_staking"},
+		[]string{"iterator", "staking", "stargate", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "virtual_staking"},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	require.NoError(t, wasmKeeper.SetParams(ctx, wasmtypes.DefaultParams()))
@@ -279,24 +301,50 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		memKeys[types.MemStoreKey],
 		bankKeeper,
 		stakingKeeper,
-		wasmKeeper,
+		&wasmKeeper,
 		authority,
 		opts...,
 	)
 	require.NoError(t, babylonKeeper.SetParams(ctx, types.DefaultParams(sdk.DefaultBondDenom)))
+	babylonMsgServer := keeper.NewMsgServer(babylonKeeper)
 
 	faucet := wasmkeeper.NewTestFaucet(t, ctx, bankKeeper, minttypes.ModuleName, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000))
 	return TestKeepers{
-		Ctx:            ctx,
-		AccountKeeper:  accountKeeper,
-		StakingKeeper:  stakingKeeper,
-		SlashingKeeper: slashingKeeper,
-		BankKeeper:     bankKeeper,
-		StoreKey:       keys[types.StoreKey],
-		EncodingConfig: encConfig,
-		BabylonKeeper:  babylonKeeper,
-		WasmKeeper:     &wasmKeeper,
-		WasmMsgServer:  wasmMsgServer,
-		Faucet:         faucet,
+		Ctx:              ctx,
+		AccountKeeper:    accountKeeper,
+		StakingKeeper:    stakingKeeper,
+		SlashingKeeper:   slashingKeeper,
+		BankKeeper:       bankKeeper,
+		StoreKey:         keys[types.StoreKey],
+		EncodingConfig:   encConfig,
+		BabylonKeeper:    babylonKeeper,
+		BabylonMsgServer: babylonMsgServer,
+		WasmKeeper:       &wasmKeeper,
+		WasmMsgServer:    wasmMsgServer,
+		Faucet:           faucet,
 	}
+}
+
+const (
+	TestDataPath                = "../../../tests/testdata"
+	BabylonContractCodePath     = TestDataPath + "/babylon_contract.wasm"
+	BtcStakingContractCodePath  = TestDataPath + "/btc_staking.wasm"
+	BtcFinalityContractCodePath = TestDataPath + "/btc_finality.wasm"
+)
+
+func GetGZippedContractCodes() ([]byte, []byte, []byte) {
+	babylonContractCode, err := types.GetGZippedContractCode(BabylonContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+	btcStakingContractCode, err := types.GetGZippedContractCode(BtcStakingContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+	btcFinalityContractCode, err := types.GetGZippedContractCode(BtcFinalityContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+
+	return babylonContractCode, btcStakingContractCode, btcFinalityContractCode
 }

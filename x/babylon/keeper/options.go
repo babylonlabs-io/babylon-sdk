@@ -1,6 +1,6 @@
 package keeper
 
-import "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+import wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 
 // option that is applied after keeper is setup with the VM. Used for decorators mainly.
 type postOptsFn func(*Keeper)
@@ -10,7 +10,7 @@ func (f postOptsFn) apply(keeper *Keeper) {
 }
 
 // WithWasmKeeperDecorated can set a decorator to the wasm keeper
-func WithWasmKeeperDecorated(cb func(types.WasmKeeper) types.WasmKeeper) Option {
+func WithWasmKeeperDecorated(cb func(*wasmkeeper.Keeper) *wasmkeeper.Keeper) Option {
 	return postOptsFn(func(keeper *Keeper) {
 		keeper.wasm = cb(keeper.wasm)
 	})

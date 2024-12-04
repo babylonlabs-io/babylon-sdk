@@ -8,6 +8,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -120,43 +121,39 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	if err != nil {
 		return nil, err
 	}
-	initMsg := map[string]interface{}{
-		"network":                         "regtest",
-		"babylon_tag":                     "01020304",
-		"btc_confirmation_depth":          1,
-		"checkpoint_finalization_timeout": 2,
-		"notify_cosmos_zone":              false,
-		"btc_staking_code_id":             btcStakingContractWasmId,
-		"btc_staking_msg":                 btcStakingInitMsgBytes,
-		"consumer_name":                   "test-consumer",
-		"consumer_description":            "test-consumer-description",
-		"btc_finality_code_id":            btcFinalityContractWasmId,
-		"btc_finality_msg":                btcFinalityInitMsgBytes,
-		"admin":                           p.GetSender().String(),
+
+	// instantiate Babylon contract
+	msgInstantiate := types.MsgInstantiateBabylonContracts{
+		Signer:                        p.GetSender().String(),
+		BabylonContractCodeId:         babylonContractWasmId,
+		BtcStakingContractCodeId:      btcStakingContractWasmId,
+		BtcFinalityContractCodeId:     btcFinalityContractWasmId,
+		Network:                       "regtest",
+		BabylonTag:                    "01020304",
+		BtcConfirmationDepth:          1,
+		CheckpointFinalizationTimeout: 2,
+		NotifyCosmosZone:              false,
+		BtcStakingMsg:                 btcStakingInitMsgBytes,
+		BtcFinalityMsg:                btcFinalityInitMsgBytes,
+		ConsumerName:                  "test-consumer",
+		ConsumerDescription:           "test-consumer-description",
+		Admin:                         p.GetSender().String(),
 	}
-	initMsgBytes, err := json.Marshal(initMsg)
+	_, err = p.Chain.SendMsgs(&msgInstantiate)
 	if err != nil {
 		return nil, err
 	}
 
-	babylonContractAddr := InstantiateContract(p.t, p.Chain, babylonContractWasmId, initMsgBytes)
-	res, err := p.Query(babylonContractAddr, Query{"config": {}})
+	params := p.App.BabylonKeeper.GetParams(p.Chain.GetContext())
+	babylonAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
 	if err != nil {
 		return nil, err
-	}
-	btcStakingContractAddr, ok := res["btc_staking"]
-	if !ok {
-		return nil, fmt.Errorf("failed to instantiate BTC staking contract")
-	}
-	btcFinalityContractAddr, ok := res["btc_finality"]
-	if !ok {
-		return nil, fmt.Errorf("failed to instantiate BTC finality contract")
 	}
 
 	r := ConsumerContract{
-		Babylon:     babylonContractAddr,
-		BTCStaking:  sdk.MustAccAddressFromBech32(btcStakingContractAddr.(string)),
-		BTCFinality: sdk.MustAccAddressFromBech32(btcFinalityContractAddr.(string)),
+		Babylon:     babylonAddr,
+		BTCStaking:  btcStakingAddr,
+		BTCFinality: btcFinalityAddr,
 	}
 	p.Contracts = r
 	return &r, nil
