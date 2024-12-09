@@ -20,5 +20,5 @@ jobs:
     secrets: inherit
     with:
      publish: false
-     dockerfile: ./Dockerfile
+     dockerfile: ./contrib/images/local-bcd/Dockerfile
      repoName: babylon-sdk

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,7 @@ type Keeper struct {
 	cdc      codec.Codec
 	bank     types.BankKeeper
 	Staking  types.StakingKeeper
-	wasm     types.WasmKeeper
+	wasm     *wasmkeeper.Keeper
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
@@ -34,7 +35,7 @@ func NewKeeper(
 	memoryStoreKey storetypes.StoreKey,
 	bank types.BankKeeper,
 	staking types.StakingKeeper,
-	wasm types.WasmKeeper,
+	wasm *wasmkeeper.Keeper,
 	authority string,
 	opts ...Option,
 ) *Keeper {
