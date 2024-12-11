@@ -18,6 +18,6 @@ start-bcd-consumer-integration: stop-bcd-consumer-integration
 
 stop-bcd-consumer-integration:
 	docker compose -f ibcsim-bcd/docker-compose.yml down
-	rm -rf ibcsim-bcd/.testnets
+	sudo rm -rf ibcsim-bcd/.testnets
 
 .PHONY: ibcsim-bcd ibcsim-bcd-rmi start-bcd-consumer-integration stop-bcd-consumer-integration babylond babylond-rmi

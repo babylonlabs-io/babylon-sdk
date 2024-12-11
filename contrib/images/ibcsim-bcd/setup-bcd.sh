@@ -61,9 +61,9 @@ delegate="100000000000$DENOM"
 
 redirect $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID keys add validator $KEYRING --output json > $CHAINDIR/$CHAINID/validator_seed.json 2>&1
+$BINARY --home $CHAINDIR/$CHAINID keys add validator $KEYRING --output json >$CHAINDIR/$CHAINID/validator_seed.json 2>&1
 sleep 1
-$BINARY --home $CHAINDIR/$CHAINID keys add user $KEYRING --output json > $CHAINDIR/$CHAINID/key_seed.json 2>&1
+$BINARY --home $CHAINDIR/$CHAINID keys add user $KEYRING --output json >$CHAINDIR/$CHAINID/key_seed.json 2>&1
 sleep 1
 redirect $BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show user -a) $coins
 sleep 1
@@ -102,6 +102,9 @@ btcFinalityContractAddr=bbnc17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pg
 sed -i 's/"babylon_contract_address": ""/"babylon_contract_address": "'"$babylonContractAddr"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
 sed -i 's/"btc_staking_contract_address": ""/"btc_staking_contract_address": "'"$btcStakingContractAddr"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
 sed -i 's/"btc_finality_contract_address": ""/"btc_finality_contract_address": "'"$btcFinalityContractAddr"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
+
+# change permission so that e2e program can use the keys there
+sudo chmod -R 777 $CHAINDIR/$CHAINID
 
 # Start
 echo "Starting $BINARY..."
