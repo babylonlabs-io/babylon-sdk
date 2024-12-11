@@ -103,9 +103,6 @@ sed -i 's/"babylon_contract_address": ""/"babylon_contract_address": "'"$babylon
 sed -i 's/"btc_staking_contract_address": ""/"btc_staking_contract_address": "'"$btcStakingContractAddr"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
 sed -i 's/"btc_finality_contract_address": ""/"btc_finality_contract_address": "'"$btcFinalityContractAddr"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
 
-# change permission so that e2e program can use the keys there
-sudo chmod -R 777 $CHAINDIR/$CHAINID
-
 # Start
 echo "Starting $BINARY..."
 $BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' 2>&1 | tee $CHAINDIR/$CHAINID.log &

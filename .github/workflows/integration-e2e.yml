@@ -1,9 +1,15 @@
 name: integration-e2e
-
 on:
   push:
     branches:
     - '**'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   test:

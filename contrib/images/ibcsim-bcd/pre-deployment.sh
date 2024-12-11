@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Create new directory that will hold node and services' configuration
-mkdir -p ibcsim-bcd/.testnets && sudo chmod -R 777 ibcsim-bcd/.testnets
+mkdir -p ibcsim-bcd/.testnets && chmod -R 777 ibcsim-bcd/.testnets
 echo "Creating and configuring testnet directory..."
 docker run --rm -v $(pwd)/ibcsim-bcd/.testnets:/data babylonlabs-io/babylond \
     babylond testnet init-files --v 2 -o /data \
@@ -18,5 +18,5 @@ docker run --rm -v $(pwd)/ibcsim-bcd/.testnets:/data babylonlabs-io/babylond \
     --covenant-pks "bb50e2d89a4ed70663d080659fe0ad4b9bc3e06c17a227433966cb59ceee020d" # should be updated if `covenant-keyring` dir is changed`
 
 # Create separate subpaths for each component and copy relevant configuration
-sudo chmod -R 777 ibcsim-bcd/.testnets
+chmod -R 777 ibcsim-bcd/.testnets
 echo "Testnet directory created and configured successfully."
