@@ -1,0 +1,16 @@
+name: integration-e2e
+
+on:
+  push:
+    branches:
+    - '**'
+
+jobs:
+  test:
+    uses: babylonchain/.github/.github/workflows/reusable_go_lint_test.yml@v0.1.0
+    with:
+      run-integration-tests: true
+      integration-tests-command: |
+        make build-ibcsim-bcd
+        make build-babylond
+        make test-e2e-bcd-consumer-integration
