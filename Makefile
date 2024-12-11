@@ -83,8 +83,6 @@ proto-lint:
 ###                             Integration e2e	                            ###
 ###############################################################################
 
-PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
-
 build-ibcsim-bcd:
 	$(MAKE) -C contrib/images ibcsim-bcd
 
@@ -95,4 +93,6 @@ start-bcd-consumer-integration:
 	$(MAKE) -C contrib/images start-bcd-consumer-integration
 
 test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
-	go test -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=60m -v $(PACKAGES_E2E) --tags=e2e
+	@cd tests/e2e
+	@go test -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=60m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e
+	@cd - 

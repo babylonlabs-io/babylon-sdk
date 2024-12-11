@@ -8,7 +8,6 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -123,7 +122,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	}
 
 	// instantiate Babylon contract
-	msgInstantiate := types.MsgInstantiateBabylonContracts{
+	msgInstantiate := bbntypes.MsgInstantiateBabylonContracts{
 		Signer:                        p.GetSender().String(),
 		BabylonContractCodeId:         babylonContractWasmId,
 		BtcStakingContractCodeId:      btcStakingContractWasmId,
