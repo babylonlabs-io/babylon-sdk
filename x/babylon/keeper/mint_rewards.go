@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// MintBlockRewards mints new tokens and sends them to the staking contract for distribution.
+// MintBlockRewards mints new tokens and sends them to the finality contract for distribution.
 // Authorization of the actor should be handled before entering this method.
 // Authorization of the recipient is being handled within the method for safety, but can
 // be removed for flexibility
@@ -26,9 +26,9 @@ func (k Keeper) MintBlockRewards(pCtx sdk.Context, recipient sdk.AccAddress, amt
 	}
 	// FIXME? Remove this constraint for flexibility
 	params := k.GetParams(pCtx)
-	if recipient.String() != params.BtcStakingContractAddress {
-		return sdkmath.ZeroInt(), errors.ErrUnauthorized.Wrapf("invalid recipient: got %s, expected staking contract (%s)",
-			recipient, params.BtcStakingContractAddress)
+	if recipient.String() != params.BtcFinalityContractAddress {
+		return sdkmath.ZeroInt(), errors.ErrUnauthorized.Wrapf("invalid recipient: got %s, expected finality contract (%s)",
+			recipient, params.BtcFinalityContractAddress)
 	}
 
 	// TODO?: Ensure Babylon constraints
