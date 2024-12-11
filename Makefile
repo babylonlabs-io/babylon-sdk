@@ -78,3 +78,10 @@ proto-lint:
 .PHONY: all install \
 	build build-linux-static test test-all test-e2e \
 	proto-all proto-format proto-swagger-gen proto-lint
+
+###############################################################################
+###                                Images                                 ###
+###############################################################################
+
+build-ibcsim-bcd:
+	$(MAKE) -C contrib/images build-ibcsim-bcd
