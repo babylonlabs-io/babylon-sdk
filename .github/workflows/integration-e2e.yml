@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    uses: babylonchain/.github/.github/workflows/reusable_go_lint_test.yml@v0.1.0
+    uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
       run-integration-tests: true
       integration-tests-command: |
