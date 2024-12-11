@@ -1,6 +1,6 @@
 module github.com/babylonlabs-io/babylon-sdk/demo
 
-go 1.22
+go 1.23.4
 
 require (
 	github.com/CosmWasm/wasmd v0.51.0

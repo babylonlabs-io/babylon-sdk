@@ -36,9 +36,9 @@ type BabylonSDKTestSuite struct {
 	MyProvChainActor string
 
 	// clients side information
-	ProviderCli      *TestProviderClient
-	ConsumerCli      *TestConsumerClient
-	ConsumerContract *ConsumerContract
+	ProviderCli      *types.TestProviderClient
+	ConsumerCli      *types.TestConsumerClient
+	ConsumerContract *types.ConsumerContract
 }
 
 // SetupSuite runs once before the suite's tests are run
@@ -48,7 +48,7 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 
 	// set up coordinator and chains
 	t := s.T()
-	coord := NewIBCCoordinator(t)
+	coord := types.NewIBCCoordinator(t)
 	provChain := coord.GetChain(ibctesting2.GetChainID(1))
 	consChain := coord.GetChain(ibctesting2.GetChainID(2))
 
@@ -62,16 +62,16 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 	s.MyProvChainActor = provChain.SenderAccount.GetAddress().String()
 }
 
-func (x *BabylonSDKTestSuite) setupBabylonIntegration() (*TestConsumerClient, *ConsumerContract, *TestProviderClient) {
+func (x *BabylonSDKTestSuite) setupBabylonIntegration() (*types.TestConsumerClient, *types.ConsumerContract, *types.TestProviderClient) {
 	x.Coordinator.SetupConnections(x.IbcPath)
 
 	// consumer client
-	consumerCli := NewConsumerClient(x.T(), x.ConsumerChain)
+	consumerCli := types.NewConsumerClient(x.T(), x.ConsumerChain)
 	// setup contracts on consumer
 	consumerContracts, err := consumerCli.BootstrapContracts()
 	x.NoError(err)
 	// provider client
-	providerCli := NewProviderClient(x.T(), x.ProviderChain)
+	providerCli := types.NewProviderClient(x.T(), x.ProviderChain)
 
 	return consumerCli, consumerContracts, providerCli
 }
@@ -90,10 +90,10 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.ConsumerContract = consumerContracts
 
 	// query admins
-	adminRespStaking, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"admin": {}})
+	adminRespStaking, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"admin": {}})
 	s.NoError(err)
 	s.Equal(adminRespStaking["admin"], s.ConsumerCli.GetSender().String())
-	adminRespFinality, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{"admin": {}})
+	adminRespFinality, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{"admin": {}})
 	s.NoError(err)
 	s.Equal(adminRespFinality["admin"], s.ConsumerCli.GetSender().String())
 
@@ -140,17 +140,17 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.NoError(err)
 
 	// ensure the finality provider is on consumer chain
-	consumerFps, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"finality_providers": {}})
+	consumerFps, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"finality_providers": {}})
 	s.NoError(err)
 	s.NotEmpty(consumerFps)
 
 	// ensure delegations are on consumer chain
-	consumerDels, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"delegations": {}})
+	consumerDels, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"delegations": {}})
 	s.NoError(err)
 	s.NotEmpty(consumerDels)
 
 	// ensure the BTC staking is activated
-	resp, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, Query{"activated_height": {}})
+	resp, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"activated_height": {}})
 	s.NoError(err)
 	parsedActivatedHeight := resp["height"].(float64)
 	currentHeight := s.ConsumerChain.GetContext().BlockHeight()
@@ -171,7 +171,7 @@ func (s *BabylonSDKTestSuite) Test5NextBlock() {
 	// get current height
 	height := s.ConsumerChain.GetContext().BlockHeight()
 	// ensure the current block is not indexed yet
-	_, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{
+	_, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
 		"block": {
 			"height": uint64(height),
 		},
@@ -182,7 +182,7 @@ func (s *BabylonSDKTestSuite) Test5NextBlock() {
 	s.ConsumerChain.NextBlock()
 
 	// ensure the current block is indexed
-	_, err = s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, Query{
+	_, err = s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
 		"block": {
 			"height": uint64(height),
 		},

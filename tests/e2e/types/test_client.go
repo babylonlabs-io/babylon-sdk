@@ -1,4 +1,4 @@
-package e2e
+package types
 
 import (
 	"encoding/json"
