@@ -80,8 +80,19 @@ proto-lint:
 	proto-all proto-format proto-swagger-gen proto-lint
 
 ###############################################################################
-###                                Images                                 ###
+###                             Integration e2e	                            ###
 ###############################################################################
 
+PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
+
 build-ibcsim-bcd:
-	$(MAKE) -C contrib/images build-ibcsim-bcd
+	$(MAKE) -C contrib/images ibcsim-bcd
+
+build-babylond:
+	$(MAKE) -C contrib/images babylond
+
+start-bcd-consumer-integration:
+	$(MAKE) -C contrib/images start-bcd-consumer-integration
+
+test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
+	go test -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=60m -v $(PACKAGES_E2E) --tags=e2e

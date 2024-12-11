@@ -1,6 +1,12 @@
 BABYLON_SDK_FULL_PATH := $(shell git rev-parse --show-toplevel)
 
-build-ibcsim-bcd:
+babylond: babylond-rmi
+	docker build --tag babylonlabs-io/babylond -f babylond/Dockerfile ${BABYLON_SDK_FULL_PATH}
+
+babylond-rmi:
+	docker rmi babylonlabs-io/babylond --force 2>/dev/null; true
+
+ibcsim-bcd:
 	docker build --tag babylonlabs-io/ibcsim-bcd -f ibcsim-bcd/Dockerfile ${BABYLON_SDK_FULL_PATH}
 
 ibcsim-bcd-rmi:
@@ -14,4 +20,4 @@ stop-bcd-consumer-integration:
 	docker compose -f ibcsim-bcd/docker-compose.yml down
 	rm -rf ibcsim-bcd/.testnets
 
-.PHONY: build-ibcsim-bcd ibcsim-bcd-rmi start-bcd-consumer-integration stop-bcd-consumer-integration
+.PHONY: ibcsim-bcd ibcsim-bcd-rmi start-bcd-consumer-integration stop-bcd-consumer-integration babylond babylond-rmi

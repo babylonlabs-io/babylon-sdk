@@ -23,3 +23,5 @@ vendor/
 coverage.txt
 
 demo/build/
+
+tmp/
