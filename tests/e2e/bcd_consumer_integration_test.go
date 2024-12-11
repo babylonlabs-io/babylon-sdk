@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -8,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"testing"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -58,6 +62,11 @@ var (
 	czFpBTCPK                 *btcec.PublicKey
 	czDelBtcSk, czDelBtcPk, _ = datagen.GenRandomBTCKeyPair(r)
 )
+
+// TestBCDConsumerIntegrationTestSuite includes babylon<->bcd integration related tests
+func TestBCDConsumerIntegrationTestSuite(t *testing.T) {
+	suite.Run(t, new(BCDConsumerIntegrationTestSuite))
+}
 
 type BCDConsumerIntegrationTestSuite struct {
 	suite.Suite

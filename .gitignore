@@ -23,5 +23,7 @@ vendor/
 coverage.txt
 
 demo/build/
-
 tmp/
+
+# E2E test files
+contrib/images/ibcsim-bcd/.testnets/
