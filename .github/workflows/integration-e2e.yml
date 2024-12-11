@@ -4,13 +4,18 @@ on:
   push:
     branches:
     - '**'
-
 jobs:
   test:
-    uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
-    with:
-      run-integration-tests: true
-      integration-tests-command: |
-        make build-ibcsim-bcd
-        make build-babylond
-        make test-e2e-bcd-consumer-integration
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build IBC Simulator BCD Image
+        run: make build-ibcsim-bcd
+
+      - name: Build Babylond Image
+        run: make build-babylond
+
+      - name: Run Integration Tests
+        run: make test-e2e-bcd-consumer-integration
