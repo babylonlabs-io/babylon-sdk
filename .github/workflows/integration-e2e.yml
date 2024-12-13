@@ -10,17 +10,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Build IBC Simulator BCD Image
-        run: make build-ibcsim-bcd
-
-      - name: Build Babylond Image
-        run: make build-babylond
-
       - name: Cache Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.23
-
       - name: Run Integration Tests
-        run: sudo make test-e2e-bcd-consumer-integration
+        run: sudo make test-e2e
