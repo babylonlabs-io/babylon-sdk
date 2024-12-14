@@ -297,7 +297,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.NotNil(czActivatedBlock)
 
 	// Ensure the staking contract balance is initially empty
-	rewards, err := s.cosmwasmController.QueryStakingContractBalances()
+	rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
 	s.NoError(err)
 	s.Empty(rewards)
 
@@ -344,7 +344,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 
 	// Ensure consumer rewards are generated and sent to the staking contract
 	s.Eventually(func() bool {
-		rewards, err := s.cosmwasmController.QueryStakingContractBalances()
+		rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
 		if err != nil {
 			s.T().Logf("failed to query rewards: %s", err.Error())
 			return false
