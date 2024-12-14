@@ -28,10 +28,12 @@ test:
 	$(MAKE) -C demo test
 	$(MAKE) -C x test
 
+test-integration:
+	$(MAKE) -C tests/e2e/ test
+
 test-e2e: build-docker-e2e test-e2e-cache
 
 test-e2e-cache:
-	$(MAKE) -C tests/e2e/ test
 	$(MAKE) test-e2e-bcd-consumer-integration
 
 clean-e2e:

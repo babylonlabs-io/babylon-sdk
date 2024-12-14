@@ -1,4 +1,4 @@
-name: integration-e2e
+name: e2e
 on:
   push:
     branches:
@@ -14,5 +14,5 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23
-      - name: Run Integration Tests
+      - name: Run E2E Tests
         run: sudo make test-e2e
