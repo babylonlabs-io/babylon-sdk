@@ -32,7 +32,7 @@ require (
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.3.0
-	github.com/babylonlabs-io/babylon v0.9.3-0.20241207063157-930046144fa3
+	github.com/babylonlabs-io/babylon v0.9.3-0.20241213004323-72654c8c8406
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6
