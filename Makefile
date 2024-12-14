@@ -27,10 +27,18 @@ test-all: test
 test:
 	$(MAKE) -C demo test
 	$(MAKE) -C x test
+
+test-integration:
 	$(MAKE) -C tests/e2e/ test
 
-test-e2e:
-	$(MAKE) -C tests/e2e/ test
+test-e2e: build-docker-e2e test-e2e-cache
+
+test-e2e-cache:
+	$(MAKE) test-e2e-bcd-consumer-integration
+
+clean-e2e:
+	docker container rm -f $(shell docker container ls -a -q) || true
+	docker network prune -f || true
 
 ###############################################################################
 ###                                Linting                                  ###
@@ -83,6 +91,8 @@ proto-lint:
 ###                             Integration e2e	                            ###
 ###############################################################################
 
+build-docker-e2e: build-ibcsim-bcd build-babylond
+
 build-ibcsim-bcd:
 	$(MAKE) -C contrib/images ibcsim-bcd
 
@@ -93,6 +103,4 @@ start-bcd-consumer-integration:
 	$(MAKE) -C contrib/images start-bcd-consumer-integration
 
 test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
-	@cd tests/e2e
-	@go test -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=60m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e
-	@cd - 
+	@cd tests/e2e && go test -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=60m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e

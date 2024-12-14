@@ -15,7 +15,7 @@ jobs:
       run-unit-tests: true
       run-integration-tests: true
       integration-tests-command: |
-        make test-e2e
+        make test-integration
       
   docker_pipeline:
     uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.11.2

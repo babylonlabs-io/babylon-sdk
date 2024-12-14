@@ -1,0 +1,18 @@
+name: e2e
+on:
+  push:
+    branches:
+    - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Cache Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23
+      - name: Run E2E Tests
+        run: sudo make test-e2e
