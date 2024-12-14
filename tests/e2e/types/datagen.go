@@ -124,8 +124,9 @@ func genBTCDelegation() (*bstypes.Params, ActiveBtcDelegation) {
 		covenantPKs,
 		covenantQuorum,
 		slashingPkScript,
-		1000,
-		uint64(1000+stakingTimeBlocks),
+		uint32(stakingTimeBlocks),
+		uint32(1000),
+		uint32(1000+stakingTimeBlocks),
 		uint64(stakingValue),
 		slashingRate,
 		slashingChangeLockTime,
@@ -245,8 +246,8 @@ type ActiveBtcDelegation struct {
 	StakerAddr           string                      `json:"staker_addr"`
 	BTCPkHex             string                      `json:"btc_pk_hex"`
 	FpBtcPkList          []string                    `json:"fp_btc_pk_list"`
-	StartHeight          uint64                      `json:"start_height"`
-	EndHeight            uint64                      `json:"end_height"`
+	StartHeight          uint32                      `json:"start_height"`
+	EndHeight            uint32                      `json:"end_height"`
 	TotalSat             uint64                      `json:"total_sat"`
 	StakingTx            string                      `json:"staking_tx"`
 	SlashingTx           string                      `json:"slashing_tx"`

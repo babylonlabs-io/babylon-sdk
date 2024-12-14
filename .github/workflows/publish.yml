@@ -10,15 +10,15 @@ on:
   
 jobs:
   test:
-    uses: babylonchain/.github/.github/workflows/reusable_go_lint_test.yml@v0.1.0
+    uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
       run-unit-tests: true
       run-integration-tests: true
       integration-tests-command: |
-        make test-e2e
+        make test-integration
       
   docker_pipeline:
-    uses: babylonchain/.github/.github/workflows/reusable_docker_pipeline.yml@v0.1.0
+    uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.11.2
     needs: ["test"]
     secrets: inherit
     with:
