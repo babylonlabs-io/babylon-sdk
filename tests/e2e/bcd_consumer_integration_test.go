@@ -333,7 +333,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 			return false
 		}
 		return true
-	}, time.Minute, time.Second*5)
+	}, 30*time.Second, time.Second*5)
 
 	// Once the vote is cast, ensure the block is finalised
 	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(czActivatedHeight))
@@ -354,7 +354,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 		}
 		fmt.Println("Consumer rewards: ", rewards)
 		return true
-	}, time.Minute, time.Second*5)
+	}, 30*time.Second, time.Second*5)
 }
 
 // Test7BabylonFPCascadedSlashing
