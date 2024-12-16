@@ -6,6 +6,9 @@ package e2e
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
+	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -21,9 +24,6 @@ import (
 	bbnparams "github.com/babylonlabs-io/babylon/app/params"
 	txformat "github.com/babylonlabs-io/babylon/btctxformatter"
 	"github.com/babylonlabs-io/babylon/client/config"
-	"github.com/babylonlabs-io/babylon/test/e2e/bcd_consumer_integration/clientcontroller/babylon"
-	cwconfig "github.com/babylonlabs-io/babylon/test/e2e/bcd_consumer_integration/clientcontroller/config"
-	"github.com/babylonlabs-io/babylon/test/e2e/bcd_consumer_integration/clientcontroller/cosmwasm"
 	"github.com/babylonlabs-io/babylon/test/e2e/initialization"
 	"github.com/babylonlabs-io/babylon/testutil/datagen"
 	bbn "github.com/babylonlabs-io/babylon/types"
@@ -333,7 +333,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 			return false
 		}
 		return true
-	}, time.Minute, time.Second*5)
+	}, 30*time.Second, time.Second*5)
 
 	// Once the vote is cast, ensure the block is finalised
 	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(czActivatedHeight))
@@ -354,7 +354,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 		}
 		fmt.Println("Consumer rewards: ", rewards)
 		return true
-	}, time.Minute, time.Second*5)
+	}, 30*time.Second, time.Second*5)
 }
 
 // Test7BabylonFPCascadedSlashing

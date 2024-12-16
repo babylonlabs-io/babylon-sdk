@@ -11,6 +11,7 @@ package babylon
 import (
 	"context"
 	"fmt"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 	"math/rand"
 
 	sdkErr "cosmossdk.io/errors"
@@ -18,7 +19,6 @@ import (
 	bbnclient "github.com/babylonlabs-io/babylon/client/client"
 	"github.com/babylonlabs-io/babylon/client/config"
 	"github.com/babylonlabs-io/babylon/crypto/eots"
-	types2 "github.com/babylonlabs-io/babylon/test/e2e/bcd_consumer_integration/clientcontroller/types"
 	"github.com/babylonlabs-io/babylon/testutil/datagen"
 	bbntypes "github.com/babylonlabs-io/babylon/types"
 	btcctypes "github.com/babylonlabs-io/babylon/x/btccheckpoint/types"
@@ -124,7 +124,7 @@ func (bc *BabylonController) RegisterFinalityProvider(
 	pop []byte,
 	commission *math.LegacyDec,
 	description []byte,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	var bbnPop btcstakingtypes.ProofOfPossessionBTC
 	if err := bbnPop.Unmarshal(pop); err != nil {
 		return nil, fmt.Errorf("invalid proof-of-possession: %w", err)
@@ -150,7 +150,7 @@ func (bc *BabylonController) RegisterFinalityProvider(
 		return nil, err
 	}
 
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) QueryFinalityProviderSlashed(fpPk *btcec.PublicKey) (bool, error) {
@@ -191,7 +191,7 @@ func (bc *BabylonController) QueryFinalityProviderHasPower(fpPk *btcec.PublicKey
 	return res.VotingPower > 0, nil
 }
 
-func (bc *BabylonController) QueryLatestFinalizedBlocks(count uint64) ([]*types2.BlockInfo, error) {
+func (bc *BabylonController) QueryLatestFinalizedBlocks(count uint64) ([]*types.BlockInfo, error) {
 	return bc.queryLatestBlocks(nil, count, finalitytypes.QueriedBlockStatus_FINALIZED, true)
 }
 
@@ -208,7 +208,7 @@ func (bc *BabylonController) QueryCometBlock(height uint64) (*coretypes.ResultBl
 	return bc.bbnClient.GetBlock(int64(height))
 }
 
-func (bc *BabylonController) QueryBlocks(startHeight, endHeight, limit uint64) ([]*types2.BlockInfo, error) {
+func (bc *BabylonController) QueryBlocks(startHeight, endHeight, limit uint64) ([]*types.BlockInfo, error) {
 	if endHeight < startHeight {
 		return nil, fmt.Errorf("the startHeight %v should not be higher than the endHeight %v", startHeight, endHeight)
 	}
@@ -237,8 +237,8 @@ func (bc *BabylonController) QueryLastCommittedPublicRand(fpPk *btcec.PublicKey,
 	return res.PubRandCommitMap, nil
 }
 
-func (bc *BabylonController) queryLatestBlocks(startKey []byte, count uint64, status finalitytypes.QueriedBlockStatus, reverse bool) ([]*types2.BlockInfo, error) {
-	var blocks []*types2.BlockInfo
+func (bc *BabylonController) queryLatestBlocks(startKey []byte, count uint64, status finalitytypes.QueriedBlockStatus, reverse bool) ([]*types.BlockInfo, error) {
+	var blocks []*types.BlockInfo
 	pagination := &sdkquery.PageRequest{
 		Limit:   count,
 		Reverse: reverse,
@@ -251,7 +251,7 @@ func (bc *BabylonController) queryLatestBlocks(startKey []byte, count uint64, st
 	}
 
 	for _, b := range res.Blocks {
-		ib := &types2.BlockInfo{
+		ib := &types.BlockInfo{
 			Height: b.Height,
 			Hash:   b.AppHash,
 		}
@@ -288,7 +288,7 @@ func (bc *BabylonController) CreateBTCDelegation(
 	unbondingValue int64,
 	unbondingSlashingTx *btcstakingtypes.BTCSlashingTx,
 	delUnbondingSlashingSig *bbntypes.BIP340Signature,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	fpBtcPks := make([]bbntypes.BIP340PubKey, 0, len(fpPks))
 	for _, v := range fpPks {
 		fpBtcPks = append(fpBtcPks, *bbntypes.NewBIP340PubKeyFromBTCPK(v))
@@ -316,7 +316,7 @@ func (bc *BabylonController) CreateBTCDelegation(
 		return nil, err
 	}
 
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) InsertWBTCHeaders(r *rand.Rand) error {
@@ -498,7 +498,7 @@ func (bc *BabylonController) queryDelegationsWithStatus(status btcstakingtypes.B
 	return res.BtcDelegations, nil
 }
 
-func (bc *BabylonController) QueryStakingParams() (*types2.StakingParams, error) {
+func (bc *BabylonController) QueryStakingParams() (*types.StakingParams, error) {
 	// query btc checkpoint params
 	ckptParamRes, err := bc.bbnClient.QueryClient.BTCCheckpointParams()
 	if err != nil {
@@ -520,7 +520,7 @@ func (bc *BabylonController) QueryStakingParams() (*types2.StakingParams, error)
 		covenantPks = append(covenantPks, covPk)
 	}
 
-	return &types2.StakingParams{
+	return &types.StakingParams{
 		ComfirmationTimeBlocks:    ckptParamRes.Params.BtcConfirmationDepth,
 		FinalizationTimeoutBlocks: ckptParamRes.Params.CheckpointFinalizationTimeout,
 		MinSlashingTxFeeSat:       btcutil.Amount(stakingParamRes.Params.MinSlashingTxFeeSat),
@@ -547,7 +547,7 @@ func (bc *BabylonController) SubmitCovenantSigs(
 	slashingSigs [][]byte,
 	unbondingSig *schnorr.Signature,
 	unbondingSlashingSigs [][]byte,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	bip340UnbondingSig := bbntypes.NewBIP340SignatureFromBTCSig(unbondingSig)
 
 	msg := &btcstakingtypes.MsgAddCovenantSigs{
@@ -564,7 +564,7 @@ func (bc *BabylonController) SubmitCovenantSigs(
 		return nil, err
 	}
 
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) InsertSpvProofs(submitter string, proofs []*btcctypes.BTCSpvProof) (*provider.RelayerTxResponse, error) {
@@ -582,7 +582,7 @@ func (bc *BabylonController) InsertSpvProofs(submitter string, proofs []*btcctyp
 }
 
 // RegisterConsumerChain registers a consumer chain via a MsgRegisterChain to Babylon
-func (bc *BabylonController) RegisterConsumerChain(id, name, description string) (*types2.TxResponse, error) {
+func (bc *BabylonController) RegisterConsumerChain(id, name, description string) (*types.TxResponse, error) {
 	msg := &bsctypes.MsgRegisterConsumer{
 		Signer:              bc.MustGetTxSigner(),
 		ConsumerId:          id,
@@ -595,12 +595,12 @@ func (bc *BabylonController) RegisterConsumerChain(id, name, description string)
 		return nil, err
 	}
 
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) CommitPublicRandomness(
 	msgCommitPubRandList *finalitytypes.MsgCommitPubRandList,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	signerAddr := bc.MustGetTxSigner()
 	msgCommitPubRandList.Signer = signerAddr
 	res, err := bc.reliablySendMsg(msgCommitPubRandList, emptyErrs, emptyErrs)
@@ -608,7 +608,7 @@ func (bc *BabylonController) CommitPublicRandomness(
 		return nil, err
 	}
 
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) SubmitFinalitySignature(
@@ -618,7 +618,7 @@ func (bc *BabylonController) SubmitFinalitySignature(
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
 	heightToVote uint64,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	block, err := bc.bbnClient.QueryClient.GetBlock(int64(heightToVote))
 	if err != nil {
 		return nil, err
@@ -645,7 +645,7 @@ func (bc *BabylonController) SubmitFinalitySignature(
 	if err != nil {
 		return nil, err
 	}
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 func (bc *BabylonController) SubmitInvalidFinalitySignature(
@@ -656,7 +656,7 @@ func (bc *BabylonController) SubmitInvalidFinalitySignature(
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
 	heightToVote uint64,
-) (*types2.TxResponse, error) {
+) (*types.TxResponse, error) {
 	invalidAppHash := datagen.GenRandomByteArray(r, 32)
 	invalidMsgToSign := append(sdk.Uint64ToBigEndian(heightToVote), invalidAppHash...)
 	invalidSig, err := eots.Sign(fpSK, privateRand, invalidMsgToSign)
@@ -680,7 +680,7 @@ func (bc *BabylonController) SubmitInvalidFinalitySignature(
 	if err != nil {
 		return nil, err
 	}
-	return &types2.TxResponse{TxHash: res.TxHash}, nil
+	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
 // IBCChannels queries the IBC channels
