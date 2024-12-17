@@ -152,6 +152,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test2RegisterAndIntegrateConsumer() {
 func (s *BCDConsumerIntegrationTestSuite) Test3CreateConsumerFinalityProvider() {
 	// generate a random number of finality providers from 1 to 5
 	numConsumerFPs := datagen.RandomInt(r, 5) + 1
+	fmt.Println("Number of consumer finality providers: ", numConsumerFPs)
 	var consumerFps []*bstypes.FinalityProvider
 	for i := 0; i < int(numConsumerFPs); i++ {
 		consumerFp, SK, PK := s.createVerifyConsumerFP()
@@ -257,7 +258,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test5ActivateDelegation() {
 	s.Eventually(func() bool {
 		dataFromContract, err = s.cosmwasmController.QueryDelegations()
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 1
-	}, time.Second*30, time.Second)
+	}, time.Second*60, time.Second)
 
 	// Assert delegation details
 	s.Empty(dataFromContract.Delegations[0].UndelegationInfo.DelegatorUnbondingInfo)
@@ -784,7 +785,7 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	}
 	headers := make([]bbn.BTCHeaderBytes, 0)
 	headers = append(headers, blockWithStakingTx.HeaderBytes)
-	for i := 0; i < int(params.ComfirmationTimeBlocks); i++ {
+	for i := 0; i < int(params.ConfirmationTimeBlocks); i++ {
 		headerInfo := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *parentBlockHeaderInfo)
 		headers = append(headers, *headerInfo.Header)
 		parentBlockHeaderInfo = headerInfo

@@ -521,7 +521,7 @@ func (bc *BabylonController) QueryStakingParams() (*types.StakingParams, error) 
 	}
 
 	return &types.StakingParams{
-		ComfirmationTimeBlocks:    ckptParamRes.Params.BtcConfirmationDepth,
+		ConfirmationTimeBlocks:    ckptParamRes.Params.BtcConfirmationDepth,
 		FinalizationTimeoutBlocks: ckptParamRes.Params.CheckpointFinalizationTimeout,
 		MinSlashingTxFeeSat:       btcutil.Amount(stakingParamRes.Params.MinSlashingTxFeeSat),
 		CovenantPks:               covenantPks,
