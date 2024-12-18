@@ -115,9 +115,6 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	}
 	btcFinalityInitMsg := map[string]interface{}{
 		"admin": p.GetSender().String(),
-		"params": map[string]interface{}{
-			"epoch_length": 10,
-		},
 	}
 	btcFinalityInitMsgBytes, err := json.Marshal(btcFinalityInitMsg)
 	if err != nil {
