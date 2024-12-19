@@ -475,6 +475,7 @@ func NewConsumerApp(
 	)
 
 	// Override max wasm size to 1MB
+	// TODO: Remove this after down-sizing / splitting contracts
 	wasmtypes.MaxWasmSize = 1 * 1024 * 1024
 
 	wasmDir := filepath.Join(homePath, "wasm")
