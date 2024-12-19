@@ -474,6 +474,10 @@ func NewConsumerApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	// Override max wasm size to 1MB
+	// TODO: Remove this after down-sizing / splitting contracts
+	wasmtypes.MaxWasmSize = 1 * 1024 * 1024
+
 	wasmDir := filepath.Join(homePath, "wasm")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {

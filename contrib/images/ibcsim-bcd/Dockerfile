@@ -7,17 +7,17 @@ WORKDIR /work
 ARG TARGETARCH
 
 # Download and install Go
-ENV GOLANG_VERSION 1.21.4
+ENV GOLANG_VERSION=1.21.4
 RUN wget -q https://golang.org/dl/go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz && \
     tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz && \
     rm go${GOLANG_VERSION}.linux-${TARGETARCH}.tar.gz
 # Set Go environment variables
-ENV PATH /usr/local/go/bin:$PATH
-ENV GOPATH /go
-ENV PATH $GOPATH/bin:$PATH
+ENV PATH=/usr/local/go/bin:$PATH
+ENV GOPATH=/go
+ENV PATH=$GOPATH/bin:$PATH
 
-ENV GO111MODULE on
-ENV RELAYER_TAG v2.5.2
+ENV GO111MODULE=on
+ENV RELAYER_TAG=v2.5.2
 
 # Install the relayer
 RUN git clone https://github.com/cosmos/relayer.git

@@ -1049,10 +1049,9 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnection() {
 		}
 		s.Equal(channeltypes.ORDERED, consumerChannel.Ordering)
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
+		s.T().Logf("IBC channel established successfully")
 		return true
 	}, time.Minute, time.Second*2, "Failed to get expected Consumer IBC channel")
-
-	s.T().Logf("IBC channel is established successfully")
 
 	// Query the channel client state
 	//babylonChannelState, err := s.babylonController.QueryChannelClientState(babylonChannel.ChannelId, babylonChannel.PortId)
