@@ -302,6 +302,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.NoError(err)
 	s.Empty(rewards)
 
+	// Record the Babylon contract's initial balance
+	initialBalance, err := s.cosmwasmController.QueryBabylonContractBalances()
+	s.NoError(err)
+	s.Len(initialBalance, 1)
+	bondedDenom := initialBalance[0].Denom
+
 	// Commit public randomness at the activated block height on the consumer chain
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK, uint64(czActivatedHeight), 100)
 	s.NoError(err)
@@ -343,18 +349,19 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.Equal(hex.EncodeToString(finalizedBlock.AppHash), hex.EncodeToString(czActivatedBlock.AppHash))
 	s.True(finalizedBlock.Finalized)
 
-	// Ensure consumer rewards are generated and sent to the staking contract
+	// Ensure consumer rewards are generated (initially sent to the finality contract,
+	// and then sent to the Babylon contract, after Consumer-side distribution)
+	// TODO: Change once rewards are finally on the Babylon side
 	s.Eventually(func() bool {
-		rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
+		balance, err := s.cosmwasmController.QueryBabylonContractBalances()
 		if err != nil {
-			s.T().Logf("failed to query rewards: %s", err.Error())
+			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
 		}
-		if len(rewards) == 0 {
+		if len(balance) == 0 {
 			return false
 		}
-		fmt.Println("Consumer rewards: ", rewards)
-		return true
+		return balance.AmountOf(bondedDenom).GT(initialBalance.AmountOf(bondedDenom))
 	}, 30*time.Second, time.Second*5)
 }
 
@@ -985,6 +992,7 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 		s.T().Fatalf("Failed to get current working directory: %v", err)
 	}
 
+	cfg.BabylonContractAddress = "bbnc14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9syx25zf"
 	cfg.BtcStakingContractAddress = "bbnc1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrqgn0kq0"
 	cfg.BtcFinalityContractAddress = "bbnc17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgssg3nft"
 	cfg.ChainID = "bcd-test"
