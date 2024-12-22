@@ -142,7 +142,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test2RegisterAndIntegrateConsumer() {
 
 	// after the consumer is registered, wait till IBC connection/channel
 	// between babylon<->bcd is established
-	s.waitForIBCConnection()
+	s.waitForIBCConnections()
 }
 
 // Test3CreateConsumerFinalityProvider
@@ -1019,9 +1019,11 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 	return nil
 }
 
-// helper function: waitForIBCConnection waits for the IBC connection to be established between Babylon and the consumer.
-func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnection() {
+// helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
+// Consumer.
+func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 	var babylonChannel *channeltypes.IdentifiedChannel
+	// Wait for the custom channel
 	s.Eventually(func() bool {
 		babylonChannelsResp, err := s.babylonController.IBCChannels()
 		if err != nil {
@@ -1034,13 +1036,13 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnection() {
 		}
 		babylonChannel = babylonChannelsResp.Channels[0]
 		if babylonChannel.State != channeltypes.OPEN {
-			s.T().Logf("Babylon channel state is not OPEN, got %s", babylonChannel.State)
+			s.T().Logf("Babylon custom channel state is not OPEN, got %s", babylonChannel.State)
 			return false
 		}
 		s.Equal(channeltypes.ORDERED, babylonChannel.Ordering)
 		s.Contains(babylonChannel.Counterparty.PortId, "wasm.")
 		return true
-	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon IBC channel")
+	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon custom IBC channel")
 
 	var consumerChannel *channeltypes.IdentifiedChannel
 	s.Eventually(func() bool {
@@ -1058,15 +1060,49 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnection() {
 		}
 		s.Equal(channeltypes.ORDERED, consumerChannel.Ordering)
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
-		s.T().Logf("IBC channel established successfully")
+		s.T().Logf("IBC custom channel established successfully")
 		return true
-	}, time.Minute, time.Second*2, "Failed to get expected Consumer IBC channel")
+	}, time.Minute, time.Second*2, "Failed to get expected Consumer custom IBC channel")
 
-	// Query the channel client state
-	//babylonChannelState, err := s.babylonController.QueryChannelClientState(babylonChannel.ChannelId, babylonChannel.PortId)
-	//s.Require().NoError(err, "Failed to query Babylon channel client state")
-	//
-	//return babylonChannelState.IdentifiedClientState.ClientId
+	// Wait for the transfer channel
+	s.Eventually(func() bool {
+		babylonChannelsResp, err := s.babylonController.IBCChannels()
+		if err != nil {
+			s.T().Logf("Error querying Babylon IBC channels: %v", err)
+			return false
+		}
+		if len(babylonChannelsResp.Channels) != 2 {
+			s.T().Logf("Expected 2 Babylon IBC channels, got %d", len(babylonChannelsResp.Channels))
+			return false
+		}
+		babylonChannel = babylonChannelsResp.Channels[1]
+		if babylonChannel.State != channeltypes.OPEN {
+			s.T().Logf("Babylon transfer channel state is not OPEN, got %s", babylonChannel.State)
+			return false
+		}
+		s.Equal(channeltypes.UNORDERED, babylonChannel.Ordering)
+		s.Contains(babylonChannel.Counterparty.PortId, "transfer")
+		return true
+	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
+
+	s.Eventually(func() bool {
+		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()
+		if err != nil {
+			s.T().Logf("Error querying Consumer IBC channels: %v", err)
+			return false
+		}
+		if len(consumerChannelsResp.Channels) != 2 {
+			return false
+		}
+		consumerChannel = consumerChannelsResp.Channels[1]
+		if consumerChannel.State != channeltypes.OPEN {
+			return false
+		}
+		s.Equal(channeltypes.UNORDERED, consumerChannel.Ordering)
+		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
+		s.T().Logf("IBC transfer channel established successfully")
+		return true
+	}, time.Minute, time.Second*2, "Failed to get expected Consumer transfer IBC channel")
 }
 
 // helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
