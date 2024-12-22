@@ -153,6 +153,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test3CreateConsumerFinalityProvider() 
 	// generate a random number of finality providers from 1 to 5
 	numConsumerFPs := datagen.RandomInt(r, 5) + 1
 	fmt.Println("Number of consumer finality providers: ", numConsumerFPs)
+
 	var consumerFps []*bstypes.FinalityProvider
 	for i := 0; i < int(numConsumerFPs); i++ {
 		consumerFp, SK, PK := s.createVerifyConsumerFP()
@@ -1075,7 +1076,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 			s.T().Logf("Expected 2 Babylon IBC channels, got %d", len(babylonChannelsResp.Channels))
 			return false
 		}
-		babylonChannel = babylonChannelsResp.Channels[1]
+		babylonChannel = babylonChannelsResp.Channels[0]
 		if babylonChannel.State != channeltypes.OPEN {
 			s.T().Logf("Babylon transfer channel state is not OPEN, got %s", babylonChannel.State)
 			return false
@@ -1083,7 +1084,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(channeltypes.UNORDERED, babylonChannel.Ordering)
 		s.Contains(babylonChannel.Counterparty.PortId, "transfer")
 		return true
-	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
+	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
 
 	s.Eventually(func() bool {
 		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()
@@ -1094,7 +1095,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		if len(consumerChannelsResp.Channels) != 2 {
 			return false
 		}
-		consumerChannel = consumerChannelsResp.Channels[1]
+		consumerChannel = consumerChannelsResp.Channels[0]
 		if consumerChannel.State != channeltypes.OPEN {
 			return false
 		}
