@@ -36,7 +36,7 @@ echo -n "$BABYLON_MSG" | jq '.'
 
 ./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm "$BABYLON_MSG"
 
-sleep 10
+sleep 5
 
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
 CONTRACT_PORT="wasm.$CONTRACT_ADDRESS"
@@ -111,8 +111,7 @@ sleep 10
 echo "Creating IBC light clients, connection, and channels between the two CZs"
 rly --home $RELAYER_CONF_DIR tx link bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1
 [ $? -eq 0 ] && echo "Created custom IBC channel successfully!" || echo "Error creating custom IBC channel"
-rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1
-[ $? -eq 0 ] && echo "Created transfer IBC channel successfully!" || echo "Error creating trasfer IBC channel"
+rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 &
 
 sleep 10
 
