@@ -317,6 +317,11 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.NoError(err)
 	s.Empty(rewards)
 
+	// Check that there are no tokens in the module account
+	balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
+	s.NoError(err)
+	s.Empty(balance)
+
 	// Commit public randomness at the activated block height on the consumer chain
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK, uint64(czActivatedHeight), 100)
 	s.NoError(err)
@@ -375,6 +380,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 			s.T().Logf("failed to get IBC denom")
 			return false
 		}
+		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
 		// Check that the balance of the IBC denom is greater than 0
 		return balance.AmountOf(ibcDenom).IsPositive()
 	}, 30*time.Second, time.Second*5)
