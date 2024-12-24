@@ -12,7 +12,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"math/rand"
+	"net/url"
 
 	sdkErr "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -705,4 +711,49 @@ func (bc *BabylonController) QueryChannelClientState(channelID, portID string) (
 	})
 
 	return resp, err
+}
+
+func (bc *BabylonController) QueryModuleAccountBalances(module string) (sdk.Coins, error) {
+	moduleAccountAddress := sdk.MustBech32ifyAddressBytes(bc.cfg.AccountPrefix, authtypes.NewModuleAddress(module))
+	return bc.QueryBalances(moduleAccountAddress)
+}
+
+// QueryBalances returns balances at the address
+func (bc *BabylonController) QueryBalances(address string) (sdk.Coins, error) {
+	grpcConn, err := bc.createGrpcConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer grpcConn.Close()
+
+	// create a gRPC client to query the x/bank service.
+	bankClient := banktypes.NewQueryClient(grpcConn)
+	bankRes, err := bankClient.AllBalances(
+		context.Background(),
+		&banktypes.QueryAllBalancesRequest{Address: address},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return bankRes.GetBalances(), nil
+}
+
+func (bc *BabylonController) createGrpcConnection() (*grpc.ClientConn, error) {
+	// Create a connection to the gRPC server.
+	parsedUrl, err := url.Parse(bc.cfg.GRPCAddr)
+	if err != nil {
+		return nil, fmt.Errorf("grpc-address is not correctly formatted: %w", err)
+	}
+	endpoint := fmt.Sprintf("%s:%s", parsedUrl.Hostname(), parsedUrl.Port())
+	grpcConn, err := grpc.NewClient(
+		endpoint,
+		grpc.WithTransportCredentials(insecure.NewCredentials()), // The Cosmos SDK doesn't support any transport security mechanism.
+		// This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
+		// if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return grpcConn, nil
 }

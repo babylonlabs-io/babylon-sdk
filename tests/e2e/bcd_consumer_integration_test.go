@@ -33,6 +33,7 @@ import (
 	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
 	ckpttypes "github.com/babylonlabs-io/babylon/x/checkpointing/types"
 	ftypes "github.com/babylonlabs-io/babylon/x/finality/types"
+	zctypes "github.com/babylonlabs-io/babylon/x/zoneconcierge/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
@@ -62,6 +63,19 @@ var (
 	czFpBTCPK                 *btcec.PublicKey
 	czDelBtcSk, czDelBtcPk, _ = datagen.GenRandomBTCKeyPair(r)
 )
+
+func getFirstIBCDenom(balance sdk.Coins) string {
+	// Look up the ugly IBC denom
+	denoms := balance.Denoms()
+	var denomB string
+	for _, d := range denoms {
+		if strings.HasPrefix(d, "ibc/") {
+			denomB = d
+			break
+		}
+	}
+	return denomB
+}
 
 // TestBCDConsumerIntegrationTestSuite includes babylon<->bcd integration related tests
 func TestBCDConsumerIntegrationTestSuite(t *testing.T) {
@@ -303,12 +317,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.NoError(err)
 	s.Empty(rewards)
 
-	// Record the Babylon contract's initial balance
-	initialBalance, err := s.cosmwasmController.QueryBabylonContractBalances()
-	s.NoError(err)
-	s.Len(initialBalance, 1)
-	bondedDenom := initialBalance[0].Denom
-
 	// Commit public randomness at the activated block height on the consumer chain
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK, uint64(czActivatedHeight), 100)
 	s.NoError(err)
@@ -351,10 +359,10 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 	s.True(finalizedBlock.Finalized)
 
 	// Ensure consumer rewards are generated (initially sent to the finality contract,
-	// and then sent to the Babylon contract, after Consumer-side distribution)
-	// TODO: Change once rewards are finally on the Babylon side
+	// then sent to the Babylon contract, after Consumer-side distribution, and then sent to the Babylon zoneconcierge
+	// module account)
 	s.Eventually(func() bool {
-		balance, err := s.cosmwasmController.QueryBabylonContractBalances()
+		balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
@@ -362,7 +370,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
 		if len(balance) == 0 {
 			return false
 		}
-		return balance.AmountOf(bondedDenom).GT(initialBalance.AmountOf(bondedDenom))
+		ibcDenom := getFirstIBCDenom(balance)
+		if ibcDenom == "" {
+			s.T().Logf("failed to get IBC denom")
+			return false
+		}
+		// Check that the balance of the IBC denom is greater than 0
+		return balance.AmountOf(ibcDenom).IsPositive()
 	}, 30*time.Second, time.Second*5)
 }
 
