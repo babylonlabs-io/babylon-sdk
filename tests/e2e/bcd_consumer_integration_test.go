@@ -299,7 +299,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test5ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewardsGeneration() {
+func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
