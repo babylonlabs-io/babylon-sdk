@@ -29,7 +29,13 @@ BABYLON_MSG="{
     \"consumer_name\": \"Test Consumer\",
     \"consumer_description\": \"Test Consumer Description\",
     \"btc_finality_code_id\": 3,
-    \"btc_finality_msg\": \"$ENCODED_FINALITY_MSG\"
+    \"btc_finality_msg\": \"$ENCODED_FINALITY_MSG\",
+    \"transfer_info\": {
+      \"channel_id\": \"channel-1\",
+      \"recipient\": {
+        \"module_addr\": \"zoneconcierge\"
+      }
+    }
 }"
 echo "babylon-contract instantiation msg:"
 echo -n "$BABYLON_MSG" | jq '.'
