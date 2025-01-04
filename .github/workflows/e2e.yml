@@ -15,4 +15,4 @@ jobs:
         with:
           go-version: 1.23
       - name: Run E2E Tests
-        run: make test-e2e
+        run: sudo make test-e2e
