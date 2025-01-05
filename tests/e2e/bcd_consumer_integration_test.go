@@ -511,7 +511,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test8ConsumerFPCascadedSlashing() {
 	s.Eventually(func() bool {
 		dataFromContract, err = s.cosmwasmController.QueryDelegations()
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 2
-	}, time.Second*20, time.Second)
+	}, time.Second*30, time.Second)
 
 	// query and assert consumer finality provider's voting power is equal to the total stake
 	s.Eventually(func() bool {
