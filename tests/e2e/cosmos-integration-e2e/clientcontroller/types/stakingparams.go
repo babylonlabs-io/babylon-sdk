@@ -8,7 +8,7 @@ import (
 
 type StakingParams struct {
 	// K-deep
-	ComfirmationTimeBlocks uint32
+	ConfirmationTimeBlocks uint32
 	// W-deep
 	FinalizationTimeoutBlocks uint32
 

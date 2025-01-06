@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# shellcheck disable=SC3037
 
 # 0. Define configuration
 BABYLON_KEY="babylon-key"
@@ -7,19 +8,41 @@ CONSUMER_KEY="bcd-key"
 CONSUMER_CHAIN_ID="bcd-test"
 
 # 1. Create a bcd testnet with Babylon contract
-./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm '{
-    "network": "regtest",
-    "babylon_tag": "01020304",
-    "btc_confirmation_depth": 1,
-    "checkpoint_finalization_timeout": 2,
-    "notify_cosmos_zone": false,
-    "btc_staking_code_id": 2,
-    "consumer_name": "Test Consumer",
-    "consumer_description": "Test Consumer Description",
-    "btc_finality_code_id": 3
+FINALITY_MSG='{
+  "params": {
+    "max_active_finality_providers": 100,
+    "min_pub_rand": 1,
+    "finality_inflation_rate": "0.035",
+    "epoch_length": 10
+  }
 }'
+echo "btc-finality instantiation msg:"
+echo -n "$FINALITY_MSG" | jq '.'
+ENCODED_FINALITY_MSG=$(echo -n "$FINALITY_MSG" | base64 -w0)
+BABYLON_MSG="{
+    \"network\": \"regtest\",
+    \"babylon_tag\": \"01020304\",
+    \"btc_confirmation_depth\": 1,
+    \"checkpoint_finalization_timeout\": 2,
+    \"notify_cosmos_zone\": false,
+    \"btc_staking_code_id\": 2,
+    \"consumer_name\": \"Test Consumer\",
+    \"consumer_description\": \"Test Consumer Description\",
+    \"btc_finality_code_id\": 3,
+    \"btc_finality_msg\": \"$ENCODED_FINALITY_MSG\",
+    \"transfer_info\": {
+      \"channel_id\": \"channel-1\",
+      \"recipient\": {
+        \"module_addr\": \"zoneconcierge\"
+      }
+    }
+}"
+echo "babylon-contract instantiation msg:"
+echo -n "$BABYLON_MSG" | jq '.'
 
-sleep 10
+./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm "$BABYLON_MSG"
+
+sleep 5
 
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
 CONTRACT_PORT="wasm.$CONTRACT_ADDRESS"
@@ -91,9 +114,10 @@ rly --home $RELAYER_CONF_DIR keys restore babylon $BABYLON_KEY "$BABYLON_MEMO"
 sleep 10
 
 # 3. Start relayer
-echo "Creating an IBC light clients, connection, and channel between the two CZs"
+echo "Creating IBC light clients, connection, and channels between the two CZs"
 rly --home $RELAYER_CONF_DIR tx link bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1
-echo "Created IBC channel successfully!"
+[ $? -eq 0 ] && echo "Created custom IBC channel successfully!" || echo "Error creating custom IBC channel"
+rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 &
 
 sleep 10
 

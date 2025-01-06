@@ -584,6 +584,10 @@ func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsRe
 	return &resp, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryBabylonContractBalances() (sdk.Coins, error) {
+	return cc.QueryBalances(cc.cfg.BabylonContractAddress)
+}
+
 func (cc *CosmwasmConsumerController) QueryFinalityContractBalances() (sdk.Coins, error) {
 	return cc.QueryBalances(cc.cfg.BtcFinalityContractAddress)
 }

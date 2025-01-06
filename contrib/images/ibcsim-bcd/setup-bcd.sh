@@ -3,7 +3,16 @@
 display_usage() {
 	echo "Missing parameters. Please check if all parameters were specified."
 	echo "Usage: setup-bcd.sh [CHAIN_ID] [CHAIN_DIR] [RPC_PORT] [P2P_PORT] [PROFILING_PORT] [GRPC_PORT] [BABYLON_CONTRACT_CODE_FILE] [BTCSTAKING_CONTRACT_CODE_FILE] [BTCFINALITY_CONTRACT_CODE_FILE] [INSTANTIATING_CFG]"
-	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm '{"btc_confirmation_depth":1,"checkpoint_finalization_timeout":2,"network":"Regtest","babylon_tag":"bbn0", "notify_cosmos_zone":false, "btc_staking_code_id":2}'"
+	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm '{
+  "btc_confirmation_depth": 1,
+  "checkpoint_finalization_timeout": 2,
+  "network": "Regtest",
+  "babylon_tag": "01020304",
+  "notify_cosmos_zone": false,
+  "btc_staking_code_id": 2,
+  "btc_finality_code_id": 3
+}'
+"
 	exit 1
 }
 
@@ -105,7 +114,7 @@ sed -i 's/"btc_finality_contract_address": ""/"btc_finality_contract_address": "
 
 # Start
 echo "Starting $BINARY..."
-$BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' 2>&1 | tee $CHAINDIR/$CHAINID.log &
+$BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' --log_no_color 2>&1 | tee $CHAINDIR/$CHAINID.log &
 sleep 20
 
 # upload contract code
