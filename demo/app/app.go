@@ -493,7 +493,9 @@ func NewConsumerApp(
 			bbnkeeper.NewDefaultCustomMsgHandler(app.BabylonKeeper),
 		)
 	})
-	wasmOpts = append(wasmOpts, messageHandler,
+	wasmOpts = append(wasmOpts,
+		// add support for the custom message handlers
+		messageHandler,
 		// add support for the custom queries
 		wasmkeeper.WithQueryHandlerDecorator(bbnkeeper.NewQueryDecorator(app.BabylonKeeper)),
 	)

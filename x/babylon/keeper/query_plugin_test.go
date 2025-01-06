@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +18,18 @@ import (
 func TestChainedCustomQuerier(t *testing.T) {
 	myContractAddr := sdk.AccAddress(rand.Bytes(32))
 	keepers := NewTestKeepers(t)
+
+	defaultParams := contract.ParamsResponse{
+		BabylonContractCodeId:      0,
+		BtcStakingContractCodeId:   0,
+		BtcFinalityContractCodeId:  0,
+		BabylonContractAddress:     "",
+		BtcStakingContractAddress:  "",
+		BtcFinalityContractAddress: "",
+		MaxGasBeginBlocker:         500_000,
+	}
+	expData, err := json.Marshal(defaultParams)
+	require.NoError(t, err)
 
 	specs := map[string]struct {
 		src           wasmvmtypes.QueryRequest
@@ -30,12 +45,20 @@ func TestChainedCustomQuerier(t *testing.T) {
 			viewKeeper:    keepers.BabylonKeeper,
 			expNextCalled: true,
 		},
-		"custom non babylon query": {
+		"unexpected babylon query": {
 			src: wasmvmtypes.QueryRequest{
 				Custom: []byte(`{"foo":{}}`),
 			},
 			viewKeeper:    keepers.BabylonKeeper,
 			expNextCalled: true,
+		},
+		"expected babylon query": {
+			src: wasmvmtypes.QueryRequest{
+				Custom: []byte(`{"params":{}}`),
+			},
+			viewKeeper:    keepers.BabylonKeeper,
+			expNextCalled: false,
+			expData:       expData,
 		},
 	}
 	for name, spec := range specs {
@@ -62,12 +85,12 @@ func TestChainedCustomQuerier(t *testing.T) {
 var _ keeper.ViewKeeper = &MockViewKeeper{}
 
 type MockViewKeeper struct {
-	GetTestFn func(ctx sdk.Context, actor sdk.AccAddress) string
+	GetParamsFn func(ctx sdk.Context) types.Params
 }
 
-func (m MockViewKeeper) GetTest(ctx sdk.Context, actor sdk.AccAddress) string {
-	if m.GetTestFn == nil {
+func (m MockViewKeeper) GetParams(ctx sdk.Context) types.Params {
+	if m.GetParamsFn == nil {
 		panic("not expected to be called")
 	}
-	return m.GetTestFn(ctx, actor)
+	return m.GetParamsFn(ctx)
 }

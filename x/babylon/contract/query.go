@@ -1,16 +1,20 @@
 package contract
 
 // CustomQuery is a query request from a smart contract to the Babylon module
-// TODO: implement
 type CustomQuery struct {
-	Test *TestQuery `json:"test,omitempty"`
+	Params *ParamsQuery `json:"params,omitempty"`
 }
 
-type TestQuery struct {
-	Placeholder string `json:"placeholder,omitempty"`
-}
+// ParamsQuery requests the current module parameters
+type ParamsQuery struct{}
 
-type TestResponse struct {
-	// MaxCap is the max cap limit
-	Placeholder2 string `json:"placeholder2"`
+// ParamsResponse contains the current module parameters
+type ParamsResponse struct {
+	BabylonContractCodeId      uint64 `json:"babylon_contract_code_id,omitempty"`
+	BtcStakingContractCodeId   uint64 `json:"btc_staking_contract_code_id,omitempty"`
+	BtcFinalityContractCodeId  uint64 `json:"btc_finality_contract_code_id,omitempty"`
+	BabylonContractAddress     string `json:"babylon_contract_address,omitempty"`
+	BtcStakingContractAddress  string `json:"btc_staking_contract_address,omitempty"`
+	BtcFinalityContractAddress string `json:"btc_finality_contract_address,omitempty"`
+	MaxGasBeginBlocker         uint32 `json:"max_gas_begin_blocker,omitempty"`
 }

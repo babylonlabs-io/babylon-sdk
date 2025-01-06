@@ -10,12 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 type (
 	// abstract query keeper
 	ViewKeeper interface {
-		GetTest(ctx sdk.Context, actor sdk.AccAddress) string
+		GetParams(ctx sdk.Context) types.Params
 	}
 )
 
@@ -52,15 +53,22 @@ func ChainedCustomQuerier(k ViewKeeper, next wasmkeeper.WasmVMQueryHandler) wasm
 		if err := json.Unmarshal(request.Custom, &contractQuery); err != nil {
 			return nil, errorsmod.Wrap(err, "babylon query")
 		}
-		query := contractQuery.Test
-		if query == nil {
+		switch {
+		case contractQuery.Params != nil:
+			params := k.GetParams(ctx)
+			res := contract.ParamsResponse{
+				BabylonContractCodeId:      params.BabylonContractCodeId,
+				BtcStakingContractCodeId:   params.BtcStakingContractCodeId,
+				BtcFinalityContractCodeId:  params.BtcFinalityContractCodeId,
+				BabylonContractAddress:     params.BabylonContractAddress,
+				BtcStakingContractAddress:  params.BtcStakingContractAddress,
+				BtcFinalityContractAddress: params.BtcFinalityContractAddress,
+				MaxGasBeginBlocker:         params.MaxGasBeginBlocker,
+			}
+			return json.Marshal(res)
+		default:
 			return next.HandleQuery(ctx, caller, request)
 		}
-
-		res := contract.TestResponse{
-			Placeholder2: "hello world",
-		}
-		return json.Marshal(res)
 	})
 }
 
