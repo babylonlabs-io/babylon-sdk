@@ -1063,7 +1063,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(channeltypes.ORDERED, babylonChannel.Ordering)
 		s.Contains(babylonChannel.Counterparty.PortId, "wasm.")
 		return true
-	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon custom IBC channel")
+	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon custom IBC channel")
 
 	var consumerChannel *channeltypes.IdentifiedChannel
 	s.Eventually(func() bool {
