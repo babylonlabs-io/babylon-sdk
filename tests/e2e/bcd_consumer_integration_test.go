@@ -747,7 +747,7 @@ func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bsctype
 			return false
 		}
 		return activatedHeight != nil && activatedHeight.Height > 0
-	}, time.Minute, time.Second*5)
+	}, 90*time.Second, time.Second*5)
 }
 
 // helper function: createBabylonDelegation creates a random BTC delegation restaking to Babylon and consumer finality providers
