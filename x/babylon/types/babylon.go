@@ -30,9 +30,7 @@ func NewInitMsg(
 	checkpointFinalizationTimeout uint32,
 	notifyCosmosZone bool,
 	btcStakingCodeId uint64,
-	btcStakingInitMsgBytes []byte,
 	btcFinalityCodeId uint64,
-	btcFinalityInitMsgBytes []byte,
 	consumerName string,
 	consumerDescription string,
 	admin string,
@@ -44,11 +42,9 @@ func NewInitMsg(
 		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
 		"notify_cosmos_zone":              notifyCosmosZone,
 		"btc_staking_code_id":             btcStakingCodeId,
-		"btc_staking_msg":                 btcStakingInitMsgBytes,
 		"consumer_name":                   consumerName,
 		"consumer_description":            consumerDescription,
 		"btc_finality_code_id":            btcFinalityCodeId,
-		"btc_finality_msg":                btcFinalityInitMsgBytes,
 		"admin":                           admin,
 	}
 	initMsgBytes, err := json.Marshal(initMsg)
@@ -56,4 +52,18 @@ func NewInitMsg(
 		return nil, err
 	}
 	return initMsgBytes, nil
+}
+
+func NewBTCStakingInitMsg(admin string) ([]byte, error) {
+	initMsg := map[string]interface{}{
+		"admin": admin,
+	}
+	return json.Marshal(initMsg)
+}
+
+func NewBTCFinalityInitMsg(admin string) ([]byte, error) {
+	initMsg := map[string]interface{}{
+		"admin": admin,
+	}
+	return json.Marshal(initMsg)
 }

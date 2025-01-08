@@ -9,14 +9,17 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
-	types "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) InstantiateBabylonContracts(
 	ctx sdk.Context,
 	babylonContractCodeId uint64,
-	initMsg []byte,
+	btcStakingContractCodeId uint64,
+	btcFinalityContractCodeId uint64,
+	babylonInitMsg []byte,
+	btcStakingInitMsg []byte,
+	btcFinalityInitMsg []byte,
 ) (string, string, string, error) {
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
 
@@ -27,30 +30,22 @@ func (k Keeper) InstantiateBabylonContracts(
 	}
 
 	// instantiate Babylon contract
-	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, initMsg, "Babylon contract", nil)
+	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, babylonInitMsg, "Babylon contract", nil)
+	if err != nil {
+		return "", "", "", err
+	}
+	// instantiate BTC staking contract
+	btcStakingContractAddr, _, err := contractKeeper.Instantiate(ctx, btcStakingContractCodeId, govAddr, govAddr, btcStakingInitMsg, "BTC staking contract", nil)
+	if err != nil {
+		return "", "", "", err
+	}
+	// instantiate BTC finality contract
+	btcFinalityContractAddr, _, err := contractKeeper.Instantiate(ctx, btcFinalityContractCodeId, govAddr, govAddr, btcFinalityInitMsg, "BTC finality contract", nil)
 	if err != nil {
 		return "", "", "", err
 	}
 
-	// get contract addresses
-	configQuery := []byte(`{"config":{}}`)
-	res, err := k.wasm.QuerySmart(ctx, babylonContractAddr, configQuery)
-	if err != nil {
-		return "", "", "", err
-	}
-	var config types.BabylonContractConfig
-	err = json.Unmarshal(res, &config)
-	if err != nil {
-		return "", "", "", err
-	}
-	if len(config.BTCStaking) == 0 {
-		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
-	}
-	if len(config.BTCFinality) == 0 {
-		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
-	}
-
-	return babylonContractAddr.String(), config.BTCStaking, config.BTCFinality, nil
+	return babylonContractAddr.String(), btcStakingContractAddr.String(), btcFinalityContractAddr.String(), nil
 }
 
 func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {

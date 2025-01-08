@@ -1,13 +1,14 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -104,41 +105,24 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
 	btcFinalityContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_finality.wasm").CodeID
 
-	// Instantiate the contract
-	// TODO: parameterise
-	btcStakingInitMsg := map[string]interface{}{
-		"admin": p.GetSender().String(),
-	}
-	btcStakingInitMsgBytes, err := json.Marshal(btcStakingInitMsg)
+	// instantiate Babylon contracts
+	msgInstantiate, err := cli.ParseInstantiateArgs([]string{
+		strconv.FormatUint(babylonContractWasmId, 10),
+		strconv.FormatUint(btcStakingContractWasmId, 10),
+		strconv.FormatUint(btcFinalityContractWasmId, 10),
+		"regtest",
+		"01020304",
+		"1",
+		"2",
+		"false",
+		"test-consumer",
+		"test-consumer-description",
+		p.GetSender().String(),
+	}, p.GetSender().String())
 	if err != nil {
 		return nil, err
 	}
-	btcFinalityInitMsg := map[string]interface{}{
-		"admin": p.GetSender().String(),
-	}
-	btcFinalityInitMsgBytes, err := json.Marshal(btcFinalityInitMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	// instantiate Babylon contract
-	msgInstantiate := bbntypes.MsgInstantiateBabylonContracts{
-		Signer:                        p.GetSender().String(),
-		BabylonContractCodeId:         babylonContractWasmId,
-		BtcStakingContractCodeId:      btcStakingContractWasmId,
-		BtcFinalityContractCodeId:     btcFinalityContractWasmId,
-		Network:                       "regtest",
-		BabylonTag:                    "01020304",
-		BtcConfirmationDepth:          1,
-		CheckpointFinalizationTimeout: 2,
-		NotifyCosmosZone:              false,
-		BtcStakingMsg:                 btcStakingInitMsgBytes,
-		BtcFinalityMsg:                btcFinalityInitMsgBytes,
-		ConsumerName:                  "test-consumer",
-		ConsumerDescription:           "test-consumer-description",
-		Admin:                         p.GetSender().String(),
-	}
-	_, err = p.Chain.SendMsgs(&msgInstantiate)
+	_, err = p.Chain.SendMsgs(msgInstantiate)
 	if err != nil {
 		return nil, err
 	}

@@ -174,8 +174,6 @@ type.
 | `btc_confirmation_depth` | [uint32](#uint32) |  | btc_confirmation_depth is the number of confirmations required for Bitcoin transactions |
 | `checkpoint_finalization_timeout` | [uint32](#uint32) |  | checkpoint_finalization_timeout is the timeout in blocks for checkpoint finalization |
 | `notify_cosmos_zone` | [bool](#bool) |  | notify_cosmos_zone indicates whether to notify the Cosmos zone of events |
-| `btc_staking_msg` | [bytes](#bytes) |  | btc_staking_msg is the initialization message for the BTC staking contract |
-| `btc_finality_msg` | [bytes](#bytes) |  | btc_finality_msg is the initialization message for the BTC finality contract |
 | `consumer_name` | [string](#string) |  | consumer_name is the name of this consumer chain |
 | `consumer_description` | [string](#string) |  | consumer_description is a description of this consumer chain |
 | `admin` | [string](#string) |  | admin is the address that controls the Babylon module |
