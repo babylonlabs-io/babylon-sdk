@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -99,6 +98,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
 	babylonKeeper := consumerApp.BabylonKeeper
 	babylonMsgServer := babylonkeeper.NewMsgServer(babylonKeeper)
+	babylonQueryServer := babylonkeeper.NewQuerier(babylonKeeper)
 	wasmKeeper := consumerApp.WasmKeeper
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
 
@@ -124,9 +124,9 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	require.NoError(t, err)
 
 	msg, err := cli.ParseInstantiateArgs([]string{
-		strconv.FormatUint(babylonContractCodeID, 10),
-		strconv.FormatUint(btcStakingContractCodeID, 10),
-		strconv.FormatUint(btcFinalityContractCodeID, 10),
+		fmt.Sprintf("%d", babylonContractCodeID),
+		fmt.Sprintf("%d", btcStakingContractCodeID),
+		fmt.Sprintf("%d", btcFinalityContractCodeID),
 		"regtest",
 		"01020304",
 		"1",
@@ -143,7 +143,9 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	require.NoError(t, err)
 
 	// get params and verify contract addresses are set correctly
-	params := babylonKeeper.GetParams(ctx)
+	paramsResp, err := babylonQueryServer.Params(ctx, &types.QueryParamsRequest{})
+	require.NoError(t, err)
+	params := paramsResp.Params
 	require.NotEmpty(t, params.BabylonContractAddress)
 	require.NotEmpty(t, params.BtcStakingContractAddress)
 	require.NotEmpty(t, params.BtcFinalityContractAddress)

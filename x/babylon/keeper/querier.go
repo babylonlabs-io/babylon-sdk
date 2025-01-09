@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
@@ -12,13 +11,12 @@ import (
 var _ types.QueryServer = &querier{}
 
 type querier struct {
-	cdc codec.Codec
-	k   *Keeper
+	k *Keeper
 }
 
 // NewQuerier constructor
-func NewQuerier(cdc codec.Codec, k *Keeper) *querier {
-	return &querier{cdc: cdc, k: k}
+func NewQuerier(k *Keeper) *querier {
+	return &querier{k: k}
 }
 
 // Params implements the gRPC service handler for querying the babylon parameters.

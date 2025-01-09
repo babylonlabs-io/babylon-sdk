@@ -66,6 +66,7 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 	params.BabylonContractAddress = babylonContractAddr
 	params.BtcStakingContractAddress = btcStakingContractAddr
 	params.BtcFinalityContractAddress = btcFinalityContractAddr
+
 	if err := ms.k.SetParams(ctx, params); err != nil {
 		panic(err)
 	}
@@ -75,9 +76,10 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 
 // UpdateParams updates the params.
 func (ms msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if ms.k.authority != req.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.k.authority, req.Authority)
-	}
+	// TODO: remove this once determining gov gated contracts
+	// if ms.k.authority != req.Authority {
+	// 	return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.k.authority, req.Authority)
+	// }
 	if err := req.Params.ValidateBasic(); err != nil {
 		return nil, govtypes.ErrInvalidProposalMsg.Wrapf("invalid parameter: %v", err)
 	}

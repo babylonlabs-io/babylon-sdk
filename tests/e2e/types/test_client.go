@@ -2,13 +2,12 @@ package types
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,37 +98,79 @@ func (p *TestConsumerClient) GetSender() sdk.AccAddress {
 	return p.Chain.SenderAccount.GetAddress()
 }
 
-// TODO(babylon): deploy Babylon contracts
+// deploy Babylon contracts
+// TODO: use InstantiateBabylonContracts instead
 func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	babylonContractWasmId := p.Chain.StoreCodeFile("../testdata/babylon_contract.wasm").CodeID
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
 	btcFinalityContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_finality.wasm").CodeID
 
-	// instantiate Babylon contracts
-	msgInstantiate, err := cli.ParseInstantiateArgs([]string{
-		strconv.FormatUint(babylonContractWasmId, 10),
-		strconv.FormatUint(btcStakingContractWasmId, 10),
-		strconv.FormatUint(btcFinalityContractWasmId, 10),
+	initMsg, err := types.NewInitMsg(
 		"regtest",
 		"01020304",
-		"1",
-		"2",
-		"false",
+		1,
+		2,
+		false,
 		"test-consumer",
 		"test-consumer-description",
 		p.GetSender().String(),
-	}, p.GetSender().String())
+	)
+	resp, err := p.Chain.SendMsgs(&wasmtypes.MsgInstantiateContract{
+		Sender: p.GetSender().String(),
+		CodeID: babylonContractWasmId,
+		Label:  "v0.0.1",
+		Msg:    initMsg,
+		Funds:  []sdk.Coin{},
+		Admin:  p.GetSender().String(),
+	})
 	if err != nil {
 		return nil, err
 	}
+	babylonAddr := sdk.MustAccAddressFromBech32(resp.Events[4].Attributes[0].Value)
 
-	_, err = p.Chain.SendMsgs(msgInstantiate)
+	btcStakingInitMsg, err := types.NewBTCStakingInitMsg(
+		p.GetSender().String(),
+	)
+	resp, err = p.Chain.SendMsgs(&wasmtypes.MsgInstantiateContract{
+		Sender: p.GetSender().String(),
+		CodeID: btcStakingContractWasmId,
+		Label:  "v0.0.1",
+		Msg:    btcStakingInitMsg,
+		Funds:  []sdk.Coin{},
+		Admin:  p.GetSender().String(),
+	})
 	if err != nil {
 		return nil, err
 	}
+	btcStakingAddr := sdk.MustAccAddressFromBech32(resp.Events[4].Attributes[0].Value)
 
-	params := p.App.BabylonKeeper.GetParams(p.Chain.GetContext())
-	babylonAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
+	btcFinalityInitMsg, err := types.NewBTCFinalityInitMsg(
+		p.GetSender().String(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err = p.Chain.SendMsgs(&wasmtypes.MsgInstantiateContract{
+		Sender: p.GetSender().String(),
+		CodeID: btcFinalityContractWasmId,
+		Label:  "v0.0.1",
+		Msg:    btcFinalityInitMsg,
+		Funds:  []sdk.Coin{},
+		Admin:  p.GetSender().String(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	btcFinalityAddr := sdk.MustAccAddressFromBech32(resp.Events[4].Attributes[0].Value)
+
+	err = p.App.BabylonKeeper.SetParams(p.Chain.GetContext(), types.Params{
+		BabylonContractCodeId:      babylonContractWasmId,
+		BtcStakingContractCodeId:   btcStakingContractWasmId,
+		BtcFinalityContractCodeId:  btcFinalityContractWasmId,
+		BabylonContractAddress:     babylonAddr.String(),
+		BtcStakingContractAddress:  btcStakingAddr.String(),
+		BtcFinalityContractAddress: btcFinalityAddr.String(),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -32,19 +33,19 @@ func (k Keeper) InstantiateBabylonContracts(
 	// instantiate Babylon contract
 	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, babylonInitMsg, "Babylon contract", nil)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", types.ErrInvalid.Wrapf("failed to instantiate Babylon contract: %v", err)
 	}
 
 	// instantiate BTC staking contract
 	btcStakingContractAddr, _, err := contractKeeper.Instantiate(ctx, btcStakingContractCodeId, govAddr, govAddr, btcStakingInitMsg, "BTC staking contract", nil)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", types.ErrInvalid.Wrapf("failed to instantiate BTC staking contract: %v", err)
 	}
 
 	// instantiate BTC finality contract
 	btcFinalityContractAddr, _, err := contractKeeper.Instantiate(ctx, btcFinalityContractCodeId, govAddr, govAddr, btcFinalityInitMsg, "BTC finality contract", nil)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", types.ErrInvalid.Wrapf("failed to instantiate BTC finality contract: %v", err)
 	}
 
 	return babylonContractAddr.String(), btcStakingContractAddr.String(), btcFinalityContractAddr.String(), nil
