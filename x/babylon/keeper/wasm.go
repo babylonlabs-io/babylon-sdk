@@ -34,11 +34,13 @@ func (k Keeper) InstantiateBabylonContracts(
 	if err != nil {
 		return "", "", "", err
 	}
+
 	// instantiate BTC staking contract
 	btcStakingContractAddr, _, err := contractKeeper.Instantiate(ctx, btcStakingContractCodeId, govAddr, govAddr, btcStakingInitMsg, "BTC staking contract", nil)
 	if err != nil {
 		return "", "", "", err
 	}
+
 	// instantiate BTC finality contract
 	btcFinalityContractAddr, _, err := contractKeeper.Instantiate(ctx, btcFinalityContractCodeId, govAddr, govAddr, btcFinalityInitMsg, "BTC finality contract", nil)
 	if err != nil {

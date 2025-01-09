@@ -141,4 +141,18 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	// instantiate Babylon contract
 	_, err = babylonMsgServer.InstantiateBabylonContracts(ctx, msg)
 	require.NoError(t, err)
+
+	// get params and verify contract addresses are set correctly
+	params := babylonKeeper.GetParams(ctx)
+	require.NotEmpty(t, params.BabylonContractAddress)
+	require.NotEmpty(t, params.BtcStakingContractAddress)
+	require.NotEmpty(t, params.BtcFinalityContractAddress)
+
+	// verify addresses are valid
+	_, err = sdk.AccAddressFromBech32(params.BabylonContractAddress)
+	require.NoError(t, err)
+	_, err = sdk.AccAddressFromBech32(params.BtcStakingContractAddress)
+	require.NoError(t, err)
+	_, err = sdk.AccAddressFromBech32(params.BtcFinalityContractAddress)
+	require.NoError(t, err)
 }

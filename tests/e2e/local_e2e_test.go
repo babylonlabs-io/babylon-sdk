@@ -8,7 +8,6 @@ import (
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting2 "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
@@ -97,28 +96,11 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.NoError(err)
 	s.Equal(adminRespFinality["admin"], s.ConsumerCli.GetSender().String())
 
-	// get contract addresses
-	babylonContractAddress := s.ConsumerContract.Babylon.String()
-	btcStakingContractAddress := s.ConsumerContract.BTCStaking.String()
-	btcFinalityContractAddress := s.ConsumerContract.BTCFinality.String()
-
-	// update the contract address in parameters
-	msgUpdateParams := &bbntypes.MsgUpdateParams{
-		Authority: s.ConsumerApp.BabylonKeeper.GetAuthority(),
-		Params: bbntypes.Params{
-			MaxGasBeginBlocker:         500_000,
-			BabylonContractAddress:     babylonContractAddress,
-			BtcStakingContractAddress:  btcStakingContractAddress,
-			BtcFinalityContractAddress: btcFinalityContractAddress,
-		},
-	}
-	s.ConsumerCli.MustExecGovProposal(msgUpdateParams)
-
 	// assert the contract addresses are updated
 	params := s.ConsumerApp.BabylonKeeper.GetParams(s.ConsumerChain.GetContext())
-	s.Equal(babylonContractAddress, params.BabylonContractAddress)
-	s.Equal(btcStakingContractAddress, params.BtcStakingContractAddress)
-	s.Equal(btcFinalityContractAddress, params.BtcFinalityContractAddress)
+	s.Equal(s.ConsumerContract.Babylon.String(), params.BabylonContractAddress)
+	s.Equal(s.ConsumerContract.BTCStaking.String(), params.BtcStakingContractAddress)
+	s.Equal(s.ConsumerContract.BTCFinality.String(), params.BtcFinalityContractAddress)
 }
 
 func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {

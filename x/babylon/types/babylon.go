@@ -29,8 +29,6 @@ func NewInitMsg(
 	btcConfirmationDepth uint32,
 	checkpointFinalizationTimeout uint32,
 	notifyCosmosZone bool,
-	btcStakingCodeId uint64,
-	btcFinalityCodeId uint64,
 	consumerName string,
 	consumerDescription string,
 	admin string,
@@ -41,10 +39,8 @@ func NewInitMsg(
 		"btc_confirmation_depth":          btcConfirmationDepth,
 		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
 		"notify_cosmos_zone":              notifyCosmosZone,
-		"btc_staking_code_id":             btcStakingCodeId,
 		"consumer_name":                   consumerName,
 		"consumer_description":            consumerDescription,
-		"btc_finality_code_id":            btcFinalityCodeId,
 		"admin":                           admin,
 	}
 	initMsgBytes, err := json.Marshal(initMsg)

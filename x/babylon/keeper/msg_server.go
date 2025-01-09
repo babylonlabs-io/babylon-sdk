@@ -30,39 +30,31 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "only authority can override instantiated contracts; expected %s, got %s", ms.k.authority, req.Signer)
 	}
 
-	// if admin is not set, then use gov authority
-	admin := req.Admin
-	if admin == "" {
-		admin = ms.k.authority
-	}
-
 	// construct the init message
-	initMsgBytes, err := types.NewInitMsg(
+	babylonInitMsg, err := types.NewInitMsg(
 		req.Network,
 		req.BabylonTag,
 		req.BtcConfirmationDepth,
 		req.CheckpointFinalizationTimeout,
 		req.NotifyCosmosZone,
-		req.BtcStakingContractCodeId,
-		req.BtcFinalityContractCodeId,
 		req.ConsumerName,
 		req.ConsumerDescription,
-		admin,
+		req.Admin,
 	)
 	if err != nil {
 		return nil, err
 	}
-	btcStakingInitMsg, err := types.NewBTCStakingInitMsg(admin)
+	btcStakingInitMsg, err := types.NewBTCStakingInitMsg(req.Admin)
 	if err != nil {
 		return nil, err
 	}
-	btcFinalityInitMsg, err := types.NewBTCFinalityInitMsg(admin)
+	btcFinalityInitMsg, err := types.NewBTCFinalityInitMsg(req.Admin)
 	if err != nil {
 		return nil, err
 	}
 
 	// instantiate the contracts
-	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, req.BtcStakingContractCodeId, req.BtcFinalityContractCodeId, initMsgBytes, btcStakingInitMsg, btcFinalityInitMsg)
+	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, req.BtcStakingContractCodeId, req.BtcFinalityContractCodeId, babylonInitMsg, btcStakingInitMsg, btcFinalityInitMsg)
 	if err != nil {
 		return nil, err
 	}

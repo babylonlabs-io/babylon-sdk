@@ -122,6 +122,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	_, err = p.Chain.SendMsgs(msgInstantiate)
 	if err != nil {
 		return nil, err

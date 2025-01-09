@@ -83,11 +83,11 @@ func ParseInstantiateArgs(args []string, sender string) (*types.MsgInstantiateBa
 
 func NewInstantiateBabylonContractsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-hex] [btc-finality-init-msg-hex] [consumer-name] [consumer-description] [admin]",
+		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [consumer-name] [consumer-description] [admin]",
 		Short:   "Instantiate Babylon contracts",
 		Long:    "Instantiate Babylon contracts",
 		Aliases: []string{"i"},
-		Args:    cobra.ExactArgs(13),
+		Args:    cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

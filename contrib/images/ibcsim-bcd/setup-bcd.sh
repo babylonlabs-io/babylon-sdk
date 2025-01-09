@@ -109,4 +109,4 @@ sleep 10
 
 # Echo the command with expanded variables
 echo "Instantiating contract $BABYLON_CONTRACT_CODE_FILE..."
-$BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts 1 2 3 "regtest" "01020304" 1 2 false "" "" "Test\ Consumer" "Test\ Consumer\ Description" "" --admin=$(bcd --home $CHAINDIR/$CHAINID keys show user --keyring-backend test -a) --label "v0.0.1" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.001ustake --node http://localhost:$RPCPORT -y --amount 100000stake
+$BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts 1 2 3 "regtest" "01020304" 1 2 false "Test\ Consumer" "Test\ Consumer\ Description" "" --admin=$(bcd --home $CHAINDIR/$CHAINID keys show user --keyring-backend test -a) --label "v0.0.1" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.001ustake --node http://localhost:$RPCPORT -y --amount 100000stake
