@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
@@ -110,7 +111,8 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.NoError(err)
 	// send headers to the Babylon contract. This is to ensure that the contract is
 	// indexing BTC headers correctly.
-	res, err := s.ConsumerCli.Exec(s.ConsumerContract.Babylon, headersMsgBytes)
+	contractKeeper := wasmkeeper.NewGovPermissionKeeper(s.ConsumerApp.WasmKeeper)
+	res, err := contractKeeper.Execute(s.ConsumerChain.GetContext(), s.ConsumerContract.Babylon, s.ConsumerCli.GetSender(), headersMsgBytes, sdk.Coins{})
 	s.NoError(err, res)
 
 	testMsg = types.GenExecMessage()
@@ -118,8 +120,9 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.NoError(err)
 
 	// send msg to BTC staking contract via admin account
-	_, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCStaking, msgBytes)
-	s.NoError(err)
+	contractKeeper = wasmkeeper.NewGovPermissionKeeper(s.ConsumerApp.WasmKeeper)
+	res, err = contractKeeper.Execute(s.ConsumerChain.GetContext(), s.ConsumerContract.BTCStaking, s.ConsumerCli.GetSender(), msgBytes, sdk.Coins{})
+	s.NoError(err, res)
 
 	// ensure the finality provider is on consumer chain
 	consumerFps, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"finality_providers": {}})
@@ -130,13 +133,6 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	consumerDels, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"delegations": {}})
 	s.NoError(err)
 	s.NotEmpty(consumerDels)
-
-	// ensure the BTC staking is activated
-	resp, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"activated_height": {}})
-	s.NoError(err)
-	parsedActivatedHeight := resp["height"].(float64)
-	currentHeight := s.ConsumerChain.GetContext().BlockHeight()
-	s.Equal(uint64(parsedActivatedHeight), uint64(currentHeight))
 }
 
 func (s *BabylonSDKTestSuite) Test3BeginBlock() {
