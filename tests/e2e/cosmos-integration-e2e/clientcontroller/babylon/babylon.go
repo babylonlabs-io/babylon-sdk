@@ -11,14 +11,15 @@ package babylon
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"net/url"
+
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"math/rand"
-	"net/url"
 
 	sdkErr "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -534,7 +535,7 @@ func (bc *BabylonController) QueryStakingParams() (*types.StakingParams, error) 
 		SlashingPkScript:          stakingParamRes.Params.SlashingPkScript,
 		CovenantQuorum:            stakingParamRes.Params.CovenantQuorum,
 		SlashingRate:              stakingParamRes.Params.SlashingRate,
-		MinUnbondingTime:          stakingParamRes.Params.MinUnbondingTimeBlocks,
+		MinUnbondingTime:          stakingParamRes.Params.UnbondingTimeBlocks,
 	}, nil
 }
 

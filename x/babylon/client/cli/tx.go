@@ -1,7 +1,8 @@
 package cli
 
 import (
-	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -12,7 +13,9 @@ import (
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
-const flagAuthority = "authority"
+const (
+	flagAdmin = "admin"
+)
 
 // GetTxCmd returns the transaction commands for this module
 func GetTxCmd() *cobra.Command {
@@ -30,8 +33,8 @@ func GetTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-hex] [btc-finality-init-msg-hex] [consumer-name] [consumer-description] [admin]
-func parseInstantiateArgs(args []string, sender string) (*types.MsgInstantiateBabylonContracts, error) {
+// [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-json] [btc-finality-init-msg-json] [consumer-name] [consumer-description]
+func ParseInstantiateArgs(args []string, sender string, admin string) (*types.MsgInstantiateBabylonContracts, error) {
 	// get the id of the code to instantiate
 	babylonContractCodeID, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
@@ -60,17 +63,16 @@ func parseInstantiateArgs(args []string, sender string) (*types.MsgInstantiateBa
 	if err != nil {
 		return nil, err
 	}
-	btcStakingInitMsg, err := hex.DecodeString(args[8])
-	if err != nil {
-		return nil, err
+	btcStakingInitMsg := []byte(args[8])
+	if !json.Valid(btcStakingInitMsg) {
+		return nil, fmt.Errorf("invalid JSON in btc staking init message")
 	}
-	btcFinalityInitMsg, err := hex.DecodeString(args[9])
-	if err != nil {
-		return nil, err
+	btcFinalityInitMsg := []byte(args[9])
+	if !json.Valid(btcFinalityInitMsg) {
+		return nil, fmt.Errorf("invalid JSON in btc finality init message")
 	}
 	consumerName := args[10]
 	consumerDescription := args[11]
-	adminStr := args[12]
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgInstantiateBabylonContracts{
@@ -87,24 +89,32 @@ func parseInstantiateArgs(args []string, sender string) (*types.MsgInstantiateBa
 		BtcFinalityMsg:                btcFinalityInitMsg,
 		ConsumerName:                  consumerName,
 		ConsumerDescription:           consumerDescription,
-		Admin:                         adminStr,
+	}
+	if len(admin) > 0 {
+		msg.Admin = admin
 	}
 	return &msg, nil
 }
 
 func NewInstantiateBabylonContractsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-hex] [btc-finality-init-msg-hex] [consumer-name] [consumer-description] [admin]",
+		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-json] [btc-finality-init-msg-json] [consumer-name] [consumer-description]",
 		Short:   "Instantiate Babylon contracts",
 		Long:    "Instantiate Babylon contracts",
 		Aliases: []string{"i"},
-		Args:    cobra.ExactArgs(11),
+		Args:    cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			msg, err := parseInstantiateArgs(args, clientCtx.GetFromAddress().String())
+
+			admin, err := cmd.Flags().GetString(flagAdmin)
+			if err != nil {
+				return err
+			}
+
+			msg, err := ParseInstantiateArgs(args, clientCtx.GetFromAddress().String(), admin)
 			if err != nil {
 				return err
 			}
@@ -113,6 +123,7 @@ func NewInstantiateBabylonContractsCmd() *cobra.Command {
 		SilenceUsage: true,
 	}
 
+	cmd.Flags().String(flagAdmin, "", "Admin address for the contracts")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

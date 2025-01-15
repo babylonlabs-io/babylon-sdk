@@ -6,9 +6,6 @@ package e2e
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
-	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -17,6 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
+	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
+
 	sdkmath "cosmossdk.io/math"
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
@@ -24,7 +25,6 @@ import (
 	bbnparams "github.com/babylonlabs-io/babylon/app/params"
 	txformat "github.com/babylonlabs-io/babylon/btctxformatter"
 	"github.com/babylonlabs-io/babylon/client/config"
-	"github.com/babylonlabs-io/babylon/test/e2e/initialization"
 	"github.com/babylonlabs-io/babylon/testutil/datagen"
 	bbn "github.com/babylonlabs-io/babylon/types"
 	btcctypes "github.com/babylonlabs-io/babylon/x/btccheckpoint/types"
@@ -759,7 +759,7 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	s.Require().NoError(err)
 
 	// minimal required unbonding time
-	unbondingTime := uint16(initialization.BabylonBtcFinalizationPeriod) + 1
+	unbondingTime := uint16(params.MinUnbondingTime)
 
 	// NOTE: we use the node's secret key as Babylon secret key for the BTC delegation
 	pop, err := bstypes.NewPoPBTC(delBabylonAddr, czDelBtcSk)
