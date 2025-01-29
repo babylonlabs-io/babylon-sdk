@@ -42,6 +42,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var emptyErrs = []*sdkErr.Error{}
+
 type CosmwasmConsumerController struct {
 	cwClient *cwcclient.Client
 	cfg      *cwconfig.CosmwasmConfig
@@ -268,7 +270,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 		msgs = append(msgs, execMsg)
 	}
 
-	res, err := cc.reliablySendMsgs(msgs, nil, nil)
+	res, err := cc.reliablySendMsgs(msgs, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -746,7 +748,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, nil, nil)
+	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +763,7 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, nil, nil)
+	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
