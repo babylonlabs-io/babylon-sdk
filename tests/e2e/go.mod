@@ -31,7 +31,7 @@ require (
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
-	github.com/babylonlabs-io/babylon v1.0.1-rc.0.0.20250128115020-02612f9bc3a2
+	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250131
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6
@@ -40,7 +40,7 @@ require (
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cometbft/cometbft v0.38.15
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/relayer/v2 v2.5.2
+	github.com/cosmos/relayer/v2 v2.5.3
 	go.uber.org/zap v1.26.0
 )
 

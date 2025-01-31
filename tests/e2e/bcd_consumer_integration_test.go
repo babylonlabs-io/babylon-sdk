@@ -327,7 +327,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.NoError(err)
 
 	// Submit the public randomness to the consumer chain
-	txResp, err := s.cosmwasmController.CommitPubRandList(czFpBTCPK, uint64(czActivatedHeight), 100, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
+	txResp, err := s.cosmwasmController.CommitPubRandList(
+		czFpBTCPK,
+		uint64(czActivatedHeight),
+		100,
+		randListInfo.Commitment,
+		msgCommitPubRandList.Sig.MustToBTCSig(),
+	)
 	s.NoError(err)
 	s.NotNil(txResp)
 

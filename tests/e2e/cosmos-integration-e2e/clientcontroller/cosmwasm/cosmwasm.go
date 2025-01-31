@@ -42,8 +42,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var emptyErrs = []*sdkErr.Error{}
-
 type CosmwasmConsumerController struct {
 	cwClient *cwcclient.Client
 	cfg      *cwconfig.CosmwasmConfig
@@ -234,6 +232,8 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 	proofList [][]byte,
 	sigs []*btcec.ModNScalar,
 ) (*types.TxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	msgs := make([]sdk.Msg, 0, len(blocks))
 	for i, b := range blocks {
 		cmtProof := cmtcrypto.Proof{}
@@ -742,6 +742,8 @@ func (cc *CosmwasmConsumerController) Close() error {
 }
 
 func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
 		Contract: cc.cfg.BtcStakingContractAddress,
@@ -757,6 +759,8 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 }
 
 func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
 		Contract: cc.cfg.BtcFinalityContractAddress,
