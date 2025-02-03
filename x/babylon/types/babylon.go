@@ -49,7 +49,9 @@ func NewInitMsg(
 		"consumer_description":            consumerDescription,
 		"btc_finality_code_id":            btcFinalityCodeId,
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
-		"admin":                           admin,
+	}
+	if len(admin) > 0 {
+		initMsg["admin"] = admin
 	}
 	initMsgBytes, err := json.Marshal(initMsg)
 	if err != nil {

@@ -12,14 +12,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"math/rand"
 	"net/url"
 	"sort"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	sdkErr "cosmossdk.io/errors"
 	wasmdparams "github.com/CosmWasm/wasmd/app/params"
@@ -231,6 +232,8 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 	proofList [][]byte,
 	sigs []*btcec.ModNScalar,
 ) (*types.TxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	msgs := make([]sdk.Msg, 0, len(blocks))
 	for i, b := range blocks {
 		cmtProof := cmtcrypto.Proof{}
@@ -267,7 +270,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 		msgs = append(msgs, execMsg)
 	}
 
-	res, err := cc.reliablySendMsgs(msgs, nil, nil)
+	res, err := cc.reliablySendMsgs(msgs, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -739,13 +742,15 @@ func (cc *CosmwasmConsumerController) Close() error {
 }
 
 func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
 		Contract: cc.cfg.BtcStakingContractAddress,
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, nil, nil)
+	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -754,13 +759,15 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 }
 
 func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
 		Contract: cc.cfg.BtcFinalityContractAddress,
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, nil, nil)
+	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}

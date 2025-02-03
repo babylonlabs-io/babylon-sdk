@@ -62,23 +62,17 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 	s.MyProvChainActor = provChain.SenderAccount.GetAddress().String()
 }
 
-func (x *BabylonSDKTestSuite) setupBabylonIntegration() (*types.TestConsumerClient, *types.ConsumerContract, *types.TestProviderClient) {
-	x.Coordinator.SetupConnections(x.IbcPath)
+func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
+	s.Coordinator.SetupConnections(s.IbcPath)
 
 	// consumer client
-	consumerCli := types.NewConsumerClient(x.T(), x.ConsumerChain)
+	consumerCli := types.NewConsumerClient(s.T(), s.ConsumerChain)
 	// setup contracts on consumer
 	consumerContracts, err := consumerCli.BootstrapContracts()
-	x.NoError(err)
+	s.NoError(err)
 	// provider client
-	providerCli := types.NewProviderClient(x.T(), x.ProviderChain)
+	providerCli := types.NewProviderClient(s.T(), s.ProviderChain)
 
-	return consumerCli, consumerContracts, providerCli
-}
-
-func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
-	// deploy Babylon contracts to the consumer chain
-	consumerCli, consumerContracts, providerCli := s.setupBabylonIntegration()
 	s.NotEmpty(consumerCli.Chain.ChainID)
 	s.NotEmpty(providerCli.Chain.ChainID)
 	s.NotEmpty(consumerContracts.Babylon)
