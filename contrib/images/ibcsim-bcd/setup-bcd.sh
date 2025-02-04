@@ -2,17 +2,8 @@
 
 display_usage() {
 	echo "Missing parameters. Please check if all parameters were specified."
-	echo "Usage: setup-bcd.sh [CHAIN_ID] [CHAIN_DIR] [RPC_PORT] [P2P_PORT] [PROFILING_PORT] [GRPC_PORT] [BABYLON_CONTRACT_CODE_FILE] [BTCSTAKING_CONTRACT_CODE_FILE] [BTCFINALITY_CONTRACT_CODE_FILE] [INSTANTIATING_CFG]"
-	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm '{
-  "btc_confirmation_depth": 1,
-  "checkpoint_finalization_timeout": 2,
-  "network": "Regtest",
-  "babylon_tag": "01020304",
-  "notify_cosmos_zone": false,
-  "btc_staking_code_id": 2,
-  "btc_finality_code_id": 3
-}'
-"
+	echo "Usage: setup-bcd.sh [CHAIN_ID] [CHAIN_DIR] [RPC_PORT] [P2P_PORT] [PROFILING_PORT] [GRPC_PORT] [BABYLON_CONTRACT_CODE_FILE] [BTCSTAKING_CONTRACT_CODE_FILE] [BTCFINALITY_CONTRACT_CODE_FILE]"
+	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm"
 	exit 1
 }
 
@@ -44,7 +35,6 @@ GRPCPORT=$6
 BABYLON_CONTRACT_CODE_FILE=$7
 BTCSTAKING_CONTRACT_CODE_FILE=$8
 BTCFINALITY_CONTRACT_CODE_FILE=$9
-INSTANTIATING_CFG=${10}
 
 # ensure the binary exists
 if ! command -v $BINARY &>/dev/null; then
@@ -133,5 +123,47 @@ $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCFINALITY_CONTRACT_CODE_FILE
 sleep 10
 
 # Echo the command with expanded variables
-echo "Instantiating contract $BABYLON_CONTRACT_CODE_FILE..."
-$BINARY --home $CHAINDIR/$CHAINID tx wasm instantiate 1 "$INSTANTIATING_CFG" --admin=$(bcd --home $CHAINDIR/$CHAINID keys show user --keyring-backend test -a) --label "v0.0.1" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.001ustake --node http://localhost:$RPCPORT -y --amount 100000stake
+echo "Instantiating contracts..."
+
+FINALITY_MSG='{
+  "params": {
+    "max_active_finality_providers": 100,
+    "min_pub_rand": 1,
+    "finality_inflation_rate": "0.035",
+    "epoch_length": 10
+  }
+}'
+
+$BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts 1 2 3 "Regtest" "01020304" 1 2 false "" $FINALITY_MSG test-consumer test-consumer-description --admin=$(bcd --home $CHAINDIR/$CHAINID keys show user --keyring-backend test -a) $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.001ustake --node http://localhost:$RPCPORT -y --amount 100000stake
+
+# FINALITY_MSG='{
+#   "params": {
+#     "max_active_finality_providers": 100,
+#     "min_pub_rand": 1,
+#     "finality_inflation_rate": "0.035",
+#     "epoch_length": 10
+#   }
+# }'
+# echo "btc-finality instantiation msg:"
+# echo -n "$FINALITY_MSG" | jq '.'
+# ENCODED_FINALITY_MSG=$(echo -n "$FINALITY_MSG" | base64 -w0)
+# BABYLON_MSG="{
+#     \"network\": \"regtest\",
+#     \"babylon_tag\": \"01020304\",
+#     \"btc_confirmation_depth\": 1,
+#     \"checkpoint_finalization_timeout\": 2,
+#     \"notify_cosmos_zone\": false,
+#     \"btc_staking_code_id\": 2,
+#     \"consumer_name\": \"Test Consumer\",
+#     \"consumer_description\": \"Test Consumer Description\",
+#     \"btc_finality_code_id\": 3,
+#     \"btc_finality_msg\": \"$ENCODED_FINALITY_MSG\",
+#     \"transfer_info\": {
+#       \"channel_id\": \"channel-1\",
+#       \"recipient\": {
+#         \"module_addr\": \"zoneconcierge\"
+#       }
+#     }
+# }"
+# echo "babylon-contract instantiation msg:"
+# echo -n "$BABYLON_MSG" | jq '.'

@@ -8,39 +8,7 @@ CONSUMER_KEY="bcd-key"
 CONSUMER_CHAIN_ID="bcd-test"
 
 # 1. Create a bcd testnet with Babylon contract
-FINALITY_MSG='{
-  "params": {
-    "max_active_finality_providers": 100,
-    "min_pub_rand": 1,
-    "finality_inflation_rate": "0.035",
-    "epoch_length": 10
-  }
-}'
-echo "btc-finality instantiation msg:"
-echo -n "$FINALITY_MSG" | jq '.'
-ENCODED_FINALITY_MSG=$(echo -n "$FINALITY_MSG" | base64 -w0)
-BABYLON_MSG="{
-    \"network\": \"regtest\",
-    \"babylon_tag\": \"01020304\",
-    \"btc_confirmation_depth\": 1,
-    \"checkpoint_finalization_timeout\": 2,
-    \"notify_cosmos_zone\": false,
-    \"btc_staking_code_id\": 2,
-    \"consumer_name\": \"Test Consumer\",
-    \"consumer_description\": \"Test Consumer Description\",
-    \"btc_finality_code_id\": 3,
-    \"btc_finality_msg\": \"$ENCODED_FINALITY_MSG\",
-    \"transfer_info\": {
-      \"channel_id\": \"channel-1\",
-      \"recipient\": {
-        \"module_addr\": \"zoneconcierge\"
-      }
-    }
-}"
-echo "babylon-contract instantiation msg:"
-echo -n "$BABYLON_MSG" | jq '.'
-
-./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm "$BABYLON_MSG"
+./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm
 
 sleep 5
 
