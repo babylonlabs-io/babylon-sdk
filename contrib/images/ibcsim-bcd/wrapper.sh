@@ -12,6 +12,7 @@ CONSUMER_CHAIN_ID="bcd-test"
 
 sleep 5
 
+# TODO: query babylon module for getting the contract address
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
 CONTRACT_PORT="wasm.$CONTRACT_ADDRESS"
 echo "bcd started. Status of bcd node:"
@@ -82,10 +83,13 @@ rly --home $RELAYER_CONF_DIR keys restore babylon $BABYLON_KEY "$BABYLON_MEMO"
 sleep 10
 
 # 3. Start relayer
-echo "Creating IBC light clients, connection, and channels between the two CZs"
+echo "Creating IBC channel for zoneconcierge"
 rly --home $RELAYER_CONF_DIR tx link bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1
-[ $? -eq 0 ] && echo "Created custom IBC channel successfully!" || echo "Error creating custom IBC channel"
+[ $? -eq 0 ] && echo "Created zonecincierge IBC channel successfully!" || echo "Error creating zonecincierge IBC channel"
+
+echo "Creating IBC channel for IBC transfer"
 rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 &
+[ $? -eq 0 ] && echo "Created IBC transfer channel successfully!" || echo "Error creating IBC transfer channel"
 
 sleep 10
 
