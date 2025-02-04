@@ -134,6 +134,7 @@ $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
 	test-consumer \
 	test-consumer-description \
 	--admin=$ADMIN \
+	--ibc-transfer-channel-id=channel-1 \
 	$KEYRING \
 	--from user \
 	--chain-id $CHAINID \

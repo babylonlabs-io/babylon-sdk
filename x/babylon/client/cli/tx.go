@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	flagAdmin = "admin"
+	flagAdmin                = "admin"
+	flagIbcTransferChannelId = "ibc-transfer-channel-id"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -34,7 +35,7 @@ func GetTxCmd() *cobra.Command {
 }
 
 // [babylon-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-init-msg-json] [btc-finality-init-msg-json] [consumer-name] [consumer-description]
-func ParseInstantiateArgs(args []string, sender string, admin string) (*types.MsgInstantiateBabylonContracts, error) {
+func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender string, admin string) (*types.MsgInstantiateBabylonContracts, error) {
 	// get the id of the code to instantiate
 	babylonContractCodeID, err := strconv.ParseUint(args[0], 10, 64)
 	if err != nil {
@@ -90,6 +91,9 @@ func ParseInstantiateArgs(args []string, sender string, admin string) (*types.Ms
 		ConsumerName:                  consumerName,
 		ConsumerDescription:           consumerDescription,
 	}
+	if len(ibcTransferChannelId) > 0 {
+		msg.IbcTransferChannelId = ibcTransferChannelId
+	}
 	if len(admin) > 0 {
 		msg.Admin = admin
 	}
@@ -109,12 +113,16 @@ func NewInstantiateBabylonContractsCmd() *cobra.Command {
 				return err
 			}
 
+			ibcTransferChannelId, err := cmd.Flags().GetString(flagIbcTransferChannelId)
+			if err != nil {
+				return err
+			}
 			admin, err := cmd.Flags().GetString(flagAdmin)
 			if err != nil {
 				return err
 			}
 
-			msg, err := ParseInstantiateArgs(args, clientCtx.GetFromAddress().String(), admin)
+			msg, err := ParseInstantiateArgs(args, ibcTransferChannelId, clientCtx.GetFromAddress().String(), admin)
 			if err != nil {
 				return err
 			}
@@ -124,6 +132,7 @@ func NewInstantiateBabylonContractsCmd() *cobra.Command {
 	}
 
 	cmd.Flags().String(flagAdmin, "", "Admin address for the contracts")
+	cmd.Flags().String(flagIbcTransferChannelId, "", "IBC transfer channel ID")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }

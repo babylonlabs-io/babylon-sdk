@@ -29,6 +29,7 @@ func NewInitMsg(
 	btcConfirmationDepth uint32,
 	checkpointFinalizationTimeout uint32,
 	notifyCosmosZone bool,
+	ibcTransferChannelId string,
 	btcStakingCodeId uint64,
 	btcStakingInitMsgBytes []byte,
 	btcFinalityCodeId uint64,
@@ -49,6 +50,14 @@ func NewInitMsg(
 		"consumer_description":            consumerDescription,
 		"btc_finality_code_id":            btcFinalityCodeId,
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
+	}
+	if len(ibcTransferChannelId) > 0 {
+		initMsg["transfer_info"] = map[string]interface{}{
+			"channel_id": ibcTransferChannelId,
+			"recipient": map[string]interface{}{
+				"module_addr": "zoneconcierge",
+			},
+		}
 	}
 	if len(admin) > 0 {
 		initMsg["admin"] = admin
