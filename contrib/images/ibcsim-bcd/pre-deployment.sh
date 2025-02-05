@@ -4,7 +4,7 @@
 mkdir -p ibcsim-bcd/.testnets && chmod -R 777 ibcsim-bcd/.testnets
 echo "Creating and configuring testnet directory..."
 docker run --rm -v $(pwd)/ibcsim-bcd/.testnets:/data babylonlabs-io/babylond \
-    babylond testnet init-files --v 2 -o /data \
+    babylond testnet --v 2 -o /data \
     --starting-ip-address 192.168.10.2 --keyring-backend=test \
     --chain-id chain-test --epoch-interval 10 \
     --btc-finalization-timeout 2 --btc-confirmation-depth 1 \
