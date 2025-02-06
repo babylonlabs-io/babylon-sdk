@@ -37,6 +37,7 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 		req.BtcConfirmationDepth,
 		req.CheckpointFinalizationTimeout,
 		req.NotifyCosmosZone,
+		req.IbcTransferChannelId,
 		req.BtcStakingContractCodeId,
 		req.BtcStakingMsg,
 		req.BtcFinalityContractCodeId,

@@ -121,6 +121,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 			"test-consumer",
 			"test-consumer-description",
 		},
+		"",
 		p.GetSender().String(),
 		p.GetSender().String(),
 	)

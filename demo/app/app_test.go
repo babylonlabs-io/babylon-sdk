@@ -137,6 +137,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 			"test-consumer",
 			"test-consumer-description",
 		},
+		"",
 		babylonKeeper.GetAuthority(),
 		babylonKeeper.GetAuthority(),
 	)
