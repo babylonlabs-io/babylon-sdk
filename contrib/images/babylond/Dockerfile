@@ -5,7 +5,7 @@ FROM golang:1.23-alpine AS build-env
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM="linux/amd64"
 # Version to build. Default is empty
-ARG VERSION="112821536b0ada40aa29e34b53206f56c61bf631" # latest commit on babylon repo main branch
+ARG VERSION="58f8e83b73ce2ac9d1faee619f31662493b74840"
 ARG BABYLON_BUILD_OPTIONS=""
 ARG COSMOS_BUILD_OPTIONS=""
 
