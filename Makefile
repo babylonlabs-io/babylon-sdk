@@ -4,6 +4,7 @@
 DOCKER := $(shell which docker)
 
 export GO111MODULE = on
+export GOCACHE=off
 
 all: test
 
