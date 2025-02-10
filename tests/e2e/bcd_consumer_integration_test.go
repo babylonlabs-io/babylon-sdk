@@ -300,6 +300,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test5ActivateDelegation() {
 }
 
 func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
+	// TODO: remove this once the contract is updated to support updated reward distribution mechanism
+	s.T().Skip("Skipping rewards test temporarily - wip to support updated reward distribution mechanism")
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
