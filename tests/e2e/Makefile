@@ -5,7 +5,7 @@ BUILD_DIR = ./build
 all: test
 
 test:
-	go test -mod=readonly -race ./...
+	go test -count 1 -mod=readonly -race ./...
 
 build:
 	CGO_ENABLED=1 go test -c -mod=readonly -o $(BUILD_DIR)/babylon-sdk.e2e.test
