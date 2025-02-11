@@ -412,7 +412,25 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.NoError(err)
 	s.NotNil(withdrawRewardsTx)
 
-	// TODO: Check they have been sent to the staker's Babylon address after withdrawal
+	// Check they have been sent to the staker's Babylon address after withdrawal
+	s.Eventually(func() bool {
+		balance, err := s.babylonController.QueryBalances(stakerAddr)
+		if err != nil {
+			s.T().Logf("failed to query balance: %s", err.Error())
+			return false
+		}
+		if len(balance) == 0 {
+			return false
+		}
+		ibcDenom := getFirstIBCDenom(balance)
+		if ibcDenom == "" {
+			s.T().Logf("failed to get IBC denom")
+			return false
+		}
+		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
+		// Check that the balance of the IBC denom is greater than 0
+		return balance.AmountOf(ibcDenom).IsPositive()
+	}, 30*time.Second, time.Second*5)
 }
 
 // Test7BabylonFPCascadedSlashing
