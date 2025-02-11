@@ -33,7 +33,6 @@ import (
 	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
 	ckpttypes "github.com/babylonlabs-io/babylon/x/checkpointing/types"
 	ftypes "github.com/babylonlabs-io/babylon/x/finality/types"
-	zctypes "github.com/babylonlabs-io/babylon/x/zoneconcierge/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
@@ -317,8 +316,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.NoError(err)
 	s.Empty(rewards)
 
-	// Check that there are no tokens in the module account
-	balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
+	// Check that there are no tokens in the staking contract
+	balance, err := s.cosmwasmController.QueryStakingContractBalances()
 	s.NoError(err)
 	s.Empty(balance)
 
@@ -369,11 +368,10 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.Equal(hex.EncodeToString(finalizedBlock.AppHash), hex.EncodeToString(czActivatedBlock.AppHash))
 	s.True(finalizedBlock.Finalized)
 
-	// Ensure consumer rewards are generated (initially sent to the finality contract,
-	// then sent to the Babylon contract, after Consumer-side distribution, and then sent to the Babylon zoneconcierge
-	// module account)
+	// Ensure consumer rewards are generated.
+	// Initially sent to the finality contract, then sent to the staking contract.
 	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
+		balance, err := s.cosmwasmController.QueryStakingContractBalances()
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
@@ -381,15 +379,17 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 		if len(balance) == 0 {
 			return false
 		}
-		ibcDenom := getFirstIBCDenom(balance)
-		if ibcDenom == "" {
-			s.T().Logf("failed to get IBC denom")
+		if len(balance) != 1 {
+			s.T().Logf("unexpected number of balances: %d", len(balance))
 			return false
 		}
-		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
-		// Check that the balance of the IBC denom is greater than 0
-		return balance.AmountOf(ibcDenom).IsPositive()
+		denom := balance[0].Denom
+		fmt.Printf("Balance of denom '%s': %s\n", balance[0].Denom, balance.AmountOf(denom).String())
+		// Check that the balance of the denom is greater than 0
+		return balance.AmountOf(denom).IsPositive()
 	}, 30*time.Second, time.Second*5)
+
+	// TODO: And then sent to the staker's address when claiming
 }
 
 // Test7BabylonFPCascadedSlashing
