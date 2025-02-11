@@ -389,7 +389,30 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 		return balance.AmountOf(denom).IsPositive()
 	}, 30*time.Second, time.Second*5)
 
-	// TODO: And then sent to the staker's address when claiming
+	// Assert rewards are distributed among delegators
+	// Get staker address through a delegations query
+	delegations, err := s.cosmwasmController.QueryDelegations()
+	s.NoError(err)
+	s.Len(delegations.Delegations, 1)
+	delegation := delegations.Delegations[0]
+	stakerAddr := delegation.StakerAddr
+	s.Len(delegation.FpBtcPkList, 2)
+
+	// Get staker pending rewards
+	pendingRewards, err := s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
+	s.NoError(err)
+	s.Len(pendingRewards.Rewards, 1)
+	// Assert pending rewards for this staker are greater than 0
+	s.True(pendingRewards.Rewards[0].Rewards.IsPositive())
+
+	// Withdraw rewards for this staker and FP
+	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
+	fmt.Println("Withdrawing rewards for staker: ", stakerAddr, " and FP: ", fpPubkeyHex)
+	withdrawRewardsTx, err := s.cosmwasmController.WithdrawRewards(stakerAddr, fpPubkeyHex)
+	s.NoError(err)
+	s.NotNil(withdrawRewardsTx)
+
+	// TODO: Check they have been sent to the staker's Babylon address after withdrawal
 }
 
 // Test7BabylonFPCascadedSlashing
