@@ -1,5 +1,7 @@
 package cosmwasm
 
+import sdk "github.com/cosmos/cosmos-sdk/types"
+
 type ConsumerFpsResponse struct {
 	Fps []SingleConsumerFpResponse `json:"fps"`
 }
@@ -21,6 +23,7 @@ type ConsumerDelegationsResponse struct {
 }
 
 type SingleConsumerDelegationResponse struct {
+	StakerAddr           string                      `json:"staker_addr"`
 	BtcPkHex             string                      `json:"btc_pk_hex"`
 	FpBtcPkList          []string                    `json:"fp_btc_pk_list"`
 	StartHeight          uint32                      `json:"start_height"`
@@ -34,6 +37,7 @@ type SingleConsumerDelegationResponse struct {
 	UnbondingTime        uint32                      `json:"unbonding_time"`
 	UndelegationInfo     *BtcUndelegationInfo        `json:"undelegation_info"`
 	ParamsVersion        uint32                      `json:"params_version"`
+	Slashed              bool                        `json:"slashed"`
 }
 
 type ConsumerFpInfoResponse struct {
@@ -63,7 +67,7 @@ type NewFinalityProvider struct {
 	Description *FinalityProviderDescription `json:"description,omitempty"`
 	Commission  string                       `json:"commission"`
 	Addr        string                       `json:"addr"`
-	BTCPKHex    string                       `json:"btc_pk_hex"`
+	BtcPkHex    string                       `json:"btc_pk_hex"`
 	Pop         *ProofOfPossessionBtc        `json:"pop,omitempty"`
 	ConsumerID  string                       `json:"consumer_id"`
 }
@@ -129,6 +133,13 @@ type UnbondedBtcDelegation struct {
 	// Define fields as needed
 }
 
+type ExecMsg struct {
+	BtcStaking              *BtcStaking              `json:"btc_staking,omitempty"`
+	SubmitFinalitySignature *SubmitFinalitySignature `json:"submit_finality_signature,omitempty"`
+	CommitPublicRandomness  *CommitPublicRandomness  `json:"commit_public_randomness,omitempty"`
+	WithdrawRewards         *WithdrawRewards         `json:"withdraw_rewards,omitempty"`
+}
+
 type BtcStaking struct {
 	NewFP       []NewFinalityProvider   `json:"new_fp"`
 	ActiveDel   []ActiveBtcDelegation   `json:"active_del"`
@@ -136,19 +147,9 @@ type BtcStaking struct {
 	UnbondedDel []UnbondedBtcDelegation `json:"unbonded_del"`
 }
 
-type CommitPublicRandomness struct {
-	FPPubKeyHex string `json:"fp_pubkey_hex"`
-	StartHeight uint64 `json:"start_height"`
-	NumPubRand  uint64 `json:"num_pub_rand"`
-	Commitment  []byte `json:"commitment"`
-	Signature   []byte `json:"signature"`
-}
-
-type Proof struct {
-	Total    int64    `json:"total"`
-	Index    int64    `json:"index"`
-	LeafHash []byte   `json:"leaf_hash"`
-	Aunts    [][]byte `json:"aunts"`
+type FinalityProviderInfo struct {
+	BtcPkHex string `json:"btc_pk_hex"`
+	Height   uint64 `json:"height,omitempty"`
 }
 
 type SubmitFinalitySignature struct {
@@ -160,15 +161,24 @@ type SubmitFinalitySignature struct {
 	Signature   []byte `json:"signature"`
 }
 
-type ExecMsg struct {
-	SubmitFinalitySignature *SubmitFinalitySignature `json:"submit_finality_signature,omitempty"`
-	BtcStaking              *BtcStaking              `json:"btc_staking,omitempty"`
-	CommitPublicRandomness  *CommitPublicRandomness  `json:"commit_public_randomness,omitempty"`
+type Proof struct {
+	Total    int64    `json:"total"`
+	Index    int64    `json:"index"`
+	LeafHash []byte   `json:"leaf_hash"`
+	Aunts    [][]byte `json:"aunts"`
 }
 
-type FinalityProviderInfo struct {
-	BtcPkHex string `json:"btc_pk_hex"`
-	Height   uint64 `json:"height,omitempty"`
+type CommitPublicRandomness struct {
+	FPPubKeyHex string `json:"fp_pubkey_hex"`
+	StartHeight uint64 `json:"start_height"`
+	NumPubRand  uint64 `json:"num_pub_rand"`
+	Commitment  []byte `json:"commitment"`
+	Signature   []byte `json:"signature"`
+}
+
+type WithdrawRewards struct {
+	StakerAddr  string `json:"staker_addr"`
+	FpPubkeyHex string `json:"fp_pubkey_hex"`
 }
 
 type QueryMsgFinalityProviderInfo struct {
@@ -189,7 +199,7 @@ type QueryMsgBlocks struct {
 
 type BlocksQuery struct {
 	StartAfter *uint64 `json:"start_after,omitempty"`
-	Limit      *uint64 `json:"limit,omitempty"`
+	Limit      *uint32 `json:"limit,omitempty"`
 	Finalized  *bool   `json:"finalised,omitempty"` //TODO: finalised or finalized, typo in smart contract
 	Reverse    *bool   `json:"reverse,omitempty"`
 }
@@ -233,4 +243,41 @@ type QueryMsgLastPubRandCommit struct {
 
 type LastPubRandCommitQuery struct {
 	BtcPkHex string `json:"btc_pk_hex"`
+}
+
+type QueryMsgPendingRewards struct {
+	PendingRewards PendingRewardsQuery `json:"pending_rewards"`
+}
+
+type PendingRewardsQuery struct {
+	StakerAddr  string `json:"staker_addr"`
+	FpPubkeyHex string `json:"fp_pubkey_hex"`
+}
+
+type ConsumerPendingRewardsResponse struct {
+	Rewards []SingleConsumerPendingRewardsResponse `json:"rewards"`
+}
+
+type SingleConsumerPendingRewardsResponse struct {
+	Rewards sdk.Coin `json:"rewards"`
+}
+
+type QueryMsgAllPendingRewards struct {
+	PendingRewards AllPendingRewardsQuery `json:"all_pending_rewards"`
+}
+
+type AllPendingRewardsQuery struct {
+	StakerAddr string                        `json:"staker_addr"`
+	StartAfter *SinglePendingRewardsResponse `json:"start_after,omitempty"`
+	Limit      *uint32                       `json:"limit,omitempty"`
+}
+
+type ConsumerAllPendingRewardsResponse struct {
+	Rewards []SinglePendingRewardsResponse `json:"rewards"`
+}
+
+type SinglePendingRewardsResponse struct {
+	StakingTxHash []byte   `json:"staking_tx_hash"`
+	FpPubkeyHex   string   `json:"fp_pubkey_hex"`
+	Rewards       sdk.Coin `json:"rewards"`
 }
