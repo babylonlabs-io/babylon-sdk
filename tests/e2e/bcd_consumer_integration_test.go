@@ -33,7 +33,6 @@ import (
 	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
 	ckpttypes "github.com/babylonlabs-io/babylon/x/checkpointing/types"
 	ftypes "github.com/babylonlabs-io/babylon/x/finality/types"
-	zctypes "github.com/babylonlabs-io/babylon/x/zoneconcierge/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
@@ -317,8 +316,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.NoError(err)
 	s.Empty(rewards)
 
-	// Check that there are no tokens in the module account
-	balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
+	// Check that there are no tokens in the staking contract
+	balance, err := s.cosmwasmController.QueryStakingContractBalances()
 	s.NoError(err)
 	s.Empty(balance)
 
@@ -369,11 +368,53 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	s.Equal(hex.EncodeToString(finalizedBlock.AppHash), hex.EncodeToString(czActivatedBlock.AppHash))
 	s.True(finalizedBlock.Finalized)
 
-	// Ensure consumer rewards are generated (initially sent to the finality contract,
-	// then sent to the Babylon contract, after Consumer-side distribution, and then sent to the Babylon zoneconcierge
-	// module account)
+	// Ensure consumer rewards are generated.
+	// Initially sent to the finality contract, then sent to the staking contract.
 	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryModuleAccountBalances(zctypes.ModuleName)
+		balance, err := s.cosmwasmController.QueryStakingContractBalances()
+		if err != nil {
+			s.T().Logf("failed to query balance: %s", err.Error())
+			return false
+		}
+		if len(balance) == 0 {
+			return false
+		}
+		if len(balance) != 1 {
+			s.T().Logf("unexpected number of balances: %d", len(balance))
+			return false
+		}
+		denom := balance[0].Denom
+		fmt.Printf("Balance of denom '%s': %s\n", balance[0].Denom, balance.AmountOf(denom).String())
+		// Check that the balance of the denom is greater than 0
+		return balance.AmountOf(denom).IsPositive()
+	}, 30*time.Second, time.Second*5)
+
+	// Assert rewards are distributed among delegators
+	// Get staker address through a delegations query
+	delegations, err := s.cosmwasmController.QueryDelegations()
+	s.NoError(err)
+	s.Len(delegations.Delegations, 1)
+	delegation := delegations.Delegations[0]
+	stakerAddr := delegation.StakerAddr
+	s.Len(delegation.FpBtcPkList, 2)
+
+	// Get staker pending rewards
+	pendingRewards, err := s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
+	s.NoError(err)
+	s.Len(pendingRewards.Rewards, 1)
+	// Assert pending rewards for this staker are greater than 0
+	s.True(pendingRewards.Rewards[0].Rewards.IsPositive())
+
+	// Withdraw rewards for this staker and FP
+	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
+	fmt.Println("Withdrawing rewards for staker: ", stakerAddr, " and FP: ", fpPubkeyHex)
+	withdrawRewardsTx, err := s.cosmwasmController.WithdrawRewards(stakerAddr, fpPubkeyHex)
+	s.NoError(err)
+	s.NotNil(withdrawRewardsTx)
+
+	// Check they have been sent to the staker's Babylon address after withdrawal
+	s.Eventually(func() bool {
+		balance, err := s.babylonController.QueryBalances(stakerAddr)
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
@@ -768,7 +809,7 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	unbondingTime := uint16(params.MinUnbondingTime)
 
 	// NOTE: we use the node's secret key as Babylon secret key for the BTC delegation
-	pop, err := bstypes.NewPoPBTC(delBabylonAddr, czDelBtcSk)
+	pop, err := datagen.NewPoPBTC(delBabylonAddr, czDelBtcSk)
 	s.NoError(err)
 	// generate staking tx and slashing tx
 	stakingTimeBlocks := uint16(10000)
@@ -1129,7 +1170,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
 		s.T().Logf("IBC transfer channel established successfully")
 		return true
-	}, time.Minute, time.Second*2, "Failed to get expected Consumer transfer IBC channel")
+	}, time.Second*90, time.Second*2, "Failed to get expected Consumer transfer IBC channel")
 }
 
 // helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
@@ -1156,10 +1197,10 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 			return false
 		}
 		s.Require().NotNil(consumerRegistryResp)
-		s.Require().Len(consumerRegistryResp.GetConsumersRegister(), 1)
-		s.Require().Equal(registeredConsumer.ConsumerId, consumerRegistryResp.GetConsumersRegister()[0].ConsumerId)
-		s.Require().Equal(registeredConsumer.ConsumerName, consumerRegistryResp.GetConsumersRegister()[0].ConsumerName)
-		s.Require().Equal(registeredConsumer.ConsumerDescription, consumerRegistryResp.GetConsumersRegister()[0].ConsumerDescription)
+		s.Require().Len(consumerRegistryResp.ConsumerRegisters, 1)
+		s.Require().Equal(registeredConsumer.ConsumerId, consumerRegistryResp.ConsumerRegisters[0].ConsumerId)
+		s.Require().Equal(registeredConsumer.ConsumerName, consumerRegistryResp.ConsumerRegisters[0].ConsumerName)
+		s.Require().Equal(registeredConsumer.ConsumerDescription, consumerRegistryResp.ConsumerRegisters[0].ConsumerDescription)
 
 		return true
 	}, 2*time.Minute, 5*time.Second, "Consumer was not registered within the expected time")

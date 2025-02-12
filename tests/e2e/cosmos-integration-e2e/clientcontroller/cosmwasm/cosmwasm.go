@@ -370,7 +370,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvidersByPower() (*Consumer
 
 func (cc *CosmwasmConsumerController) QueryLatestFinalizedBlock() (*types.BlockInfo, error) {
 	isFinalized := true
-	limit := uint64(1)
+	limit := uint32(1)
 	blocks, err := cc.queryLatestBlocks(nil, &limit, &isFinalized, nil)
 	if err != nil || len(blocks) == 0 {
 		// do not return error here as FP handles this situation by
@@ -587,6 +587,85 @@ func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsRe
 	return &resp, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryPendingRewards(stakerAddress, fpPubkeyHex string) (*ConsumerPendingRewardsResponse, error) {
+	queryMsgStruct := QueryMsgPendingRewards{
+		PendingRewards: PendingRewardsQuery{
+			StakerAddr:  stakerAddress,
+			FpPubkeyHex: fpPubkeyHex,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ConsumerPendingRewardsResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryAllPendingRewards(stakerAddress string, startAfter *SinglePendingRewardsResponse, limit *uint32) (*ConsumerAllPendingRewardsResponse, error) {
+	queryMsgStruct := QueryMsgAllPendingRewards{
+		PendingRewards: AllPendingRewardsQuery{
+			StakerAddr: stakerAddress,
+			StartAfter: startAfter,
+			Limit:      limit,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ConsumerAllPendingRewardsResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}
+
+// WithdrawRewards
+func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex string) (*types.TxResponse, error) {
+	// Construct the ExecMsg struct
+	msg := ExecMsg{
+		WithdrawRewards: &WithdrawRewards{
+			StakerAddr:  stakerAddress,
+			FpPubkeyHex: fpPubkeyHex,
+		},
+	}
+
+	// Marshal the ExecMsg struct to JSON
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := cc.ExecuteStakingContract(msgBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.TxResponse{TxHash: res.TxHash}, nil
+}
+
 func (cc *CosmwasmConsumerController) QueryBabylonContractBalances() (sdk.Coins, error) {
 	return cc.QueryBalances(cc.cfg.BabylonContractAddress)
 }
@@ -639,7 +718,7 @@ func (cc *CosmwasmConsumerController) QueryBalances(address string) (sdk.Coins, 
 	return bankRes.GetBalances(), nil
 }
 
-func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter, limit *uint64, finalized, reverse *bool) ([]*types.BlockInfo, error) {
+func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter *uint64, limit *uint32, finalized, reverse *bool) ([]*types.BlockInfo, error) {
 	// Construct the query message
 	queryMsg := QueryMsgBlocks{
 		Blocks: BlocksQuery{

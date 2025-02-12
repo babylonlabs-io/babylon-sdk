@@ -52,12 +52,7 @@ func NewInitMsg(
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
 	}
 	if len(ibcTransferChannelId) > 0 {
-		initMsg["transfer_info"] = map[string]interface{}{
-			"channel_id": ibcTransferChannelId,
-			"recipient": map[string]interface{}{
-				"module_addr": "zoneconcierge",
-			},
-		}
+		initMsg["ics20_channel_id"] = ibcTransferChannelId
 	}
 	if len(admin) > 0 {
 		initMsg["admin"] = admin
