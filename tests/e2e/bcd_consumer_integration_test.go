@@ -809,7 +809,7 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	unbondingTime := uint16(params.MinUnbondingTime)
 
 	// NOTE: we use the node's secret key as Babylon secret key for the BTC delegation
-	pop, err := bstypes.NewPoPBTC(delBabylonAddr, czDelBtcSk)
+	pop, err := datagen.NewPoPBTC(delBabylonAddr, czDelBtcSk)
 	s.NoError(err)
 	// generate staking tx and slashing tx
 	stakingTimeBlocks := uint16(10000)
@@ -1197,10 +1197,10 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 			return false
 		}
 		s.Require().NotNil(consumerRegistryResp)
-		s.Require().Len(consumerRegistryResp.GetConsumersRegister(), 1)
-		s.Require().Equal(registeredConsumer.ConsumerId, consumerRegistryResp.GetConsumersRegister()[0].ConsumerId)
-		s.Require().Equal(registeredConsumer.ConsumerName, consumerRegistryResp.GetConsumersRegister()[0].ConsumerName)
-		s.Require().Equal(registeredConsumer.ConsumerDescription, consumerRegistryResp.GetConsumersRegister()[0].ConsumerDescription)
+		s.Require().Len(consumerRegistryResp.ConsumerRegisters, 1)
+		s.Require().Equal(registeredConsumer.ConsumerId, consumerRegistryResp.ConsumerRegisters[0].ConsumerId)
+		s.Require().Equal(registeredConsumer.ConsumerName, consumerRegistryResp.ConsumerRegisters[0].ConsumerName)
+		s.Require().Equal(registeredConsumer.ConsumerDescription, consumerRegistryResp.ConsumerRegisters[0].ConsumerDescription)
 
 		return true
 	}, 2*time.Minute, 5*time.Second, "Consumer was not registered within the expected time")
