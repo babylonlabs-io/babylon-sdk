@@ -238,6 +238,8 @@ require (
 )
 
 replace (
+	github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250212123728-4e2edfe9f106
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// local work dirs
