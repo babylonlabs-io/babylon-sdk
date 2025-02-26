@@ -518,8 +518,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test7ConsumerFPRewards() {
 // 2. Block is finalized.
 // 3. Equivocates/ Submits a invalid finality sig to Babylon
 // 4. Babylon FP is slashed
-// 4. Babylon notifies involved consumer about the delegations.
-// 5. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
+// 5. Babylon notifies involved consumer about the delegations.
+// 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
 func (s *BCDConsumerIntegrationTestSuite) Test8BabylonFPCascadedSlashing() {
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
