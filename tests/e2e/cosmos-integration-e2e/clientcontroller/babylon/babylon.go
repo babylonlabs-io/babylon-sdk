@@ -357,20 +357,6 @@ func (bc *BabylonController) InsertWBTCHeaders(r *rand.Rand) error {
 	return nil
 }
 
-func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderBytes) (*babylonclient.RelayerTxResponse, error) {
-	msg := &btclctypes.MsgInsertHeaders{
-		Signer:  bc.MustGetTxSigner(),
-		Headers: headers,
-	}
-
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
 func (bc *BabylonController) InsertNewEmptyBtcHeader(r *rand.Rand) (*btclctypes.BTCHeaderInfo, error) {
 	tipResp, err := bc.QueryBtcLightClientTip()
 	if err != nil {
@@ -409,6 +395,20 @@ func ParseBTCHeaderInfoResponseToInfo(r *btclctypes.BTCHeaderInfoResponse) (*btc
 		Height: r.Height,
 		Work:   &r.Work,
 	}, nil
+}
+
+func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderBytes) (*babylonclient.RelayerTxResponse, error) {
+	msg := &btclctypes.MsgInsertHeaders{
+		Signer:  bc.MustGetTxSigner(),
+		Headers: headers,
+	}
+
+	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 // TODO: only used in test. this should not be put here. it causes confusion that this is a method
@@ -474,6 +474,15 @@ func (bc *BabylonController) QueryBtcLightClientTip() (*btclctypes.BTCHeaderInfo
 	}
 
 	return res.Header, nil
+}
+
+func (bc *BabylonController) QueryBtcLightClientMainChain() (*btclctypes.QueryMainChainResponse, error) {
+	res, err := bc.bbnClient.QueryClient.BTCMainChain(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query BTC main chain: %v", err)
+	}
+
+	return res, nil
 }
 
 // TODO: this method only used in test. this should be refactored out to test files
