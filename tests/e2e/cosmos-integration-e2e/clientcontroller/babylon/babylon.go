@@ -357,6 +357,46 @@ func (bc *BabylonController) InsertWBTCHeaders(r *rand.Rand) error {
 	return nil
 }
 
+func (bc *BabylonController) InsertNewEmptyBtcHeader(r *rand.Rand) (*btclctypes.BTCHeaderInfo, error) {
+	tipResp, err := bc.QueryBtcLightClientTip()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query BTC light client tip: %w", err)
+	}
+
+	tip, err := ParseBTCHeaderInfoResponseToInfo(tipResp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse BTC light client tip: %w", err)
+	}
+
+	child := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *tip)
+	_, err = bc.InsertBtcBlockHeaders([]bbntypes.BTCHeaderBytes{*child.Header})
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert BTC block headers: %w", err)
+	}
+
+	return child, nil
+}
+
+// ParseBTCHeaderInfoResponseToInfo turns an BTCHeaderInfoResponse back to BTCHeaderInfo.
+func ParseBTCHeaderInfoResponseToInfo(r *btclctypes.BTCHeaderInfoResponse) (*btclctypes.BTCHeaderInfo, error) {
+	header, err := bbntypes.NewBTCHeaderBytesFromHex(r.HeaderHex)
+	if err != nil {
+		return nil, err
+	}
+
+	hash, err := bbntypes.NewBTCHeaderHashBytesFromHex(r.HashHex)
+	if err != nil {
+		return nil, err
+	}
+
+	return &btclctypes.BTCHeaderInfo{
+		Header: &header,
+		Hash:   &hash,
+		Height: r.Height,
+		Work:   &r.Work,
+	}, nil
+}
+
 func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderBytes) (*babylonclient.RelayerTxResponse, error) {
 	msg := &btclctypes.MsgInsertHeaders{
 		Signer:  bc.MustGetTxSigner(),
@@ -434,6 +474,15 @@ func (bc *BabylonController) QueryBtcLightClientTip() (*btclctypes.BTCHeaderInfo
 	}
 
 	return res.Header, nil
+}
+
+func (bc *BabylonController) QueryBtcLightClientMainChain() (*btclctypes.QueryMainChainResponse, error) {
+	res, err := bc.bbnClient.QueryClient.BTCMainChain(nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query BTC main chain: %v", err)
+	}
+
+	return res, nil
 }
 
 // TODO: this method only used in test. this should be refactored out to test files

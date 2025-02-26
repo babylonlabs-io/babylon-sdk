@@ -436,6 +436,32 @@ func (cc *CosmwasmConsumerController) QueryLastPublicRandCommit(fpPk *btcec.Publ
 	return &commit, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeadersResponse, error) {
+	queryMsgStruct := QueryMsgBtcHeaders{
+		BtcHeaders: BtcHeadersQuery{
+			Limit: limit,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp BtcHeadersResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
 func (cc *CosmwasmConsumerController) QueryIsBlockFinalized(height uint64) (bool, error) {
 	resp, err := cc.QueryIndexedBlock(height)
 	if err != nil || resp == nil {

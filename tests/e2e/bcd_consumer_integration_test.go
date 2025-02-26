@@ -158,11 +158,91 @@ func (s *BCDConsumerIntegrationTestSuite) Test2RegisterAndIntegrateConsumer() {
 	s.waitForIBCConnections()
 }
 
-// Test3CreateConsumerFinalityProvider
+// Test3BTCHeaderPropagation
+// 1. Inserts initial BTC headers in Babylon
+// 2. Verifies that headers propagate from Babylon -> Consumer
+// 3. Creates a fork in Babylon
+// 4. Verifies that fork headers propagate from Babylon -> Consumer
+func (s *BCDConsumerIntegrationTestSuite) Test3BTCHeaderPropagation() {
+	// Insert initial BTC headers in Babylon
+	header1, err := s.babylonController.InsertNewEmptyBtcHeader(r)
+	s.Require().NoError(err)
+	header2, err := s.babylonController.InsertNewEmptyBtcHeader(r)
+	s.Require().NoError(err)
+	header3, err := s.babylonController.InsertNewEmptyBtcHeader(r)
+	s.Require().NoError(err)
+
+	// Wait until headers are inserted in Babylon
+	var bbnBtcHeaders *btclctypes.QueryMainChainResponse
+	s.Eventually(func() bool {
+		bbnBtcHeaders, err = s.babylonController.QueryBtcLightClientMainChain()
+		return err == nil && bbnBtcHeaders != nil && len(bbnBtcHeaders.Headers) == 4
+	}, time.Second*60, time.Second)
+	// Reverse the headers (as query returns headers in reverse order)
+	reverseHeaders := make([]*btclctypes.BTCHeaderInfoResponse, len(bbnBtcHeaders.Headers))
+	for i, header := range bbnBtcHeaders.Headers {
+		reverseHeaders[len(bbnBtcHeaders.Headers)-1-i] = header
+	}
+	// Height 0 is base header, so no need to assert
+	s.Require().Equal(header1.Hash.MarshalHex(), reverseHeaders[1].HashHex)
+	s.Require().Equal(header2.Hash.MarshalHex(), reverseHeaders[2].HashHex)
+	s.Require().Equal(header3.Hash.MarshalHex(), reverseHeaders[3].HashHex)
+
+	// Headers should propagate from Babylon -> Consumer
+	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
+	s.Eventually(func() bool {
+		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
+	}, time.Second*60, time.Second)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+
+	// Create fork from header2
+	// TODO: In case of re-org Babylon should send headers from BSN base to tip but currently
+	// it only sends last W+1 headers, so if in tests we insert more then 2 fork headers (W is 2 in tests)
+	// Consumer chain will not be able to re-org as Babylon will not send more than 2 headers
+	// See - https://github.com/babylonlabs-io/babylon-contract/issues/114
+	forkBase := header2 // Known ancestor to fork from
+	forkHeader1 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkBase)
+	forkHeader2 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkHeader1)
+	// Insert fork in Babylon
+	_, err = s.babylonController.InsertBtcBlockHeaders([]bbn.BTCHeaderBytes{
+		*forkHeader1.Header,
+		*forkHeader2.Header,
+	})
+	s.Require().NoError(err)
+	// Wait until headers are inserted in Babylon
+	s.Eventually(func() bool {
+		bbnBtcHeaders, err = s.babylonController.QueryBtcLightClientMainChain()
+		return err == nil && bbnBtcHeaders != nil && len(bbnBtcHeaders.Headers) == 5
+	}, time.Second*60, time.Second)
+	// Reverse the headers (as query returns headers in reverse order)
+	reverseHeaders = make([]*btclctypes.BTCHeaderInfoResponse, len(bbnBtcHeaders.Headers))
+	for i, header := range bbnBtcHeaders.Headers {
+		reverseHeaders[len(bbnBtcHeaders.Headers)-1-i] = header
+	}
+	s.Require().Equal(forkHeader2.Hash.MarshalHex(), reverseHeaders[4].HashHex)
+	s.Require().Equal(forkHeader1.Hash.MarshalHex(), reverseHeaders[3].HashHex)
+	s.Require().Equal(header2.Hash.MarshalHex(), reverseHeaders[2].HashHex)
+	s.Require().Equal(header1.Hash.MarshalHex(), reverseHeaders[1].HashHex)
+
+	// Fork headers should propagate from Babylon -> Consumer
+	s.Eventually(func() bool {
+		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
+	}, time.Second*60, time.Second)
+	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[4].Hash)
+	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+}
+
+// Test4CreateConsumerFinalityProvider
 // 1. Creates and registers a random number of consumer FPs in Babylon.
 // 2. Babylon automatically sends IBC packets to the consumer chain to transmit this data.
 // 3. Verifies that the registered consumer FPs in Babylon match the data stored in the consumer chain's contract.
-func (s *BCDConsumerIntegrationTestSuite) Test3CreateConsumerFinalityProvider() {
+func (s *BCDConsumerIntegrationTestSuite) Test4CreateConsumerFinalityProvider() {
 	// generate a random number of finality providers from 1 to 5
 	numConsumerFPs := datagen.RandomInt(r, 5) + 1
 	fmt.Println("Number of consumer finality providers: ", numConsumerFPs)
@@ -197,10 +277,10 @@ func (s *BCDConsumerIntegrationTestSuite) Test3CreateConsumerFinalityProvider() 
 	}
 }
 
-// Test4RestakeDelegationToMultipleFPs
+// Test5RestakeDelegationToMultipleFPs
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
-func (s *BCDConsumerIntegrationTestSuite) Test4RestakeDelegationToMultipleFPs() {
+func (s *BCDConsumerIntegrationTestSuite) Test5RestakeDelegationToMultipleFPs() {
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
@@ -239,13 +319,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test4RestakeDelegationToMultipleFPs() 
 	s.Len(pendingDels.Dels[0].CovenantSigs, 0)
 }
 
-// Test5ActivateDelegation
+// Test6ActivateDelegation
 // 1. Submits covenant signatures to activate a BTC delegation
 // 2. Verifies the delegation is activated on Babylon
 // 3. Checks that Babylon sends IBC packets to update the consumer chain
 // 4. Verifies the delegation details in the consumer chain contract match Babylon
 // 5. Confirms the consumer FP voting power equals the total stake amount
-func (s *BCDConsumerIntegrationTestSuite) Test5ActivateDelegation() {
+func (s *BCDConsumerIntegrationTestSuite) Test6ActivateDelegation() {
 	// Query consumer finality provider
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -298,7 +378,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test5ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
+func (s *BCDConsumerIntegrationTestSuite) Test7ConsumerFPRewards() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -433,14 +513,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test6ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 }
 
-// Test7BabylonFPCascadedSlashing
+// Test8BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon
 // 2. Block is finalized.
 // 3. Equivocates/ Submits a invalid finality sig to Babylon
 // 4. Babylon FP is slashed
-// 4. Babylon notifies involved consumer about the delegations.
-// 5. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test7BabylonFPCascadedSlashing() {
+// 5. Babylon notifies involved consumer about the delegations.
+// 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
+func (s *BCDConsumerIntegrationTestSuite) Test8BabylonFPCascadedSlashing() {
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
 	s.NoError(err)
@@ -532,7 +612,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test7BabylonFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test8ConsumerFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test9ConsumerFPCascadedSlashing() {
 	// create a new consumer finality provider
 	resp, czFpBTCSK2, czFpBTCPK2 := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, resp.BtcPk.MarshalHex())

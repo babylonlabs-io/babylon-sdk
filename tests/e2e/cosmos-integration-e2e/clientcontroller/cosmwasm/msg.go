@@ -197,6 +197,34 @@ type QueryMsgBlocks struct {
 	Blocks BlocksQuery `json:"blocks"`
 }
 
+type BtcHeadersQuery struct {
+	Limit *uint32 `json:"limit,omitempty"`
+}
+
+type QueryMsgBtcHeaders struct {
+	BtcHeaders BtcHeadersQuery `json:"btc_headers"`
+}
+
+type BtcHeadersResponse struct {
+	Headers []BtcHeaderResponse `json:"headers"`
+}
+
+type BtcHeaderResponse struct {
+	Header  BtcHeader `json:"header"`
+	Hash    string    `json:"hash"`
+	Height  uint32    `json:"height"`
+	CumWork string    `json:"cum_work"` // Using string for Uint256
+}
+
+type BtcHeader struct {
+	Version       int32  `json:"version"`
+	PrevBlockhash string `json:"prev_blockhash"`
+	MerkleRoot    string `json:"merkle_root"`
+	Time          uint32 `json:"time"`
+	Bits          uint32 `json:"bits"`
+	Nonce         uint32 `json:"nonce"`
+}
+
 type BlocksQuery struct {
 	StartAfter *uint64 `json:"start_after,omitempty"`
 	Limit      *uint32 `json:"limit,omitempty"`
