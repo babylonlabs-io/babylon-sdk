@@ -103,27 +103,44 @@ func (k Keeper) getBTCFinalityContractAddr(ctx sdk.Context) sdk.AccAddress {
 	return addr
 }
 
-// SendBeginBlockMsg sends a BeginBlock sudo message to the BTC finality contract via sudo
+// SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo
 func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	ctx := sdk.UnwrapSDKContext(c)
+	headerInfo := ctx.HeaderInfo()
 
-	// try to get and parse BTC finality contract
-	addr := k.getBTCFinalityContractAddr(ctx)
-	if addr == nil {
+	// Get both contract addresses first
+	stakingAddr := k.getBTCStakingContractAddr(ctx)
+	finalityAddr := k.getBTCFinalityContractAddr(ctx)
+
+	// Return early if either address is missing
+	if stakingAddr == nil || finalityAddr == nil {
+		k.Logger(ctx).Info("Skipping begin block processing: contract addresses are missing")
 		return nil
 	}
 
-	// construct the sudo message
-	headerInfo := ctx.HeaderInfo()
-	msg := contract.SudoMsg{
+	// Process expired delegations in BTC staking contract
+	stakingMsg := contract.SudoMsg{
 		BeginBlockMsg: &contract.BeginBlock{
 			HashHex:    hex.EncodeToString(headerInfo.Hash),
 			AppHashHex: hex.EncodeToString(headerInfo.AppHash),
 		},
 	}
+	if err := k.doSudoCall(ctx, stakingAddr, stakingMsg); err != nil {
+		return err
+	}
 
-	// send the sudo call
-	return k.doSudoCall(ctx, addr, msg)
+	// Distribute rewards and compute active finality providers in BTC finality contract
+	finalityMsg := contract.SudoMsg{
+		BeginBlockMsg: &contract.BeginBlock{
+			HashHex:    hex.EncodeToString(headerInfo.Hash),
+			AppHashHex: hex.EncodeToString(headerInfo.AppHash),
+		},
+	}
+	if err := k.doSudoCall(ctx, finalityAddr, finalityMsg); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // SendEndBlockMsg sends a EndBlock sudo message to the BTC finality contract via sudo
