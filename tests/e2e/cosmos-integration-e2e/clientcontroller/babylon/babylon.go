@@ -185,6 +185,15 @@ func (bc *BabylonController) QueryNodeStatus() (*coretypes.ResultStatus, error) 
 	return bc.bbnClient.QueryClient.GetStatus()
 }
 
+func (bc *BabylonController) GetCurrentHeight() (uint64, error) {
+	status, err := bc.QueryNodeStatus()
+	if err != nil {
+		return 0, fmt.Errorf("failed to query node status: %w", err)
+	}
+
+	return uint64(status.SyncInfo.LatestBlockHeight), nil
+}
+
 // QueryFinalityProviderHasPower queries whether the finality provider has voting power at a given height
 func (bc *BabylonController) QueryFinalityProviderHasPower(fpPk *btcec.PublicKey, blockHeight uint64) (bool, error) {
 	res, err := bc.bbnClient.QueryClient.FinalityProviderPowerAtHeight(
