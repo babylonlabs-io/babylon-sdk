@@ -111,17 +111,14 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	ctx := sdk.UnwrapSDKContext(c)
 	headerInfo := ctx.HeaderInfo()
 
-	// Get both contract addresses first
 	stakingAddr := k.getBTCStakingContractAddr(ctx)
 	finalityAddr := k.getBTCFinalityContractAddr(ctx)
-
-	// Return early if either address is missing
 	if stakingAddr == nil || finalityAddr == nil {
 		k.Logger(ctx).Info("Skipping begin block processing: contract addresses are missing")
 		return nil
 	}
 
-	// Process expired delegations in BTC staking contract
+	// Send the sudo call to the BTC staking contract
 	stakingMsg := contract.SudoMsg{
 		BeginBlockMsg: &contract.BeginBlock{
 			HashHex:    hex.EncodeToString(headerInfo.Hash),
@@ -132,7 +129,7 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 		return err
 	}
 
-	// Distribute rewards and compute active finality providers in BTC finality contract
+	// Send the sudo call to the finality contract
 	finalityMsg := contract.SudoMsg{
 		BeginBlockMsg: &contract.BeginBlock{
 			HashHex:    hex.EncodeToString(headerInfo.Hash),
