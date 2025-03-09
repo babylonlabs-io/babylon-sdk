@@ -103,7 +103,10 @@ func (k Keeper) getBTCFinalityContractAddr(ctx sdk.Context) sdk.AccAddress {
 	return addr
 }
 
-// SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo
+// SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo.
+// NOTE: This is a design decision to be made by consumer chains - in this reference implementation,
+// if the sudo call fails it will cause consensus failure/chain halt. Consumer chains may want to
+// handle sudo call failures differently based on their requirements.
 func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	ctx := sdk.UnwrapSDKContext(c)
 	headerInfo := ctx.HeaderInfo()
