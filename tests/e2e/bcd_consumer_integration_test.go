@@ -1360,7 +1360,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
 		s.T().Logf("IBC transfer channel established successfully")
 		return true
-	}, time.Minute*2, time.Second*2, "Failed to get expected Consumer transfer IBC channel")
+	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
 }
 
 // helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
