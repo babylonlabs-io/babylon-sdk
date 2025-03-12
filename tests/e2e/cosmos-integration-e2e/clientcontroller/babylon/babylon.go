@@ -165,7 +165,7 @@ func (bc *BabylonController) RegisterFinalityProvider(
 		ConsumerId:  chainID,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func (bc *BabylonController) CreateBTCDelegation(
 		DelegatorUnbondingSlashingSig: delUnbondingSlashingSig,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderB
 		Headers: headers,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -637,7 +637,7 @@ func (bc *BabylonController) SubmitCovenantSigs(
 		SlashingUnbondingTxSigs: unbondingSlashingSigs,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -651,7 +651,7 @@ func (bc *BabylonController) InsertSpvProofs(submitter string, proofs []*btcctyp
 		Proofs:    proofs,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -668,7 +668,7 @@ func (bc *BabylonController) RegisterConsumerChain(id, name, description string)
 		ConsumerDescription: description,
 	}
 
-	res, err := bc.reliablySendMsg(msg, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
