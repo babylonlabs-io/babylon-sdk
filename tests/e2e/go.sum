@@ -268,8 +268,8 @@ github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX
 github.com/aws/aws-sdk-go v1.44.312 h1:llrElfzeqG/YOLFFKjg1xNpZCFJ2xraIi3PqSuP+95k=
 github.com/aws/aws-sdk-go v1.44.312/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250212123728-4e2edfe9f106 h1:I/keUkpZY6erL9tlFydS5Nk5hFvMeUNcom4870wF0xo=
-github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250212123728-4e2edfe9f106/go.mod h1:60dia4UZsmT39kjlQAbRVYREMwgdM4oA1cLaghsT1mQ=
+github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250312114638-314a276a4cc9 h1:ukAIsekXaHfQb643neM533VHjfqG+nl5eOXGatFkduc=
+github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250312114638-314a276a4cc9/go.mod h1:60dia4UZsmT39kjlQAbRVYREMwgdM4oA1cLaghsT1mQ=
 github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6 h1:dIkjNQmlo75sAZ4ZvPlEenfC4XdCR46eiPoTOX3a9i0=
 github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6/go.mod h1:+No4dcrR8vJUm7bmx5y2TusLvPsjWeRHUB4WLmKtpEE=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
