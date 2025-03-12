@@ -34,7 +34,7 @@ require (
 	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6
+	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250310085509-a6e0887e8b94
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
