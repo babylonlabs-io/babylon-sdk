@@ -76,6 +76,19 @@ func NewCosmwasmConsumerController(
 	}, nil
 }
 
+func (cc *CosmwasmConsumerController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+	return cc.sendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
+}
+
+func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+	return cc.cwClient.SendMsgs(
+		context.Background(),
+		msgs,
+		expectedErrs,
+		unrecoverableErrs,
+	)
+}
+
 func (cc *CosmwasmConsumerController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
 	return cc.reliablySendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
@@ -270,7 +283,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 		msgs = append(msgs, execMsg)
 	}
 
-	res, err := cc.reliablySendMsgs(msgs, emptyErrs, emptyErrs)
+	res, err := cc.sendMsgs(msgs, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -855,7 +868,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
+	res, err := cc.sendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -872,7 +885,7 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 		Msg:      msgBytes,
 	}
 
-	res, err := cc.reliablySendMsg(execMsg, emptyErrs, emptyErrs)
+	res, err := cc.sendMsg(execMsg, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}

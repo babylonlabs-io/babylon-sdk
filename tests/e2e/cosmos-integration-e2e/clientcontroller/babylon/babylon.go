@@ -110,6 +110,19 @@ func (bc *BabylonController) GetKeyAddress() sdk.AccAddress {
 	return addr
 }
 
+func (bc *BabylonController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*babylonclient.RelayerTxResponse, error) {
+	return bc.sendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
+}
+
+func (bc *BabylonController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*babylonclient.RelayerTxResponse, error) {
+	return bc.bbnClient.SendMsgs(
+		context.Background(),
+		msgs,
+		expectedErrs,
+		unrecoverableErrs,
+	)
+}
+
 func (bc *BabylonController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*babylonclient.RelayerTxResponse, error) {
 	return bc.reliablySendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
@@ -668,7 +681,7 @@ func (bc *BabylonController) CommitPublicRandomness(
 ) (*types.TxResponse, error) {
 	signerAddr := bc.MustGetTxSigner()
 	msgCommitPubRandList.Signer = signerAddr
-	res, err := bc.reliablySendMsg(msgCommitPubRandList, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msgCommitPubRandList, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -706,7 +719,7 @@ func (bc *BabylonController) SubmitFinalitySignature(
 		BlockAppHash: block.Block.AppHash,
 		FinalitySig:  eotsSig,
 	}
-	res, err := bc.reliablySendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
@@ -741,7 +754,7 @@ func (bc *BabylonController) SubmitInvalidFinalitySignature(
 		BlockAppHash: invalidAppHash,
 		FinalitySig:  invalidEotsSig,
 	}
-	res, err := bc.reliablySendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
+	res, err := bc.sendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
 	}
