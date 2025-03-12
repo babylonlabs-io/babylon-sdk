@@ -34,7 +34,7 @@ require (
 	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250310085509-a6e0887e8b94
+	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250312133538-e71e0ea14828
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
@@ -240,7 +240,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250312114638-314a276a4cc9
+	github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250312133210-7957fd544145
 
 	// local work dirs
 	github.com/babylonlabs-io/babylon-sdk/demo => ../../demo
