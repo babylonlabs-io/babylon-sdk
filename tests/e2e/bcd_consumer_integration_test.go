@@ -598,12 +598,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test8BabylonFPCascadedSlashing() {
 			randListInfo1.ProofList[randIdx].ToProto(),
 			submitHeight,
 		)
-		// If the vote is rejected because the epoch is timestamped, continue to
-		// the next block
 		if err == nil {
 			s.NotEmpty(txResp)
+			s.T().Logf("Successfully submitted invalid finality signature")
 			break
 		}
+		// If the vote is rejected because the epoch is timestamped, continue to
+		// the next block
 		s.T().Logf("Failed to submit invalid finality signature: %v", err)
 		if !strings.Contains(err.Error(), "already finalized and timestamped") {
 			break
@@ -619,8 +620,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test8BabylonFPCascadedSlashing() {
 			s.T().Logf("Error querying finality provider: %v", err)
 			return false
 		}
-		return fp != nil &&
-			fp.FinalityProvider.SlashedBtcHeight > 0
+		if fp != nil && fp.FinalityProvider.SlashedBtcHeight > 0 {
+			s.T().Logf("Finality provider slashed at height: %d", fp.FinalityProvider.SlashedBtcHeight)
+			return true
+		}
+		s.T().Logf("Finality provider NOT slashed")
+		return false
 	}, time.Minute, time.Second*5)
 
 	// query consumer finality provider
