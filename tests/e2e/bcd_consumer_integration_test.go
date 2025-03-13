@@ -1442,8 +1442,12 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64, wait 
 	}
 	resp, err := bbnClient.RawCheckpoints(pagination)
 	s.NoError(err)
-	s.T().Logf("start finalizing checkpointed epochs till %d", len(resp.RawCheckpoints))
-	epoch = uint64(len(resp.RawCheckpoints))
+	if len(resp.RawCheckpoints) == 0 {
+		s.T().Logf("no checkpoints found")
+		return
+	}
+	epoch = resp.RawCheckpoints[len(resp.RawCheckpoints)-1].Ckpt.EpochNum
+	s.T().Logf("start finalizing checkpointed epochs till %d", epoch)
 
 	submitter := s.babylonController.GetKeyAddress()
 
