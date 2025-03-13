@@ -143,7 +143,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 	s.T().Logf("Consumer node status: %v", consumerStatus.SyncInfo.LatestBlockHeight)
 }
 
-// Test2RegisterAndIntegrateConsumer registers a new consumer and
+// Test02RegisterAndIntegrateConsumer registers a new consumer and
 // 1. Verifies that an IBC connection is established between the consumer chain and Babylon
 // 2. Checks that the consumer is registered in Babylon's consumer registry
 // 3. Validates the consumer registration details in Babylon
@@ -157,7 +157,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 	s.waitForIBCConnections()
 }
 
-// Test3BTCHeaderPropagation
+// Test03BTCHeaderPropagation
 // 1. Inserts initial BTC headers in Babylon
 // 2. Verifies that headers propagate from Babylon -> Consumer
 // 3. Creates a fork in Babylon
@@ -237,7 +237,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
 }
 
-// Test4CreateConsumerFinalityProvider
+// Test04CreateConsumerFinalityProvider
 // 1. Creates and registers a random number of consumer FPs in Babylon.
 // 2. Babylon automatically sends IBC packets to the consumer chain to transmit this data.
 // 3. Verifies that the registered consumer FPs in Babylon match the data stored in the consumer chain's contract.
@@ -276,7 +276,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 	}
 }
 
-// Test5RestakeDelegationToMultipleFPs
+// Test05RestakeDelegationToMultipleFPs
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
 func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs() {
@@ -318,7 +318,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	s.Len(pendingDels.Dels[0].CovenantSigs, 0)
 }
 
-// Test6ActivateDelegation
+// Test06ActivateDelegation
 // 1. Submits covenant signatures to activate a BTC delegation
 // 2. Verifies the delegation is activated on Babylon
 // 3. Checks that Babylon sends IBC packets to update the consumer chain
@@ -528,13 +528,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 }
 
-// Test8BabylonFPCascadedSlashing
+// Test08BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon
 // 2. Block is finalized (but not yet timestamped)
 // 3. Equivocates/ Submits an invalid finality sig to Babylon
 // 4. Babylon FP is slashed
 // 6. Consumer discounts the voting power of other involved consumer FPs in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test8BabylonFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
 	s.NoError(err)
