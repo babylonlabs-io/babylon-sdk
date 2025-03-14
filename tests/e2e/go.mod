@@ -31,10 +31,10 @@ require (
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.4.0
-	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250131
+	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20240908181148-88f10f0917e6
+	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250312153802-5b848d88c204
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
@@ -239,9 +239,8 @@ require (
 )
 
 replace (
-
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-	github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250212123728-4e2edfe9f106
+	github.com/babylonlabs-io/babylon => github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250312133210-7957fd544145
 
 	// local work dirs
 	github.com/babylonlabs-io/babylon-sdk/demo => ../../demo

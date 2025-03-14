@@ -143,7 +143,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 	s.T().Logf("Consumer node status: %v", consumerStatus.SyncInfo.LatestBlockHeight)
 }
 
-// Test2RegisterAndIntegrateConsumer registers a new consumer and
+// Test02RegisterAndIntegrateConsumer registers a new consumer and
 // 1. Verifies that an IBC connection is established between the consumer chain and Babylon
 // 2. Checks that the consumer is registered in Babylon's consumer registry
 // 3. Validates the consumer registration details in Babylon
@@ -157,7 +157,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 	s.waitForIBCConnections()
 }
 
-// Test3BTCHeaderPropagation
+// Test03BTCHeaderPropagation
 // 1. Inserts initial BTC headers in Babylon
 // 2. Verifies that headers propagate from Babylon -> Consumer
 // 3. Creates a fork in Babylon
@@ -237,7 +237,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
 }
 
-// Test4CreateConsumerFinalityProvider
+// Test04CreateConsumerFinalityProvider
 // 1. Creates and registers a random number of consumer FPs in Babylon.
 // 2. Babylon automatically sends IBC packets to the consumer chain to transmit this data.
 // 3. Verifies that the registered consumer FPs in Babylon match the data stored in the consumer chain's contract.
@@ -276,7 +276,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 	}
 }
 
-// Test5RestakeDelegationToMultipleFPs
+// Test05RestakeDelegationToMultipleFPs
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
 func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs() {
@@ -318,7 +318,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	s.Len(pendingDels.Dels[0].CovenantSigs, 0)
 }
 
-// Test6ActivateDelegation
+// Test06ActivateDelegation
 // 1. Submits covenant signatures to activate a BTC delegation
 // 2. Verifies the delegation is activated on Babylon
 // 3. Checks that Babylon sends IBC packets to update the consumer chain
@@ -401,31 +401,47 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 	s.Empty(balance)
 
 	// Commit public randomness at the activated block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK, uint64(czActivatedHeight), 100)
+	numPubRand := uint64(200)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK, uint64(czActivatedHeight), numPubRand)
 	s.NoError(err)
 
 	// Submit the public randomness to the consumer chain
 	txResp, err := s.cosmwasmController.CommitPubRandList(
 		czFpBTCPK,
 		uint64(czActivatedHeight),
-		100,
+		numPubRand,
 		randListInfo.Commitment,
 		msgCommitPubRandList.Sig.MustToBTCSig(),
 	)
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// Consumer finality provider submits finality signature
-	txResp, err = s.cosmwasmController.SubmitFinalitySig(
-		czFpBTCSK,
-		czFpBTCPK,
-		randListInfo.SRList[0],
-		&randListInfo.PRList[0],
-		randListInfo.ProofList[0].ToProto(),
-		czActivatedHeight,
-	)
-	s.NoError(err)
-	s.NotNil(txResp)
+	// Consumer finality provider submits finality signature, eventually
+	//succeeds
+	s.Eventually(func() bool {
+		// TODO: Obtain or compute the exact epoch to be finalised to cover the
+		// public randomness commit
+		finalizeEpoch := uint64(20)
+		s.finalizeUntilEpoch(finalizeEpoch, false)
+
+		txResp, err = s.cosmwasmController.SubmitFinalitySig(
+			czFpBTCSK,
+			czFpBTCPK,
+			randListInfo.SRList[0],
+			&randListInfo.PRList[0],
+			randListInfo.ProofList[0].ToProto(),
+			czActivatedHeight,
+		)
+		if err != nil {
+			s.T().Logf("Error submitting finality sig: %v", err)
+			return false
+		}
+		if txResp == nil {
+			return false
+		}
+		s.T().Logf("Finality sig for height %d was submitted successfully", czActivatedHeight)
+		return true
+	}, 3*time.Minute, time.Second*10)
 
 	// Ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
@@ -512,75 +528,89 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 }
 
-// Test8BabylonFPCascadedSlashing
+// Test08BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon
-// 2. Block is finalized.
-// 3. Equivocates/ Submits a invalid finality sig to Babylon
+// 2. Block is finalized (but not yet timestamped)
+// 3. Equivocates/ Submits an invalid finality sig to Babylon
 // 4. Babylon FP is slashed
-// 5. Babylon notifies involved consumer about the delegations.
-// 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
+// 6. Consumer discounts the voting power of other involved consumer FPs in the affected delegations
 func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
 	s.NoError(err)
 	s.NotNil(activatedHeight)
-
-	// get the block at the activated height
-	activatedHeightBlock, err := s.babylonController.QueryCometBlock(activatedHeight.Height)
-	s.NoError(err)
-	s.NotNil(activatedHeightBlock)
+	submitHeight := activatedHeight.Height
 
 	// get the babylon finality provider
 	babylonFp, err := s.babylonController.QueryFinalityProviders()
 	s.NoError(err)
 	s.NotNil(babylonFp)
-
 	babylonFpBIP340PK := bbn.NewBIP340PubKeyFromBTCPK(babylonFpBTCPK)
-	randIdx := activatedHeight.Height - 1 // pub rand was committed from height 1-100
 
-	// submit finality signature
-	txResp, err := s.babylonController.SubmitFinalitySignature(
-		babylonFpBTCSK,
-		babylonFpBIP340PK,
-		randListInfo1.SRList[randIdx],
-		&randListInfo1.PRList[randIdx],
-		randListInfo1.ProofList[randIdx].ToProto(),
-		activatedHeight.Height)
-	s.NoError(err)
-	s.NotNil(txResp)
+	// Eventually find a block that is not timestamped
+	for {
+		s.T().Logf("Trying to equivocate for the block at height: %d", submitHeight)
+		// get the block at the submit height
+		submitHeightBlock, err := s.babylonController.QueryCometBlock(submitHeight)
+		s.NoError(err)
+		s.NotNil(submitHeightBlock)
 
-	// ensure vote is eventually cast
-	var votes []bbn.BIP340PubKey
-	s.Eventually(func() bool {
-		votes, err = s.babylonController.QueryVotesAtHeight(activatedHeight.Height)
-		if err != nil {
-			s.T().Logf("Error querying votes: %v", err)
-			return false
+		randIdx := submitHeight - 1 // pub rand was committed from height 1-200
+
+		// submit finality signature
+		txResp, err := s.babylonController.SubmitFinalitySignature(
+			babylonFpBTCSK,
+			babylonFpBIP340PK,
+			randListInfo1.SRList[randIdx],
+			&randListInfo1.PRList[randIdx],
+			randListInfo1.ProofList[randIdx].ToProto(),
+			submitHeight)
+		s.NoError(err)
+		s.NotNil(txResp)
+
+		// ensure the vote is eventually cast
+		var votes []bbn.BIP340PubKey
+		s.Eventually(func() bool {
+			votes, err = s.babylonController.QueryVotesAtHeight(submitHeight)
+			if err != nil {
+				s.T().Logf("Error querying votes: %v", err)
+				return false
+			}
+			return len(votes) > 0
+		}, time.Minute, time.Second*5)
+		s.Equal(1, len(votes))
+		s.Equal(votes[0].MarshalHex(), babylonFpBIP340PK.MarshalHex())
+
+		// once the vote is cast, ensure the block is finalised
+		finalizedBlock, err := s.babylonController.QueryIndexedBlock(submitHeight)
+		s.NoError(err)
+		s.NotEmpty(finalizedBlock)
+		s.Equal(strings.ToUpper(hex.EncodeToString(finalizedBlock.AppHash)), submitHeightBlock.Block.AppHash.String())
+		s.True(finalizedBlock.Finalized)
+
+		// try to equivocate by submitting invalid finality signature
+		txResp, err = s.babylonController.SubmitInvalidFinalitySignature(
+			r,
+			babylonFpBTCSK,
+			babylonFpBIP340PK,
+			randListInfo1.SRList[randIdx],
+			&randListInfo1.PRList[randIdx],
+			randListInfo1.ProofList[randIdx].ToProto(),
+			submitHeight,
+		)
+		if err == nil {
+			s.NotEmpty(txResp)
+			s.T().Logf("Successfully submitted invalid finality signature")
+			break
 		}
-		return len(votes) > 0
-	}, time.Minute, time.Second*5)
-	s.Equal(1, len(votes))
-	s.Equal(votes[0].MarshalHex(), babylonFpBIP340PK.MarshalHex())
-
-	// once the vote is cast, ensure block is finalised
-	finalizedBlock, err := s.babylonController.QueryIndexedBlock(activatedHeight.Height)
-	s.NoError(err)
-	s.NotEmpty(finalizedBlock)
-	s.Equal(strings.ToUpper(hex.EncodeToString(finalizedBlock.AppHash)), activatedHeightBlock.Block.AppHash.String())
-	s.True(finalizedBlock.Finalized)
-
-	// equivocate by submitting invalid finality signature
-	txResp, err = s.babylonController.SubmitInvalidFinalitySignature(
-		r,
-		babylonFpBTCSK,
-		babylonFpBIP340PK,
-		randListInfo1.SRList[randIdx],
-		&randListInfo1.PRList[randIdx],
-		randListInfo1.ProofList[randIdx].ToProto(),
-		activatedHeight.Height,
-	)
-	s.NoError(err)
-	s.NotNil(txResp)
+		// If the vote is rejected because the epoch is timestamped, continue to
+		// the next block
+		s.T().Logf("Failed to submit invalid finality signature: %v", err)
+		if !strings.Contains(err.Error(), "already finalized and timestamped") {
+			break
+		}
+		submitHeight++
+	}
 
 	// check the babylon finality provider is slashed
 	babylonFpBIP340PKHex := bbn.NewBIP340PubKeyFromBTCPK(babylonFpBTCPK).MarshalHex()
@@ -590,8 +620,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 			s.T().Logf("Error querying finality provider: %v", err)
 			return false
 		}
-		return fp != nil &&
-			fp.FinalityProvider.SlashedBtcHeight > 0
+		if fp != nil && fp.FinalityProvider.SlashedBtcHeight > 0 {
+			s.T().Logf("Finality provider slashed at height: %d", fp.FinalityProvider.SlashedBtcHeight)
+			return true
+		}
+		s.T().Logf("Finality provider NOT slashed")
+		return false
 	}, time.Minute, time.Second*5)
 
 	// query consumer finality provider
@@ -660,25 +694,38 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 	s.NotNil(czLatestBlock)
 
 	// commit public randomness at the latest block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK2, uint64(czlatestBlockHeight), 100)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK2, uint64(czlatestBlockHeight), 200)
 	s.NoError(err)
 
 	// submit the public randomness to the consumer chain
-	txResp, err := s.cosmwasmController.CommitPubRandList(czFpBTCPK2, uint64(czlatestBlockHeight), 100, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
+	txResp, err := s.cosmwasmController.CommitPubRandList(czFpBTCPK2, uint64(czlatestBlockHeight), 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// consumer finality provider submits finality signature
-	txResp, err = s.cosmwasmController.SubmitFinalitySig(
-		czFpBTCSK2,
-		czFpBTCPK2,
-		randListInfo.SRList[0],
-		&randListInfo.PRList[0],
-		randListInfo.ProofList[0].ToProto(),
-		uint64(czlatestBlockHeight),
-	)
-	s.NoError(err)
-	s.NotNil(txResp)
+	// Consumer finality provider submits finality signature, eventually
+	//succeeds
+	s.Eventually(func() bool {
+		finalizeEpoch := uint64(100)
+		s.finalizeUntilEpoch(finalizeEpoch, false)
+
+		txResp, err = s.cosmwasmController.SubmitFinalitySig(
+			czFpBTCSK2,
+			czFpBTCPK2,
+			randListInfo.SRList[0],
+			&randListInfo.PRList[0],
+			randListInfo.ProofList[0].ToProto(),
+			uint64(czlatestBlockHeight),
+		)
+		if err != nil {
+			s.T().Logf("Error submitting finality sig: %v", err)
+			return false
+		}
+		if txResp == nil {
+			return false
+		}
+		s.T().Logf("Finality sig for height %d was submitted successfully", czlatestBlockHeight)
+		return true
+	}, 3*time.Minute, time.Second*10)
 
 	// ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
@@ -1100,7 +1147,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 // helper function: commitAndFinalizePubRand commits public randomness at the given start height and finalizes it
 func (s *BCDConsumerIntegrationTestSuite) commitAndFinalizePubRand(babylonFpBTCSK *btcec.PrivateKey, babylonFpBTCPK *btcec.PublicKey, commitStartHeight uint64) *datagen.RandListInfo {
 	// commit public randomness list
-	numPubRand := uint64(100)
+	numPubRand := uint64(200)
 	randList, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, babylonFpBTCSK, commitStartHeight, numPubRand)
 	s.NoError(err)
 
@@ -1119,7 +1166,7 @@ func (s *BCDConsumerIntegrationTestSuite) commitAndFinalizePubRand(babylonFpBTCS
 
 	commitEpoch := firstPubRandCommit.EpochNum
 	// finalise until the epoch of the first public randomness commit
-	s.finalizeUntilEpoch(commitEpoch)
+	s.finalizeUntilEpoch(commitEpoch, true)
 	return randList
 }
 
@@ -1313,7 +1360,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
 		s.T().Logf("IBC transfer channel established successfully")
 		return true
-	}, time.Second*90, time.Second*2, "Failed to get expected Consumer transfer IBC channel")
+	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
 }
 
 // helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
@@ -1356,7 +1403,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 	return registeredConsumer
 }
 
-func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64) {
+func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64, wait bool) {
 	bbnClient := s.babylonController.GetBBNClient()
 
 	startEpoch := uint64(0)
@@ -1374,13 +1421,15 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64) {
 	}
 
 	// wait until the checkpoint of this epoch is sealed
-	s.Eventually(func() bool {
-		lastSealedCkpt, err := bbnClient.LatestEpochFromStatus(ckpttypes.Sealed)
-		if err != nil {
-			return false
-		}
-		return epoch <= lastSealedCkpt.RawCheckpoint.EpochNum
-	}, 1*time.Minute, 1*time.Second)
+	if wait {
+		s.Eventually(func() bool {
+			lastSealedCkpt, err := bbnClient.LatestEpochFromStatus(ckpttypes.Sealed)
+			if err != nil {
+				return false
+			}
+			return epoch <= lastSealedCkpt.RawCheckpoint.EpochNum
+		}, 1*time.Minute, 1*time.Second)
+	}
 
 	s.T().Logf("start finalizing epochs till %d", epoch)
 	// Random source for the generation of BTC data
@@ -1393,10 +1442,21 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64) {
 	}
 	resp, err := bbnClient.RawCheckpoints(pagination)
 	s.NoError(err)
+	if len(resp.RawCheckpoints) == 0 {
+		s.T().Logf("no checkpoints found")
+		return
+	}
+	epoch = resp.RawCheckpoints[len(resp.RawCheckpoints)-1].Ckpt.EpochNum
+	s.T().Logf("start finalizing checkpointed epochs till %d", epoch)
 
 	submitter := s.babylonController.GetKeyAddress()
 
 	for _, checkpoint := range resp.RawCheckpoints {
+		fmt.Println("Checkpoint epoch:", checkpoint.Ckpt.EpochNum)
+		fmt.Println("Checkpoint status:", checkpoint.Status)
+		if checkpoint.Status == ckpttypes.Finalized {
+			continue
+		}
 		currentBtcTipResp, err := s.babylonController.QueryBtcLightClientTip()
 		s.NoError(err)
 		tipHeader, err := bbn.NewBTCHeaderBytesFromHex(currentBtcTipResp.HeaderHex)
@@ -1458,10 +1518,13 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilEpoch(epoch uint64) {
 			s.T().Logf("failed to get last finalized epoch: %v", err)
 			return false
 		}
+		if epoch <= lastFinalizedCkpt.RawCheckpoint.EpochNum {
+			s.T().Logf("epoch %d is finalised", epoch)
+		} else {
+			s.T().Logf("epoch %d is not finalised yet", epoch)
+		}
 		return epoch <= lastFinalizedCkpt.RawCheckpoint.EpochNum
 	}, 1*time.Minute, 1*time.Second)
-
-	s.T().Logf("epoch %d is finalised", epoch)
 }
 
 // helper function: getDeterministicCovenantKey returns a single, constant private key and its corresponding public key.
