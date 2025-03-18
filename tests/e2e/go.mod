@@ -34,7 +34,7 @@ require (
 	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250317113418-7e4eed42ebab
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250318085813-a3871aaa5afe
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250318085813-a3871aaa5afe
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250312153802-5b848d88c204
+	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250318113903-d64f5b1bb85e
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
@@ -169,7 +169,7 @@ require (
 	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b // indirect
 	github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -225,7 +225,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.32.0 // indirect
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.34.0 // indirect
