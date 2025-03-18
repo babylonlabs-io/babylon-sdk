@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/x/wasm/ibctesting"
+	"github.com/CosmWasm/wasmd/tests/ibctesting"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"

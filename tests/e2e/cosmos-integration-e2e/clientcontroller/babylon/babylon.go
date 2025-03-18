@@ -33,6 +33,7 @@ import (
 	btclctypes "github.com/babylonlabs-io/babylon/x/btclightclient/types"
 	btcstakingtypes "github.com/babylonlabs-io/babylon/x/btcstaking/types"
 	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
+	epochingtypes "github.com/babylonlabs-io/babylon/x/epoching/types"
 	finalitytypes "github.com/babylonlabs-io/babylon/x/finality/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
@@ -143,6 +144,7 @@ func (bc *BabylonController) RegisterFinalityProvider(
 	fpPk *bbntypes.BIP340PubKey,
 	pop []byte,
 	commission *math.LegacyDec,
+	commissionInfo *btcstakingtypes.CommissionInfo,
 	description []byte,
 ) (*types.TxResponse, error) {
 	var bbnPop btcstakingtypes.ProofOfPossessionBTC
@@ -157,10 +159,14 @@ func (bc *BabylonController) RegisterFinalityProvider(
 
 	fpAddr := bc.MustGetTxSigner()
 	msg := &btcstakingtypes.MsgCreateFinalityProvider{
-		Addr:        fpAddr,
-		BtcPk:       fpPk,
-		Pop:         &bbnPop,
-		Commission:  commission,
+		Addr:  fpAddr,
+		BtcPk: fpPk,
+		Pop:   &bbnPop,
+		Commission: btcstakingtypes.NewCommissionRates(
+			*commission,
+			commissionInfo.MaxRate,
+			commissionInfo.MaxChangeRate,
+		),
 		Description: &sdkDescription,
 		ConsumerId:  chainID,
 	}
@@ -558,6 +564,20 @@ func (bc *BabylonController) QueryActivatedHeight() (*finalitytypes.QueryActivat
 	}
 
 	return resp, nil
+}
+
+func (bc *BabylonController) QueryEpochInfo(epochNumber uint64) (*epochingtypes.QueryEpochInfoResponse, error) {
+	var resp *epochingtypes.QueryEpochInfoResponse
+	err := bc.bbnClient.QueryEpoching(func(ctx context.Context, queryClient epochingtypes.QueryClient) error {
+		var err error
+		req := &epochingtypes.QueryEpochInfoRequest{
+			EpochNum: epochNumber,
+		}
+		resp, err = queryClient.EpochInfo(ctx, req)
+		return err
+	})
+
+	return resp, err
 }
 
 // queryDelegationsWithStatus queries BTC delegations
