@@ -1,11 +1,14 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,6 +18,7 @@ import (
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
 	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
+	bbnclient "github.com/babylonlabs-io/babylon/client/client"
 
 	sdkmath "cosmossdk.io/math"
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
@@ -99,24 +103,24 @@ func (s *BCDConsumerIntegrationTestSuite) SetupSuite() {
 func (s *BCDConsumerIntegrationTestSuite) TearDownSuite() {
 	s.T().Log("tearing down e2e integration test suite...")
 
-	// // Get the current working directory
-	// currentDir, err := os.Getwd()
-	// if err != nil {
-	// 	s.T().Errorf("Failed to get current working directory: %v", err)
-	// 	return
-	// }
+	// Get the current working directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		s.T().Errorf("Failed to get current working directory: %v", err)
+		return
+	}
 
-	// // Construct the path to the Makefile directory
-	// makefileDir := filepath.Join(currentDir, "../../contrib/images")
+	// Construct the path to the Makefile directory
+	makefileDir := filepath.Join(currentDir, "../../contrib/images")
 
-	// // Run the stop-bcd-consumer-integration make target
-	// cmd := exec.Command("make", "-C", makefileDir, "stop-bcd-consumer-integration")
-	// output, err := cmd.CombinedOutput()
-	// if err != nil {
-	// 	s.T().Errorf("Failed to run stop-bcd-consumer-integration: %v\nOutput: %s", err, output)
-	// } else {
-	// 	s.T().Log("Successfully stopped integration test")
-	// }
+	// Run the stop-bcd-consumer-integration make target
+	cmd := exec.Command("make", "-C", makefileDir, "stop-bcd-consumer-integration")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		s.T().Errorf("Failed to run stop-bcd-consumer-integration: %v\nOutput: %s", err, output)
+	} else {
+		s.T().Log("Successfully stopped integration test")
+	}
 }
 
 func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
@@ -237,162 +241,52 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 
 // TestBTCTimestampRelay verifies that BTC timestamps are properly relayed from Babylon to the consumer chain
 func (s *BCDConsumerIntegrationTestSuite) Test04BTCTimestampRelay() {
-	// 1. Get current Babylon epoch information
+	// Get current Babylon epoch information
 	bbnClient := s.babylonController.GetBBNClient()
-	// currentEpochResp, err := bbnClient.CurrentEpoch()
-	// s.Require().NoError(err)
-	// currentEpoch := currentEpochResp.CurrentEpoch
+	currentEpochResp, err := bbnClient.CurrentEpoch()
+	s.Require().NoError(err)
+	currentEpoch := currentEpochResp.CurrentEpoch
 
-	// s.T().Logf("Current epoch: %d", currentEpoch)
+	s.T().Logf("Current epoch: %d", currentEpoch)
 
-	// // 2. Wait for the current epoch to be sealed
-	// var lastSealedCkpt *ckpttypes.QueryLastCheckpointWithStatusResponse
-	// s.Eventually(func() bool {
-	// 	lastSealedCkpt, err = bbnClient.LatestEpochFromStatus(ckpttypes.Sealed)
-	// 	if err != nil {
-	// 		return false
-	// 	}
-	// 	return currentEpoch <= lastSealedCkpt.RawCheckpoint.EpochNum
-	// }, 1*time.Minute, 1*time.Second)
+	// Wait for the current epoch to be sealed
+	var lastSealedCkpt *ckpttypes.QueryLastCheckpointWithStatusResponse
+	s.Eventually(func() bool {
+		lastSealedCkpt, err = bbnClient.LatestEpochFromStatus(ckpttypes.Sealed)
+		if err != nil {
+			return false
+		}
+		return currentEpoch <= lastSealedCkpt.RawCheckpoint.EpochNum
+	}, 1*time.Minute, 1*time.Second)
 
-	// s.T().Logf("Epoch %d is now sealed", currentEpoch)
+	s.T().Logf("Epoch %d is now sealed", currentEpoch)
 
-	// // 3. Finalize the epoch
-	// s.finalizeUntilEpoch(currentEpoch)
+	// Finalize the epoch
+	s.finalizeUntilEpoch(currentEpoch, true)
 
-	// s.T().Logf("Epoch %d is now finalized", currentEpoch)
+	s.T().Logf("Epoch %d is now finalized", currentEpoch)
 
-	currentEpoch := uint64(6)
-	// var lastSealedCkpt *ckpttypes.QueryLastCheckpointWithStatusResponse
-	// lastSealedCkpt, err := bbnClient.LatestEpochFromStatus(ckpttypes.Finalized)
-	// s.Require().NoError(err)
-	// s.Require().NotNil(lastSealedCkpt)
-	// s.Require().Equal(currentEpoch, lastSealedCkpt.RawCheckpoint.EpochNum)
-
-	// 4. Verify the epoch data was relayed to the consumer chain
+	// Verify all BTC timestamps were relayed to the consumer chain
 	var consumerEpoch *cosmwasm.BabylonEpochResponse
-	var err error
 	s.Eventually(func() bool {
 		consumerEpoch, err = s.cosmwasmController.QueryBabylonLastEpoch()
 		return err == nil && consumerEpoch != nil &&
 			consumerEpoch.EpochNumber == currentEpoch
 	}, 1*time.Minute, 1*time.Second)
 
+	// Assert the BTC timestamp info is consistent between Babylon and consumer chain
 	for i := uint64(1); i <= currentEpoch; i++ {
-		epochInfo, err := s.babylonController.QueryEpochInfo(i)
-		s.Require().NoError(err)
-		s.Require().NotNil(epochInfo)
-
-		consumerEpoch, err := s.cosmwasmController.QueryBabylonEpoch(i)
-		s.Require().NoError(err)
-		s.Require().NotNil(consumerEpoch)
-
-		s.Require().Equal(epochInfo.Epoch.EpochNumber, consumerEpoch.EpochNumber)
-		s.Require().Equal(epochInfo.Epoch.CurrentEpochInterval, consumerEpoch.CurrentEpochInterval)
-		s.Require().Equal(epochInfo.Epoch.FirstBlockHeight, consumerEpoch.FirstBlockHeight)
-		consumerLastBlockTimeNano, err := strconv.ParseInt(consumerEpoch.LastBlockTime, 10, 64)
-		s.Require().NoError(err)
-		consumerLastBlockTime := consumerLastBlockTimeNano / 1e9
-		s.Require().Equal(epochInfo.Epoch.LastBlockTime.Unix(), consumerLastBlockTime)
-		// improve the time struct in both sides check?
-		s.Require().Equal(epochInfo.Epoch.SealerAppHashHex, consumerEpoch.SealerAppHash)
-		s.Require().Equal(epochInfo.Epoch.SealerBlockHash, consumerEpoch.SealerBlockHash)
-
-		consumerCheckpoint, err := s.cosmwasmController.QueryBabylonCheckpoint(i)
-		s.Require().NoError(err)
-		s.Require().NotNil(consumerCheckpoint)
-
-		babylonCheckpoint, err := bbnClient.RawCheckpoint(i)
-		s.Require().NoError(err)
-		s.Require().NotNil(babylonCheckpoint)
-
-		s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.EpochNum, consumerCheckpoint.EpochNum)
-		s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.BlockHashHex, consumerCheckpoint.BlockHash)
-		babylonCkptBitmap := hex.EncodeToString(babylonCheckpoint.RawCheckpoint.Ckpt.Bitmap)
-		s.Require().Equal(babylonCkptBitmap, consumerCheckpoint.Bitmap)
-		// s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.BlsMultiSig, consumerCheckpoint.BlsMultiSig)
-
-		babylonCkptBlsMultiSig := hex.EncodeToString(babylonCheckpoint.RawCheckpoint.Ckpt.BlsMultiSig.MustMarshal())
-		// consumerCkptBlsMultiSig, err := base64ToHex(consumerCheckpoint.BlsMultiSig)
-		// s.Require().NoError(err)
-		s.Require().Equal(babylonCkptBlsMultiSig, consumerCheckpoint.BlsMultiSig)
-
-		s.T().Logf("Epoch %d info: %v", i, epochInfo)
-
-		babylonEpochChainInfo, err := bbnClient.ConnectedChainsEpochInfo([]string{consumerID}, i)
-		s.Require().NoError(err)
-		s.Require().NotNil(babylonEpochChainInfo)
-
-		if babylonEpochChainInfo.ChainsInfo[0].LatestHeader != nil {
-			czHeight := babylonEpochChainInfo.ChainsInfo[0].LatestHeader.Height
-			s.T().Logf("Babylon epoch chain info: %v", babylonEpochChainInfo)
-			s.T().Logf("CZ height: %d", czHeight)
-
-			consumerEpochChainInfo, err := s.cosmwasmController.QueryCzHeader(czHeight)
-			s.Require().NoError(err)
-			s.Require().NotNil(consumerEpochChainInfo)
-			s.T().Logf("Consumer epoch chain info: %v", consumerEpochChainInfo)
-			s.Require().Equal(consumerEpochChainInfo.Height, czHeight)
-			s.Require().Equal(consumerEpochChainInfo.Hash, hex.EncodeToString(babylonEpochChainInfo.ChainsInfo[0].LatestHeader.Hash))
-			s.Require().Equal(consumerEpochChainInfo.BabylonEpoch, babylonEpochChainInfo.ChainsInfo[0].LatestHeader.BabylonEpoch)
-			s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHeight, babylonEpochChainInfo.ChainsInfo[0].LatestHeader.BabylonHeaderHeight)
-			s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHash, hex.EncodeToString(babylonEpochChainInfo.ChainsInfo[0].LatestHeader.BabylonHeaderHash))
-			s.Require().Equal(consumerEpochChainInfo.BabylonTxHash, hex.EncodeToString(babylonEpochChainInfo.ChainsInfo[0].LatestHeader.BabylonTxHash))
-		}
+		s.validateEpochInfo(i, bbnClient)
+		s.validateCheckpointInfo(i, bbnClient)
+		s.validateConsumerHeader(i, bbnClient, consumerID)
 	}
-
-	// 5. Verify the epoch details match
-	// s.Require().Equal(lastSealedCkpt.RawCheckpoint.EpochNum, consumerEpoch.EpochNumber)
-
-	// 6. Verify the checkpoint was relayed correctly
-	// var consumerCheckpoint *cosmwasm.BabylonCheckpointResponse
-	// s.Eventually(func() bool {
-	// 	consumerCheckpoint, err = s.cosmwasmController.QueryBabylonCheckpoint(currentEpoch)
-	// 	return err == nil && consumerCheckpoint != nil
-	// }, 1*time.Minute, 1*time.Second)
-
-	// // 7. Verify checkpoint details match
-	// s.Require().Equal(lastSealedCkpt.RawCheckpoint.EpochNum, consumerCheckpoint.RawCheckpoint.EpochNum)
-
-	// // 9. If a CZ header was included in this epoch, verify it was relayed correctly
-	// // First check if there's a CZ header for this epoch on the consumer chain
-	// var consumerCzHeader *cosmwasm.CzHeaderResponse
-	// consumerCzHeader, err = s.cosmwasmController.QueryCzLastHeader()
-	// if err == nil && consumerCzHeader != nil && consumerCzHeader.BabylonEpoch == currentEpoch {
-	// 	s.T().Logf("Found CZ header for epoch %d: height=%d, hash=%s",
-	// 		currentEpoch, consumerCzHeader.Height, consumerCzHeader.Hash)
-
-	// 	// Verify we can query this specific CZ header by height
-	// 	var specificCzHeader *cosmwasm.CzHeaderResponse
-	// 	specificCzHeader, err = s.cosmwasmController.QueryCzHeader(consumerCzHeader.Height)
-	// 	s.Require().NoError(err)
-	// 	s.Require().NotNil(specificCzHeader)
-
-	// 	// Verify the specific CZ header matches the last CZ header
-	// 	s.Require().Equal(consumerCzHeader.Height, specificCzHeader.Height)
-	// 	s.Require().Equal(consumerCzHeader.Hash, specificCzHeader.Hash)
-	// 	s.Require().Equal(consumerCzHeader.BabylonEpoch, specificCzHeader.BabylonEpoch)
-
-	// 	s.T().Logf("CZ header for epoch %d was properly relayed", currentEpoch)
-	// } else {
-	// 	s.T().Logf("No CZ header was included in epoch %d", currentEpoch)
-	// }
 }
 
-func base64ToHex(b64Str string) (string, error) {
-	bytes, err := base64.StdEncoding.DecodeString(b64Str)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
-}
-
-// Test4CreateConsumerFinalityProvider
+// Test5CreateConsumerFinalityProvider
 // 1. Creates and registers a random number of consumer FPs in Babylon.
 // 2. Babylon automatically sends IBC packets to the consumer chain to transmit this data.
 // 3. Verifies that the registered consumer FPs in Babylon match the data stored in the consumer chain's contract.
-func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider() {
-	s.T().Skip("Skipping Test04CreateConsumerFinalityProvider")
+func (s *BCDConsumerIntegrationTestSuite) Test05CreateConsumerFinalityProvider() {
 	// generate a random number of finality providers from 1 to 5
 	numConsumerFPs := datagen.RandomInt(r, 5) + 1
 	fmt.Println("Number of consumer finality providers: ", numConsumerFPs)
@@ -427,11 +321,10 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 	}
 }
 
-// Test05RestakeDelegationToMultipleFPs
+// Test6RestakeDelegationToMultipleFPs
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
-func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs() {
-	s.T().Skip("Skipping Test05RestakeDelegationToMultipleFPs")
+func (s *BCDConsumerIntegrationTestSuite) Test06RestakeDelegationToMultipleFPs() {
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
@@ -470,14 +363,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	s.Len(pendingDels.Dels[0].CovenantSigs, 0)
 }
 
-// Test06ActivateDelegation
+// Test7ActivateDelegation
 // 1. Submits covenant signatures to activate a BTC delegation
 // 2. Verifies the delegation is activated on Babylon
 // 3. Checks that Babylon sends IBC packets to update the consumer chain
 // 4. Verifies the delegation details in the consumer chain contract match Babylon
 // 5. Confirms the consumer FP voting power equals the total stake amount
-func (s *BCDConsumerIntegrationTestSuite) Test06ActivateDelegation() {
-	s.T().Skip("Skipping Test06ActivateDelegation")
+func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	// Query consumer finality provider
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -530,8 +422,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test06ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
-	s.T().Skip("Skipping Test07ConsumerFPRewards")
+func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -682,13 +573,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 }
 
-// Test08BabylonFPCascadedSlashing
+// Test9BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon
 // 2. Block is finalized (but not yet timestamped)
 // 3. Equivocates/ Submits an invalid finality sig to Babylon
 // 4. Babylon FP is slashed
-// 6. Consumer discounts the voting power of other involved consumer FPs in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
+// 5. Babylon notifies involved consumer about the delegations.
+// 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
+func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.T().Skip("Skipping Test08BabylonFPCascadedSlashing")
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
@@ -800,8 +692,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
-	s.T().Skip("Skipping Test09ConsumerFPCascadedSlashing")
+func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	// create a new consumer finality provider
 	resp, czFpBTCSK2, czFpBTCPK2 := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, resp.BtcPk.MarshalHex())
@@ -951,14 +842,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-// Test10ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
+// Test11ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
 // when the BTC height exceeds the delegation's end height.
 // 1. Creates a delegation with a very short timelock (11 blocks)
 // 2. Activates the delegation and verifies FP has voting power
 // 3. Inserts BTC headers to exceed the delegation's end height
 // 4. Verifies the delegation is expired and FP  zero voting power
-func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerDelegationExpiry() {
-	s.T().Skip("Skipping Test10ConsumerDelegationExpiry")
+func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 	// create a new consumer finality provider
 	resp, _, _ := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, resp.BtcPk.MarshalHex())
@@ -1804,4 +1694,109 @@ func ParseRespBTCDelToBTCDel(resp *bstypes.BTCDelegationResponse) (btcDel *bstyp
 	}
 
 	return btcDel, nil
+}
+
+// ParseClientTimestampToUnixSeconds parses timestamp from consumer chain (in nanoseconds) to unix seconds
+func (s *BCDConsumerIntegrationTestSuite) ParseClientTimestampToUnixSeconds(timestamp string) int64 {
+	// Parse the string timestamp as int64 (nanoseconds since epoch)
+	nanoTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
+	s.Require().NoError(err, "Failed to parse timestamp %s", timestamp)
+
+	// Convert nanoseconds to seconds
+	return nanoTimestamp / 1e9
+}
+
+// ValidateTimestamps compares timestamps with appropriate tolerance
+func (s *BCDConsumerIntegrationTestSuite) ValidateTimestamps(babylonTime time.Time, consumerTimeStr string) {
+	consumerTimeSec := s.ParseClientTimestampToUnixSeconds(consumerTimeStr)
+	babylonTimeSec := babylonTime.Unix()
+
+	// For logging purposes - shows both timestamps in readable format
+	s.T().Logf("Timestamps for %s: Babylon=%s, Consumer=%s",
+		babylonTime.Format(time.RFC3339),
+		time.Unix(consumerTimeSec, 0).Format(time.RFC3339))
+
+	s.Require().Equal(babylonTimeSec, consumerTimeSec)
+}
+
+// validateBinaryFields compares binary fields that are represented differently in Babylon and consumer chain
+func (s *BCDConsumerIntegrationTestSuite) validateBinaryFields(babylonBinary []byte, consumerHex string) {
+	babylonHex := hex.EncodeToString(babylonBinary)
+	s.Require().Equal(babylonHex, consumerHex)
+}
+
+// validateEpochInfo validates that epoch information is consistent between Babylon and consumer chain
+func (s *BCDConsumerIntegrationTestSuite) validateEpochInfo(epochNumber uint64, bbnClient *bbnclient.Client) {
+	// Fetch epoch data from both chains
+	babylonEpoch, err := s.babylonController.QueryEpochInfo(epochNumber)
+	s.Require().NoError(err)
+	s.Require().NotNil(babylonEpoch)
+
+	consumerEpoch, err := s.cosmwasmController.QueryBabylonEpoch(epochNumber)
+	s.Require().NoError(err)
+	s.Require().NotNil(consumerEpoch)
+
+	// Basic epoch data validation
+	s.Require().Equal(babylonEpoch.Epoch.EpochNumber, consumerEpoch.EpochNumber)
+	s.Require().Equal(babylonEpoch.Epoch.CurrentEpochInterval, consumerEpoch.CurrentEpochInterval)
+	s.Require().Equal(babylonEpoch.Epoch.FirstBlockHeight, consumerEpoch.FirstBlockHeight)
+
+	// Timestamp validation using helper function
+	s.ValidateTimestamps(
+		*babylonEpoch.Epoch.LastBlockTime,
+		consumerEpoch.LastBlockTime)
+
+	// Hash validations
+	s.Require().Equal(babylonEpoch.Epoch.SealerAppHashHex, consumerEpoch.SealerAppHash)
+	s.Require().Equal(babylonEpoch.Epoch.SealerBlockHash, consumerEpoch.SealerBlockHash)
+}
+
+// validateCheckpointInfo validates that checkpoint information is consistent between Babylon and consumer chain
+func (s *BCDConsumerIntegrationTestSuite) validateCheckpointInfo(epochNumber uint64, bbnClient *bbnclient.Client) {
+	// Fetch checkpoint data from both chains
+	consumerCheckpoint, err := s.cosmwasmController.QueryBabylonCheckpoint(epochNumber)
+	s.Require().NoError(err)
+	s.Require().NotNil(consumerCheckpoint)
+
+	babylonCheckpoint, err := bbnClient.RawCheckpoint(epochNumber)
+	s.Require().NoError(err)
+	s.Require().NotNil(babylonCheckpoint)
+
+	// Basic checkpoint data validation
+	s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.EpochNum, consumerCheckpoint.EpochNum)
+	s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.BlockHashHex, consumerCheckpoint.BlockHash)
+
+	// Binary field validations
+	s.validateBinaryFields(
+		babylonCheckpoint.RawCheckpoint.Ckpt.Bitmap,
+		consumerCheckpoint.Bitmap)
+
+	s.validateBinaryFields(
+		babylonCheckpoint.RawCheckpoint.Ckpt.BlsMultiSig.MustMarshal(),
+		consumerCheckpoint.BlsMultiSig)
+}
+
+// validateConsumerHeader validates the consumer chain header
+func (s *BCDConsumerIntegrationTestSuite) validateConsumerHeader(epochNumber uint64, bbnClient *bbnclient.Client, consumerID string) {
+	babylonEpochChainInfo, err := bbnClient.ConnectedChainsEpochInfo([]string{consumerID}, epochNumber)
+	s.Require().NoError(err)
+	s.Require().NotNil(babylonEpochChainInfo)
+
+	// Only validate if we have header information
+	if len(babylonEpochChainInfo.ChainsInfo) > 0 && babylonEpochChainInfo.ChainsInfo[0].LatestHeader != nil {
+		latestHeader := babylonEpochChainInfo.ChainsInfo[0].LatestHeader
+		czHeight := latestHeader.Height
+
+		consumerEpochChainInfo, err := s.cosmwasmController.QueryCzHeader(czHeight)
+		s.Require().NoError(err)
+		s.Require().NotNil(consumerEpochChainInfo)
+
+		// Header validation
+		s.Require().Equal(consumerEpochChainInfo.Height, czHeight)
+		s.Require().Equal(consumerEpochChainInfo.Hash, hex.EncodeToString(latestHeader.Hash))
+		s.Require().Equal(consumerEpochChainInfo.BabylonEpoch, latestHeader.BabylonEpoch)
+		s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHeight, latestHeader.BabylonHeaderHeight)
+		s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHash, hex.EncodeToString(latestHeader.BabylonHeaderHash))
+		s.Require().Equal(consumerEpochChainInfo.BabylonTxHash, hex.EncodeToString(latestHeader.BabylonTxHash))
+	}
 }
