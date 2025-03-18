@@ -581,7 +581,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 // 5. Babylon notifies involved consumer about the delegations.
 // 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
 func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
-	s.T().Skip("Skipping Test08BabylonFPCascadedSlashing")
 	// get the activated height
 	activatedHeight, err := s.babylonController.QueryActivatedHeight()
 	s.NoError(err)
