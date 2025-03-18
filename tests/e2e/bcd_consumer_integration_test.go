@@ -1712,7 +1712,7 @@ func (s *BCDConsumerIntegrationTestSuite) ValidateTimestamps(babylonTime time.Ti
 	babylonTimeSec := babylonTime.Unix()
 
 	// For logging purposes - shows both timestamps in readable format
-	s.T().Logf("Timestamps for %s: Babylon=%s, Consumer=%s",
+	s.T().Logf("Timestamps: Babylon=%s, Consumer=%s",
 		babylonTime.Format(time.RFC3339),
 		time.Unix(consumerTimeSec, 0).Format(time.RFC3339))
 
