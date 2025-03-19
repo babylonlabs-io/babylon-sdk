@@ -33,8 +33,9 @@ P2PPORT=$4
 PROFPORT=$5
 GRPCPORT=$6
 BABYLON_CONTRACT_CODE_FILE=$7
-BTCSTAKING_CONTRACT_CODE_FILE=$8
-BTCFINALITY_CONTRACT_CODE_FILE=$9
+BTC_LC_CONTRACT_CODE_FILE=$8
+BTCSTAKING_CONTRACT_CODE_FILE=$9
+BTCFINALITY_CONTRACT_CODE_FILE=$10
 
 # ensure the binary exists
 if ! command -v $BINARY &>/dev/null; then
@@ -95,6 +96,11 @@ sleep 20
 # upload contract code
 echo "Uploading babylon contract code $BABYLON_CONTRACT_CODE_FILE..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BABYLON_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
+sleep 10
+
+# upload contract code
+echo "Uploading btc light client contract code $BTC_LC_CONTRACT_CODE_FILE..."
+$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTC_LC_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
 sleep 10
 
 # upload contract code
