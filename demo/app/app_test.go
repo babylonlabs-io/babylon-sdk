@@ -144,6 +144,8 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 			"1",
 			"2",
 			"false",
+			fmt.Sprintf(`{"admin":"%s"}`, babylonKeeper.GetAuthority()),
+			fmt.Sprintf(`{"admin":"%s"}`, babylonKeeper.GetAuthority()),
 			"test-consumer",
 			"test-consumer-description",
 		},

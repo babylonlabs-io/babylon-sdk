@@ -119,6 +119,8 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 			"1",
 			"2",
 			"false",
+			fmt.Sprintf(`{"admin":"%s"}`, p.GetSender().String()),
+			fmt.Sprintf(`{"admin":"%s"}`, p.GetSender().String()),
 			"test-consumer",
 			"test-consumer-description",
 		},
