@@ -31,7 +31,7 @@ require (
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0
-	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250317113418-7e4eed42ebab
+	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250319085135-f2aadaba655e
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250318085813-a3871aaa5afe
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250318085813-a3871aaa5afe
 	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250318113903-d64f5b1bb85e
@@ -208,7 +208,7 @@ require (
 	github.com/strangelove-ventures/cometbft-client v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/supranational/blst v0.3.11 // indirect
+	github.com/supranational/blst v0.3.14 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tidwall/btree v1.7.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
