@@ -475,6 +475,132 @@ func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeader
 	return &resp, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryCzLastHeader() (*CzHeaderResponse, error) {
+	queryMsgStruct := QueryMsgCzLastHeader{
+		CzLastHeader: struct{}{},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp CzHeaderResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryCzHeader(height uint64) (*CzHeaderResponse, error) {
+	queryMsgStruct := QueryMsgCzHeader{
+		CzHeader: CzHeaderQuery{
+			Height: height,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp CzHeaderResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryBabylonLastEpoch() (*BabylonEpochResponse, error) {
+	queryMsgStruct := QueryMsgBabylonLastEpoch{
+		BabylonLastEpoch: struct{}{},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp BabylonEpochResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryBabylonEpoch(epochNumber uint64) (*BabylonEpochResponse, error) {
+	queryMsgStruct := QueryMsgBabylonEpoch{
+		BabylonEpoch: BabylonEpochQuery{
+			EpochNumber: epochNumber,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp BabylonEpochResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryBabylonCheckpoint(epochNumber uint64) (*BabylonCheckpointResponse, error) {
+	queryMsgStruct := QueryMsgBabylonCheckpoint{
+		BabylonCheckpoint: BabylonCheckpointQuery{
+			EpochNumber: epochNumber,
+		},
+	}
+
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %w", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp BabylonCheckpointResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
+
 func (cc *CosmwasmConsumerController) QueryIsBlockFinalized(height uint64) (bool, error) {
 	resp, err := cc.QueryIndexedBlock(height)
 	if err != nil || resp == nil {

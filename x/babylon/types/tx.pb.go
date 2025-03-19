@@ -55,8 +55,8 @@ type MsgInstantiateBabylonContracts struct {
 	// notify_cosmos_zone indicates whether to notify the Cosmos zone of events
 	NotifyCosmosZone bool `protobuf:"varint,9,opt,name=notify_cosmos_zone,json=notifyCosmosZone,proto3" json:"notify_cosmos_zone,omitempty"`
 	// ibc_transfer_channel_id is the IBC channel ID for the IBC transfer
-	// contract. If empty then the reward distribution will be done at the consumer
-	// side.
+	// contract. If empty then the reward distribution will be done at the
+	// consumer side.
 	IbcTransferChannelId string `protobuf:"bytes,10,opt,name=ibc_transfer_channel_id,json=ibcTransferChannelId,proto3" json:"ibc_transfer_channel_id,omitempty"`
 	// btc_staking_msg is the initialization message for the BTC staking contract
 	BtcStakingMsg []byte `protobuf:"bytes,11,opt,name=btc_staking_msg,json=btcStakingMsg,proto3" json:"btc_staking_msg,omitempty"`

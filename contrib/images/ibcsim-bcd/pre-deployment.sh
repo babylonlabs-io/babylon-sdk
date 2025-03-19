@@ -7,7 +7,7 @@ docker run --rm -v $(pwd)/ibcsim-bcd/.testnets:/data babylonlabs-io/babylond \
     babylond testnet --v 2 -o /data \
     --starting-ip-address 192.168.10.2 --keyring-backend=test \
     --chain-id chain-test --epoch-interval 10 \
-    --btc-finalization-timeout 2 --btc-confirmation-depth 1 \
+    --btc-finalization-timeout 3 --btc-confirmation-depth 2 \
     --min-staking-time-blocks 10 \
     --unbonding-time 5 \
     --minimum-gas-prices 0.000006ubbn \
