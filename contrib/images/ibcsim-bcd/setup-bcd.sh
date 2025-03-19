@@ -125,7 +125,7 @@ FINALITY_MSG='{
 }'
 
 $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
-	1 2 3 \
+	1 2 3 4 \
 	"regtest" \
 	"01020304" \
 	1 2 false \
