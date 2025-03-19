@@ -1250,9 +1250,6 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 		s.T().Fatalf("Failed to get current working directory: %v", err)
 	}
 
-	cfg.BabylonContractAddress = "bbnc14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9syx25zf"
-	cfg.BtcStakingContractAddress = "bbnc1nc5tatafv6eyq7llkr2gv50ff9e22mnf70qgjlv737ktmt4eswrqgn0kq0"
-	cfg.BtcFinalityContractAddress = "bbnc17p9rzwnnfxcjp32un9ug7yhhzgtkhvl9jfksztgw5uh69wac2pgssg3nft"
 	cfg.ChainID = "bcd-test"
 	cfg.KeyDirectory = filepath.Join(currentDir, "../../contrib/images/ibcsim-bcd/.testnets/bcd/bcd-test")
 	cfg.AccountPrefix = "bbnc"

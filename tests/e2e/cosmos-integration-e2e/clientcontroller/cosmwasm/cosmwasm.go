@@ -277,7 +277,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 
 		execMsg := &wasmdtypes.MsgExecuteContract{
 			Sender:   cc.cwClient.MustGetAddr(),
-			Contract: sdk.MustAccAddressFromBech32(cc.cfg.BtcFinalityContractAddress).String(),
+			Contract: cc.MustQueryBabylonParams().BtcFinalityContractAddress,
 			Msg:      msgBytes,
 		}
 		msgs = append(msgs, execMsg)
@@ -308,7 +308,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 	if err != nil {
 		return false, fmt.Errorf("failed to marshal query message: %v", err)
 	}
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return false, err
 	}
@@ -343,7 +343,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderInfo(
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvidersByPower() (*Consumer
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +426,7 @@ func (cc *CosmwasmConsumerController) QueryLastPublicRandCommit(fpPk *btcec.Publ
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -461,7 +461,7 @@ func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeader
 		return nil, fmt.Errorf("failed to marshal query message: %w", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcLightClientContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -497,7 +497,7 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return 0, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -538,7 +538,7 @@ func (cc *CosmwasmConsumerController) QueryFinalitySignature(fpBtcPkHex string, 
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -562,7 +562,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviders() (*ConsumerFpsResp
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -588,7 +588,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvider(btcPkHex string) (*S
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +612,7 @@ func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsRe
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -639,7 +639,7 @@ func (cc *CosmwasmConsumerController) QueryPendingRewards(stakerAddress, fpPubke
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -667,7 +667,7 @@ func (cc *CosmwasmConsumerController) QueryAllPendingRewards(stakerAddress strin
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -706,15 +706,15 @@ func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex
 }
 
 func (cc *CosmwasmConsumerController) QueryBabylonContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.cfg.BabylonContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
 }
 
 func (cc *CosmwasmConsumerController) QueryFinalityContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.cfg.BtcFinalityContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcFinalityContractAddress)
 }
 
 func (cc *CosmwasmConsumerController) QueryStakingContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.cfg.BtcStakingContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
 }
 
 func (cc *CosmwasmConsumerController) QueryBalance(address string, denom string) (*sdk.Coin, error) {
@@ -775,7 +775,7 @@ func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter *uint64, limi
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -864,7 +864,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
-		Contract: cc.cfg.BtcStakingContractAddress,
+		Contract: cc.MustQueryBabylonParams().BtcStakingContractAddress,
 		Msg:      msgBytes,
 	}
 
@@ -881,7 +881,7 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
-		Contract: cc.cfg.BtcFinalityContractAddress,
+		Contract: cc.MustQueryBabylonParams().BtcFinalityContractAddress,
 		Msg:      msgBytes,
 	}
 
@@ -923,18 +923,6 @@ func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, paginat
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
-// SetBtcStakingContractAddress updates the BtcStakingContractAddress in the configuration
-// NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) SetBtcStakingContractAddress(newAddress string) {
-	cc.cfg.BtcStakingContractAddress = newAddress
-}
-
-// SetBtcFinalityContractAddress updates the BtcFinalityContractAddress in the configuration
-// NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) SetBtcFinalityContractAddress(newAddress string) {
-	cc.cfg.BtcFinalityContractAddress = newAddress
-}
-
 // MustGetValidatorAddress gets the validator address of the consumer chain
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
@@ -968,7 +956,7 @@ func (cc *CosmwasmConsumerController) QueryIndexedBlock(height uint64) (*Indexed
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
