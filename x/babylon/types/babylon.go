@@ -52,10 +52,10 @@ func NewInitMsg(
 		"btc_light_client_msg":            btcLightClientInitMsgBytes,
 		"btc_staking_code_id":             btcStakingCodeId,
 		"btc_staking_msg":                 btcStakingInitMsgBytes,
-		"consumer_name":                   consumerName,
-		"consumer_description":            consumerDescription,
 		"btc_finality_code_id":            btcFinalityCodeId,
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
+		"consumer_name":                   consumerName,
+		"consumer_description":            consumerDescription,
 	}
 	if len(ibcTransferChannelId) > 0 {
 		initMsg["ics20_channel_id"] = ibcTransferChannelId

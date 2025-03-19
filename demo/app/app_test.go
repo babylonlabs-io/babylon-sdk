@@ -154,6 +154,28 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	require.NoError(t, err)
 
 	// instantiate Babylon contract
-	_, err = babylonMsgServer.InstantiateBabylonContracts(ctx, initMsg)
-	require.NoError(t, err, initMsg)
+	msgResp, err := babylonMsgServer.InstantiateBabylonContracts(ctx, initMsg)
+	require.NoError(t, err)
+	require.NotNil(t, msgResp)
+
+	// Verify that the contracts were instantiated successfully
+	params := babylonKeeper.GetParams(ctx)
+	babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
+	require.NoError(t, err)
+	require.NotEmpty(t, babylonAddr)
+	require.NotEmpty(t, btcLightClientAddr)
+	require.NotEmpty(t, btcStakingAddr)
+	require.NotEmpty(t, btcFinalityAddr)
+
+	// Verify that the contract code IDs are set correctly
+	require.Equal(t, babylonContractCodeID, params.BabylonContractCodeId)
+	require.Equal(t, btcLightClientContractCodeID, params.BtcLightClientContractCodeId)
+	require.Equal(t, btcStakingContractCodeID, params.BtcStakingContractCodeId)
+	require.Equal(t, btcFinalityContractCodeID, params.BtcFinalityContractCodeId)
+
+	// Verify that the contracts are instantiated
+	require.True(t, wasmKeeper.HasContractInfo(ctx, babylonAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcLightClientAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcStakingAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcFinalityAddr))
 }

@@ -93,7 +93,7 @@ func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender str
 	}
 
 	// BTC light client contract message
-	btclcMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth:%d,checkpoint_finalization_timeout:%d}`, msg.Network, msg.BtcConfirmationDepth, msg.CheckpointFinalizationTimeout)
+	btclcMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`, msg.Network, msg.BtcConfirmationDepth, msg.CheckpointFinalizationTimeout)
 	msg.BtcLightClientMsg = []byte(btclcMsg)
 
 	// BTC staking contract message
