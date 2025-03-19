@@ -52,8 +52,8 @@ message MsgInstantiateBabylonContracts {
   // notify_cosmos_zone indicates whether to notify the Cosmos zone of events
   bool notify_cosmos_zone = 9;
   // ibc_transfer_channel_id is the IBC channel ID for the IBC transfer
-  // contract. If empty then the reward distribution will be done at the consumer
-  // side.
+  // contract. If empty then the reward distribution will be done at the
+  // consumer side.
   string ibc_transfer_channel_id = 10;
   // btc_staking_msg is the initialization message for the BTC staking contract
   bytes btc_staking_msg = 11;
