@@ -2,14 +2,13 @@
 set -o errexit -o nounset -o pipefail
 command -v shellcheck >/dev/null && shellcheck "$0"
 
-CONTRACTS="babylon_contract btc_staking btc_finality"
+CONTRACTS="babylon_contract btc_light_client btc_staking btc_finality"
 OUTPUT_FOLDER="$(dirname "$0")/../testdata"
 
 echo "DEV-only: copy from local built instead of downloading"
 
-for CONTRACT in $CONTRACTS
-do
-  cp -f  ../../babylon-contract/artifacts/"${CONTRACT}".wasm "$OUTPUT_FOLDER/"
+for CONTRACT in $CONTRACTS; do
+  cp -f ../../babylon-contract/artifacts/"${CONTRACT}".wasm "$OUTPUT_FOLDER/"
 done
 
 cd ../../babylon-contract
