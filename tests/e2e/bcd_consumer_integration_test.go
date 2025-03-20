@@ -1361,8 +1361,10 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilConsumerHeight(consumerHe
 	s.Eventually(func() bool {
 		s.finalizeNextEpoch()
 		consumerLastTimestampedHeader, err := s.cosmwasmController.QueryLastBTCTimestampedHeader()
-		s.NoError(err)
-		s.NotNil(consumerLastTimestampedHeader)
+		if err != nil {
+			s.T().Logf("error querying last timestamped header: %v", err)
+			return false
+		}
 
 		if consumerHeight < consumerLastTimestampedHeader.Height {
 			s.T().Logf("consumer height %d is now timestamped (last timestamped height %d)!", consumerHeight, consumerLastTimestampedHeader.Height)
