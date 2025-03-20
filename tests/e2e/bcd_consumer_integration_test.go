@@ -571,13 +571,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 	s.Equal(1, len(votes))
 	s.Equal(votes[0].MarshalHex(), babylonFpBIP340PK.MarshalHex())
 
-	// once the vote is cast, ensure block is finalised
-	finalizedBlock, err := s.babylonController.QueryIndexedBlock(firstNonFinalizedHeight)
-	s.NoError(err)
-	s.NotEmpty(finalizedBlock)
-	s.Equal(strings.ToUpper(hex.EncodeToString(finalizedBlock.AppHash)), firstNonFinalizedBlock.Block.AppHash.String())
-	s.True(finalizedBlock.Finalized)
-
 	// equivocate by submitting invalid finality signature
 	_, err = s.babylonController.SubmitInvalidFinalitySignature(
 		r,
@@ -702,6 +695,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 		}
 		return true
 	}, time.Minute, time.Second*5)
+
+	// once the vote is cast, ensure block is finalised
+	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerLatestBlockHeight)
+	s.NoError(err)
+	s.NotEmpty(finalizedBlock)
+	s.Equal(finalizedBlock.AppHash, czLatestBlock.AppHash)
+	s.True(finalizedBlock.Finalized)
 
 	// consumer finality provider submits invalid finality signature
 	txResp, err = s.cosmwasmController.SubmitInvalidFinalitySig(
