@@ -94,4 +94,4 @@ rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer
 sleep 10
 
 echo "Start the IBC relayer"
-rly --home $RELAYER_CONF_DIR start bcd --debug-addr "" --flush-interval 30s
+rly --home $RELAYER_CONF_DIR start bcd --debug-addr "" --flush-interval 10s

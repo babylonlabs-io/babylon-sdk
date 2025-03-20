@@ -1,6 +1,8 @@
 package cosmwasm
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 type ConsumerFpsResponse struct {
 	Fps []SingleConsumerFpResponse `json:"fps"`
@@ -308,4 +310,19 @@ type SinglePendingRewardsResponse struct {
 	StakingTxHash []byte   `json:"staking_tx_hash"`
 	FpPubkeyHex   string   `json:"fp_pubkey_hex"`
 	Rewards       sdk.Coin `json:"rewards"`
+}
+
+type QueryMsgCzLastHeader struct {
+	CzLastHeader struct{} `json:"cz_last_header"`
+}
+
+type CzHeaderResponse struct {
+	ConsumerID          string `json:"consumer_id"`
+	Hash                string `json:"hash"`
+	Height              uint64 `json:"height"`
+	Time                string `json:"time,omitempty"`
+	BabylonHeaderHash   string `json:"babylon_header_hash"`
+	BabylonHeaderHeight uint64 `json:"babylon_header_height"`
+	BabylonEpoch        uint64 `json:"babylon_epoch"`
+	BabylonTxHash       string `json:"babylon_tx_hash"`
 }
