@@ -1046,7 +1046,7 @@ func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*CzHeader
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BabylonContractAddress, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
