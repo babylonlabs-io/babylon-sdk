@@ -1049,7 +1049,7 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 	return grpcConn, nil
 }
 
-func (cc *CosmwasmConsumerController) QuertLastBTCTimestampedHeader() (*CzHeaderResponse, error) {
+func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*CzHeaderResponse, error) {
 	queryMsgStruct := QueryMsgCzLastHeader{
 		CzLastHeader: struct{}{},
 	}

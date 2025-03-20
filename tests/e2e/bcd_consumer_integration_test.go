@@ -288,7 +288,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	// register a babylon finality provider
 	babylonFp := s.createVerifyBabylonFP(babylonFpBTCSK)
 	// commit and finalize pub rand so Babylon FP has voting power
-	// TODO: is this needed?
 	randList := s.commitAndFinalizePubRand(babylonFpBTCSK, babylonFpBTCPK, uint64(1))
 	randListInfo1 = randList
 
@@ -768,7 +767,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerDelegationExpiry() {
 	babylonFp := s.createVerifyBabylonFP(babylonFpBTCSK3)
 
 	// commit and finalize pub rand so Babylon FP has voting power
-	// TODO: is this needed?
 	currentHeight, err := s.babylonController.GetCurrentHeight()
 	s.NoError(err)
 	s.commitAndFinalizePubRand(babylonFpBTCSK3, babylonFpBTCPK3, uint64(currentHeight))
@@ -1363,7 +1361,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 func (s *BCDConsumerIntegrationTestSuite) finalizeUntilConsumerHeight(consumerHeight uint64) {
 	s.Eventually(func() bool {
 		s.finalizeNextEpoch()
-		consumerLastTimestampedHeader, err := s.cosmwasmController.QuertLastBTCTimestampedHeader()
+		consumerLastTimestampedHeader, err := s.cosmwasmController.QueryLastBTCTimestampedHeader()
 		s.NoError(err)
 		s.NotNil(consumerLastTimestampedHeader)
 
