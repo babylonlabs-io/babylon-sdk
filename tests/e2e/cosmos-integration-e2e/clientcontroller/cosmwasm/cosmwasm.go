@@ -1048,3 +1048,26 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 	}
 	return grpcConn, nil
 }
+
+func (cc *CosmwasmConsumerController) QuertLastBTCTimestampedHeader() (*CzHeaderResponse, error) {
+	queryMsgStruct := QueryMsgCzLastHeader{
+		CzLastHeader: struct{}{},
+	}
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp CzHeaderResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
+}
