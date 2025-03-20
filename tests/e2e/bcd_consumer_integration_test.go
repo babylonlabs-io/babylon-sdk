@@ -420,6 +420,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 	// wait until the consumer chain has finalized the current height
 	consumerHeight, err := s.cosmwasmController.QueryLatestBlockHeight()
 	s.NoError(err)
+	s.T().Logf("Wait until consumer chain has finalized height %d", consumerHeight)
 	s.finalizeUntilConsumerHeight(consumerHeight)
 
 	// Consumer finality provider submits finality signature
@@ -526,18 +527,17 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
 // 4. Babylon FP is slashed
 // 6. Consumer discounts the voting power of other involved consumer FPs in the affected delegations
 func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
+	activatedHeightResp, err := s.babylonController.QueryActivatedHeight()
+	s.NoError(err)
+	s.NotNil(activatedHeightResp)
+	activatedHeight := activatedHeightResp.Height
+	heightToVote := activatedHeight + 1
+
 	// get the babylon finality provider
 	babylonFp, err := s.babylonController.QueryFinalityProviders()
 	s.NoError(err)
 	s.NotNil(babylonFp)
 	babylonFpBIP340PK := bbn.NewBIP340PubKeyFromBTCPK(babylonFpBTCPK)
-
-	// find the last timestamped header
-	// the FP will equivocate on the height next to the last timestamped header
-	lastTimestampedHeader, err := s.cosmwasmController.QuertLastBTCTimestampedHeader()
-	s.NoError(err)
-	s.NotNil(lastTimestampedHeader)
-	heightToVote := lastTimestampedHeader.Height + 1
 
 	s.T().Logf("Trying to equivocate for the block at height: %d", heightToVote)
 	// get the block at the submit height
@@ -547,7 +547,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
 
 	randIdx := heightToVote - 1 // pub rand was committed from height 1-200
 
-	// submit finality signature
+	// submit finality signature to Babylon chain
 	txResp, err := s.babylonController.SubmitFinalitySignature(
 		babylonFpBTCSK,
 		babylonFpBIP340PK,
@@ -1384,10 +1384,12 @@ func (s *BCDConsumerIntegrationTestSuite) finalizeUntilConsumerHeight(consumerHe
 		s.NotNil(consumerLastTimestampedHeader)
 
 		if consumerHeight < consumerLastTimestampedHeader.Height {
-			s.T().Logf("last timestamped header height %d is greater than consumer height %d", consumerLastTimestampedHeader.Height, consumerHeight)
+			s.T().Logf("consumer height %d is now timestamped (last timestampedheight %d)!", consumerHeight, consumerLastTimestampedHeader.Height)
 			return true
+		} else {
+			s.T().Logf("consumer height %d is not timestamped (last timestamped height %d) yet", consumerHeight, consumerLastTimestampedHeader.Height)
+			return false
 		}
-		return false
 	}, 3*time.Minute, time.Second*10)
 }
 
