@@ -320,7 +320,7 @@ type CzHeaderResponse struct {
 	ConsumerID          string `json:"consumer_id"`
 	Hash                string `json:"hash"`
 	Height              uint64 `json:"height"`
-	Time                int64  `json:"time,omitempty"`
+	Time                string `json:"time,omitempty"`
 	BabylonHeaderHash   string `json:"babylon_header_hash"`
 	BabylonHeaderHeight uint64 `json:"babylon_header_height"`
 	BabylonEpoch        uint64 `json:"babylon_epoch"`

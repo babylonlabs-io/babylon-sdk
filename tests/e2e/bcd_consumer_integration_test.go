@@ -668,48 +668,40 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 	czNodeStatus, err := s.cosmwasmController.GetCometNodeStatus()
 	s.NoError(err)
 	s.NotNil(czNodeStatus)
-	czlatestBlockHeight := czNodeStatus.SyncInfo.LatestBlockHeight
-	czLatestBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(czlatestBlockHeight))
+	consumerLatestBlockHeight := uint64(czNodeStatus.SyncInfo.LatestBlockHeight)
+	czLatestBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerLatestBlockHeight)
 	s.NoError(err)
 	s.NotNil(czLatestBlock)
 
 	// commit public randomness at the latest block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK2, uint64(czlatestBlockHeight), 200)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, czFpBTCSK2, uint64(consumerLatestBlockHeight), 200)
 	s.NoError(err)
 
-	// submit the public randomness to the consumer chain
-	txResp, err := s.cosmwasmController.CommitPubRandList(czFpBTCPK2, uint64(czlatestBlockHeight), 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
+	txResp, err := s.cosmwasmController.CommitPubRandList(czFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// Consumer finality provider submits finality signature, eventually
-	//succeeds
-	s.Eventually(func() bool {
-		finalizeEpoch := uint64(100)
-		s.finalizeUntilEpoch(finalizeEpoch, false)
+	// finalize the consumer chain until the latest block height
+	consumerLatestBlockHeight, err = s.cosmwasmController.QueryLatestBlockHeight()
+	s.NoError(err)
+	s.NotNil(consumerLatestBlockHeight)
+	s.finalizeUntilConsumerHeight(consumerLatestBlockHeight)
 
-		txResp, err = s.cosmwasmController.SubmitFinalitySig(
-			czFpBTCSK2,
-			czFpBTCPK2,
-			randListInfo.SRList[0],
-			&randListInfo.PRList[0],
-			randListInfo.ProofList[0].ToProto(),
-			uint64(czlatestBlockHeight),
-		)
-		if err != nil {
-			s.T().Logf("Error submitting finality sig: %v", err)
-			return false
-		}
-		if txResp == nil {
-			return false
-		}
-		s.T().Logf("Finality sig for height %d was submitted successfully", czlatestBlockHeight)
-		return true
-	}, 3*time.Minute, time.Second*10)
+	// Consumer finality provider submits finality signature
+	_, err = s.cosmwasmController.SubmitFinalitySig(
+		czFpBTCSK2,
+		czFpBTCPK2,
+		randListInfo.SRList[0],
+		&randListInfo.PRList[0],
+		randListInfo.ProofList[0].ToProto(),
+		consumerLatestBlockHeight,
+	)
+	s.NoError(err)
+	s.T().Logf("Finality sig for height %d was submitted successfully", consumerLatestBlockHeight)
 
 	// ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.BtcPk.MarshalHex(), uint64(czlatestBlockHeight))
+		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.BtcPk.MarshalHex(), uint64(consumerLatestBlockHeight))
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -728,7 +720,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 		randListInfo.SRList[0],
 		&randListInfo.PRList[0],
 		randListInfo.ProofList[0].ToProto(),
-		czlatestBlockHeight,
+		consumerLatestBlockHeight,
 	)
 	s.NoError(err)
 	s.NotNil(txResp)

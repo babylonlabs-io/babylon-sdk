@@ -196,7 +196,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 	privateRand *eots.PrivateRand,
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
-	heightToVote int64,
+	heightToVote uint64,
 ) (*types.TxResponse, error) {
 	invalidAppHash := datagen.GenRandomByteArray(r, 32)
 	invalidMsgToSign := append(sdk.Uint64ToBigEndian(uint64(heightToVote)), invalidAppHash...)
@@ -208,7 +208,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 
 	submitFinalitySig := &SubmitFinalitySignature{
 		FpPubkeyHex: bbntypes.NewBIP340PubKeyFromBTCPK(fpBtcPk).MarshalHex(),
-		Height:      uint64(heightToVote),
+		Height:      heightToVote,
 		PubRand:     pubRand.MustMarshal(),
 		Proof: Proof{
 			Total:    proof.Total,
