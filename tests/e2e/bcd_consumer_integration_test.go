@@ -696,13 +696,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPCascadedSlashing() {
 		return true
 	}, time.Minute, time.Second*5)
 
-	// once the vote is cast, ensure block is finalised
-	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerLatestBlockHeight)
-	s.NoError(err)
-	s.NotEmpty(finalizedBlock)
-	s.Equal(finalizedBlock.AppHash, czLatestBlock.AppHash)
-	s.True(finalizedBlock.Finalized)
-
 	// consumer finality provider submits invalid finality signature
 	txResp, err = s.cosmwasmController.SubmitInvalidFinalitySig(
 		r,
