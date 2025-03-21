@@ -5,7 +5,7 @@ on:
     - '**'
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -14,5 +14,30 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.23
+
+  build-ibcsim:
+    needs: setup
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build ibcsim-bcd
+        run: sudo make build-ibcsim-bcd
+
+  build-babylond:
+    needs: setup
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build babylond
+        run: sudo make build-babylond
+
+  e2e-test:
+    needs: [build-ibcsim, build-babylond]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Run E2E Tests
-        run: sudo make test-e2e
+        run: sudo make test-e2e-cache
