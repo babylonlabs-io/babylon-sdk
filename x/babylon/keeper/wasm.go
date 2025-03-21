@@ -17,7 +17,7 @@ func (k Keeper) InstantiateBabylonContracts(
 	ctx sdk.Context,
 	babylonContractCodeId uint64,
 	initMsg []byte,
-) (string, string, string, error) {
+) (string, string, string, string, error) {
 	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
 
 	// gov address
@@ -29,28 +29,55 @@ func (k Keeper) InstantiateBabylonContracts(
 	// instantiate Babylon contract
 	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, initMsg, "Babylon contract", nil)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 
 	// get contract addresses
 	configQuery := []byte(`{"config":{}}`)
 	res, err := k.wasm.QuerySmart(ctx, babylonContractAddr, configQuery)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	var config types.BabylonContractConfig
 	err = json.Unmarshal(res, &config)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
+	}
+	if len(config.BTCLightClient) == 0 {
+		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC light client contract")
 	}
 	if len(config.BTCStaking) == 0 {
-		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
+		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
 	}
 	if len(config.BTCFinality) == 0 {
-		return "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
+		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
 	}
 
-	return babylonContractAddr.String(), config.BTCStaking, config.BTCFinality, nil
+	return babylonContractAddr.String(), config.BTCLightClient, config.BTCStaking, config.BTCFinality, nil
+}
+
+func (k Keeper) getBTCLightClientContractAddr(ctx sdk.Context) sdk.AccAddress {
+	// get address of the BTC light client contract
+	addrStr := k.GetParams(ctx).BtcLightClientContractAddress
+	if len(addrStr) == 0 {
+		// the BTC light client contract address is not set yet, skip sending BeginBlockMsg
+		return nil
+	}
+	addr, err := sdk.AccAddressFromBech32(addrStr)
+	if err != nil {
+		// Although this is a programming error so we should panic, we emit
+		// a warning message to minimise the impact on the consumer chain's operation
+		k.Logger(ctx).Warn("the BTC light client contract address is malformed", "contract", addrStr, "error", err)
+		return nil
+	}
+	if !k.wasm.HasContractInfo(ctx, addr) {
+		// NOTE: it's possible that the default contract address does not correspond to
+		// any contract. We emit a warning message rather than panic to minimise the
+		// impact on the consumer chain's operation
+		k.Logger(ctx).Warn("the BTC light client contract address is not on-chain", "contract", addrStr)
+		return nil
+	}
+	return addr
 }
 
 func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {

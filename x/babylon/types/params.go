@@ -21,29 +21,34 @@ func (p Params) ValidateBasic() error {
 	return nil
 }
 
-func (p Params) GetContractAddresses() (sdk.AccAddress, sdk.AccAddress, sdk.AccAddress, error) {
+func (p Params) GetContractAddresses() (sdk.AccAddress, sdk.AccAddress, sdk.AccAddress, sdk.AccAddress, error) {
 	if !p.IsCodeStored() {
-		return nil, nil, nil, errors.New("contracts are not instantiated")
+		return nil, nil, nil, nil, errors.New("contracts are not instantiated")
 	}
 
 	babylonAddr, err := sdk.AccAddressFromBech32(p.BabylonContractAddress)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
+	}
+	btcLightClientAddr, err := sdk.AccAddressFromBech32(p.BtcLightClientContractAddress)
+	if err != nil {
+		return nil, nil, nil, nil, err
 	}
 	btcStakingAddr, err := sdk.AccAddressFromBech32(p.BtcStakingContractAddress)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	btcFinalityAddr, err := sdk.AccAddressFromBech32(p.BtcFinalityContractAddress)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return babylonAddr, btcStakingAddr, btcFinalityAddr, nil
+	return babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, nil
 }
 
 func (p Params) IsCodeStored() bool {
 	return p.BabylonContractCodeId != 0 &&
+		p.BtcLightClientContractCodeId != 0 &&
 		p.BtcStakingContractCodeId != 0 &&
 		p.BtcFinalityContractCodeId != 0
 }
@@ -51,6 +56,7 @@ func (p Params) IsCodeStored() bool {
 func (p Params) IsContractInstantiated() bool {
 	return p.IsCodeStored() &&
 		len(p.BabylonContractAddress) > 0 &&
+		len(p.BtcLightClientContractAddress) > 0 &&
 		len(p.BtcStakingContractAddress) > 0 &&
 		len(p.BtcFinalityContractAddress) > 0
 }

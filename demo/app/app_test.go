@@ -69,14 +69,19 @@ func TestGetMaccPerms(t *testing.T) {
 }
 
 const (
-	TestDataPath                = "../../tests/testdata"
-	BabylonContractCodePath     = TestDataPath + "/babylon_contract.wasm"
-	BtcStakingContractCodePath  = TestDataPath + "/btc_staking.wasm"
-	BtcFinalityContractCodePath = TestDataPath + "/btc_finality.wasm"
+	TestDataPath                   = "../../tests/testdata"
+	BabylonContractCodePath        = TestDataPath + "/babylon_contract.wasm"
+	BtcLightClientContractCodePath = TestDataPath + "/btc_light_client.wasm"
+	BtcStakingContractCodePath     = TestDataPath + "/btc_staking.wasm"
+	BtcFinalityContractCodePath    = TestDataPath + "/btc_finality.wasm"
 )
 
-func GetGZippedContractCodes() ([]byte, []byte, []byte) {
+func GetGZippedContractCodes() ([]byte, []byte, []byte, []byte) {
 	babylonContractCode, err := types.GetGZippedContractCode(BabylonContractCodePath)
+	if err != nil {
+		panic(err)
+	}
+	btcLightClientContractCode, err := types.GetGZippedContractCode(BtcLightClientContractCodePath)
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +94,7 @@ func GetGZippedContractCodes() ([]byte, []byte, []byte) {
 		panic(err)
 	}
 
-	return babylonContractCode, btcStakingContractCode, btcFinalityContractCode
+	return babylonContractCode, btcLightClientContractCode, btcStakingContractCode, btcFinalityContractCode
 }
 
 func TestInstantiateBabylonContracts(t *testing.T) {
@@ -102,12 +107,18 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
 
 	// store Babylon contract codes
-	babylonContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
+	babylonContractCode, btcLightClientContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
 	resp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
 		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
 		WASMByteCode: babylonContractCode,
 	})
 	babylonContractCodeID := resp.CodeID
+	require.NoError(t, err)
+	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		WASMByteCode: btcLightClientContractCode,
+	})
+	btcLightClientContractCodeID := resp.CodeID
 	require.NoError(t, err)
 	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
 		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
@@ -125,6 +136,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	initMsg, err := cli.ParseInstantiateArgs(
 		[]string{
 			fmt.Sprintf("%d", babylonContractCodeID),
+			fmt.Sprintf("%d", btcLightClientContractCodeID),
 			fmt.Sprintf("%d", btcStakingContractCodeID),
 			fmt.Sprintf("%d", btcFinalityContractCodeID),
 			"regtest",
@@ -144,6 +156,28 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	require.NoError(t, err)
 
 	// instantiate Babylon contract
-	_, err = babylonMsgServer.InstantiateBabylonContracts(ctx, initMsg)
-	require.NoError(t, err, initMsg)
+	msgResp, err := babylonMsgServer.InstantiateBabylonContracts(ctx, initMsg)
+	require.NoError(t, err)
+	require.NotNil(t, msgResp)
+
+	// Verify that the contracts were instantiated successfully
+	params := babylonKeeper.GetParams(ctx)
+	babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
+	require.NoError(t, err)
+	require.NotEmpty(t, babylonAddr)
+	require.NotEmpty(t, btcLightClientAddr)
+	require.NotEmpty(t, btcStakingAddr)
+	require.NotEmpty(t, btcFinalityAddr)
+
+	// Verify that the contract code IDs are set correctly
+	require.Equal(t, babylonContractCodeID, params.BabylonContractCodeId)
+	require.Equal(t, btcLightClientContractCodeID, params.BtcLightClientContractCodeId)
+	require.Equal(t, btcStakingContractCodeID, params.BtcStakingContractCodeId)
+	require.Equal(t, btcFinalityContractCodeID, params.BtcFinalityContractCodeId)
+
+	// Verify that the contracts are instantiated
+	require.True(t, wasmKeeper.HasContractInfo(ctx, babylonAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcLightClientAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcStakingAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcFinalityAddr))
 }

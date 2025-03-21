@@ -89,9 +89,10 @@ func NewConsumerClient(t *testing.T, chain *ibctesting.TestChain) *TestConsumerC
 }
 
 type ConsumerContract struct {
-	Babylon     sdk.AccAddress
-	BTCStaking  sdk.AccAddress
-	BTCFinality sdk.AccAddress
+	Babylon        sdk.AccAddress
+	BTCLightClient sdk.AccAddress
+	BTCStaking     sdk.AccAddress
+	BTCFinality    sdk.AccAddress
 }
 
 func (p *TestConsumerClient) GetSender() sdk.AccAddress {
@@ -101,6 +102,7 @@ func (p *TestConsumerClient) GetSender() sdk.AccAddress {
 // TODO(babylon): deploy Babylon contracts
 func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	babylonContractWasmId := p.Chain.StoreCodeFile("../testdata/babylon_contract.wasm").CodeID
+	btcLightClientContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_light_client.wasm").CodeID
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
 	btcFinalityContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_finality.wasm").CodeID
 
@@ -109,6 +111,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	msgInit, err := cli.ParseInstantiateArgs(
 		[]string{
 			fmt.Sprintf("%d", babylonContractWasmId),
+			fmt.Sprintf("%d", btcLightClientContractWasmId),
 			fmt.Sprintf("%d", btcStakingContractWasmId),
 			fmt.Sprintf("%d", btcFinalityContractWasmId),
 			"regtest",
@@ -134,15 +137,16 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	}
 
 	params := p.App.BabylonKeeper.GetParams(p.Chain.GetContext())
-	babylonAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
+	babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
 	if err != nil {
 		return nil, err
 	}
 
 	r := ConsumerContract{
-		Babylon:     babylonAddr,
-		BTCStaking:  btcStakingAddr,
-		BTCFinality: btcFinalityAddr,
+		Babylon:        babylonAddr,
+		BTCLightClient: btcLightClientAddr,
+		BTCStaking:     btcStakingAddr,
+		BTCFinality:    btcFinalityAddr,
 	}
 	p.Contracts = r
 	return &r, nil
