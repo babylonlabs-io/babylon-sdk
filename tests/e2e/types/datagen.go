@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"math/rand"
 	"testing"
 	"time"
@@ -31,9 +32,16 @@ func GenBTCHeadersMsg() BabylonExecuteMsg {
 		})
 	}
 
+	firstHeader := chain.GetChainInfo()[0]
+	firstHeight := firstHeader.Height
+	firstWork, _ := firstHeader.Work.Marshal()
+	firstWorkHex := hex.EncodeToString(firstWork)
+
 	return BabylonExecuteMsg{
 		BtcHeaders: BTCHeadersMsg{
-			Headers: headers,
+			Headers:     headers,
+			FirstWork:   firstWorkHex,
+			FirstHeight: firstHeight,
 		},
 	}
 }
@@ -272,7 +280,9 @@ type BabylonExecuteMsg struct {
 }
 
 type BTCHeadersMsg struct {
-	Headers []BtcHeader `json:"headers"`
+	Headers     []BtcHeader `json:"headers"`
+	FirstWork   string      `json:"first_work"`
+	FirstHeight uint32      `json:"first_height"`
 }
 
 type BtcHeader struct {
