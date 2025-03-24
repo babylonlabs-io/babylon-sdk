@@ -274,10 +274,10 @@ github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX
 github.com/aws/aws-sdk-go v1.44.312 h1:llrElfzeqG/YOLFFKjg1xNpZCFJ2xraIi3PqSuP+95k=
 github.com/aws/aws-sdk-go v1.44.312/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
-github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250319085135-f2aadaba655e h1:DYO/wPceBavnvjpSHZ7UGzzudvRKhQbIjX7gbiTO/rA=
-github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250319085135-f2aadaba655e/go.mod h1:kaEDWP+kwh27+AG3/mC2aWgD/BRlpxQ4hTVIU65lPXM=
-github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250318113903-d64f5b1bb85e h1:jrKjJpHDptwqD/MeSPQOO1OAuqIL9Gecacnmi+TYrmA=
-github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250318113903-d64f5b1bb85e/go.mod h1:r3gzwTEu/UR4uAw0bUEintY0zJeZbvHVcOjUmiXCxAw=
+github.com/babylonlabs-io/babylon v1.99.0-snapshot.250319.0.20250324084358-dab04d00c6c2 h1:UOhbFRiWeZxH7GRM2a+BV8pRdKSdaayWEoE/7Zeqd0o=
+github.com/babylonlabs-io/babylon v1.99.0-snapshot.250319.0.20250324084358-dab04d00c6c2/go.mod h1:kaEDWP+kwh27+AG3/mC2aWgD/BRlpxQ4hTVIU65lPXM=
+github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250319083036-ec68da708ddf h1:8AclxVvFOjtxaualdVzzmIJuR5NtuGCJCeRAAr3vCao=
+github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250319083036-ec68da708ddf/go.mod h1:r3gzwTEu/UR4uAw0bUEintY0zJeZbvHVcOjUmiXCxAw=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=

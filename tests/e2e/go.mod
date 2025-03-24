@@ -31,10 +31,10 @@ require (
 require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0
-	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250211.0.20250319085135-f2aadaba655e
+	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250319.0.20250324084358-dab04d00c6c2
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250318085813-a3871aaa5afe
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250318085813-a3871aaa5afe
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250318113903-d64f5b1bb85e
+	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250319083036-ec68da708ddf
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
