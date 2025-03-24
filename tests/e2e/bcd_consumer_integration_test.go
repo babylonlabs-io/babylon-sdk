@@ -572,7 +572,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 // 4. Babylon FP is slashed
 // 5. Babylon notifies involved consumer about the delegations.
 // 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test08BabylonFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	// get the last finalized epoch
 	lastFinalizedEpoch := s.getLastFinalizedEpoch()
 	// get the first non finalized height
