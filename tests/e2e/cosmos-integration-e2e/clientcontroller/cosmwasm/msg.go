@@ -315,13 +315,6 @@ type SinglePendingRewardsResponse struct {
 type QueryMsgCzLastHeader struct {
 	CzLastHeader struct{} `json:"cz_last_header"`
 }
-type QueryMsgCzHeader struct {
-	CzHeader CzHeaderQuery `json:"cz_header"`
-}
-
-type CzHeaderQuery struct {
-	Height uint64 `json:"height"`
-}
 
 type CzHeaderResponse struct {
 	ConsumerID          string `json:"consumer_id"`
@@ -332,39 +325,4 @@ type CzHeaderResponse struct {
 	BabylonHeaderHeight uint64 `json:"babylon_header_height"`
 	BabylonEpoch        uint64 `json:"babylon_epoch"`
 	BabylonTxHash       string `json:"babylon_tx_hash"`
-}
-type QueryMsgBabylonLastEpoch struct {
-	BabylonLastEpoch struct{} `json:"babylon_last_epoch"`
-}
-
-type QueryMsgBabylonEpoch struct {
-	BabylonEpoch BabylonEpochQuery `json:"babylon_epoch"`
-}
-
-type BabylonEpochQuery struct {
-	EpochNumber uint64 `json:"epoch_number"`
-}
-
-type QueryMsgBabylonCheckpoint struct {
-	BabylonCheckpoint BabylonCheckpointQuery `json:"babylon_checkpoint"`
-}
-
-type BabylonCheckpointQuery struct {
-	EpochNumber uint64 `json:"epoch_number"`
-}
-
-type BabylonEpochResponse struct {
-	EpochNumber          uint64 `json:"epoch_number"`
-	CurrentEpochInterval uint64 `json:"current_epoch_interval"`
-	FirstBlockHeight     uint64 `json:"first_block_height"`
-	LastBlockTime        string `json:"last_block_time"`
-	SealerAppHash        string `json:"sealer_app_hash"`
-	SealerBlockHash      string `json:"sealer_block_hash"`
-}
-
-type BabylonCheckpointResponse struct {
-	EpochNum    uint64 `json:"epoch_num"`
-	BlockHash   string `json:"block_hash"`
-	Bitmap      string `json:"bitmap"`
-	BlsMultiSig string `json:"bls_multi_sig"`
 }

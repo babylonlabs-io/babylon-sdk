@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +17,6 @@ import (
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
 	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
-	bbnclient "github.com/babylonlabs-io/babylon/client/client"
 
 	sdkmath "cosmossdk.io/math"
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
@@ -1647,109 +1645,4 @@ func ParseRespBTCDelToBTCDel(resp *bstypes.BTCDelegationResponse) (btcDel *bstyp
 	}
 
 	return btcDel, nil
-}
-
-// ParseClientTimestampToUnixSeconds parses timestamp from consumer chain (in nanoseconds) to unix seconds
-func (s *BCDConsumerIntegrationTestSuite) ParseClientTimestampToUnixSeconds(timestamp string) int64 {
-	// Parse the string timestamp as int64 (nanoseconds since epoch)
-	nanoTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
-	s.Require().NoError(err, "Failed to parse timestamp %s", timestamp)
-
-	// Convert nanoseconds to seconds
-	return nanoTimestamp / 1e9
-}
-
-// ValidateTimestamps compares timestamps with appropriate tolerance
-func (s *BCDConsumerIntegrationTestSuite) ValidateTimestamps(babylonTime time.Time, consumerTimeStr string) {
-	consumerTimeSec := s.ParseClientTimestampToUnixSeconds(consumerTimeStr)
-	babylonTimeSec := babylonTime.Unix()
-
-	// For logging purposes - shows both timestamps in readable format
-	s.T().Logf("Timestamps: Babylon=%s, Consumer=%s",
-		babylonTime.Format(time.RFC3339),
-		time.Unix(consumerTimeSec, 0).Format(time.RFC3339))
-
-	s.Require().Equal(babylonTimeSec, consumerTimeSec)
-}
-
-// validateBinaryFields compares binary fields that are represented differently in Babylon and consumer chain
-func (s *BCDConsumerIntegrationTestSuite) validateBinaryFields(babylonBinary []byte, consumerHex string) {
-	babylonHex := hex.EncodeToString(babylonBinary)
-	s.Require().Equal(babylonHex, consumerHex)
-}
-
-// validateEpochInfo validates that epoch information is consistent between Babylon and consumer chain
-func (s *BCDConsumerIntegrationTestSuite) validateEpochInfo(epochNumber uint64, bbnClient *bbnclient.Client) {
-	// Fetch epoch data from both chains
-	babylonEpoch, err := s.babylonController.QueryEpochInfo(epochNumber)
-	s.Require().NoError(err)
-	s.Require().NotNil(babylonEpoch)
-
-	consumerEpoch, err := s.cosmwasmController.QueryBabylonEpoch(epochNumber)
-	s.Require().NoError(err)
-	s.Require().NotNil(consumerEpoch)
-
-	// Basic epoch data validation
-	s.Require().Equal(babylonEpoch.Epoch.EpochNumber, consumerEpoch.EpochNumber)
-	s.Require().Equal(babylonEpoch.Epoch.CurrentEpochInterval, consumerEpoch.CurrentEpochInterval)
-	s.Require().Equal(babylonEpoch.Epoch.FirstBlockHeight, consumerEpoch.FirstBlockHeight)
-
-	// Timestamp validation using helper function
-	s.ValidateTimestamps(
-		*babylonEpoch.Epoch.LastBlockTime,
-		consumerEpoch.LastBlockTime)
-
-	// Hash validations
-	s.Require().Equal(babylonEpoch.Epoch.SealerAppHashHex, consumerEpoch.SealerAppHash)
-	s.Require().Equal(babylonEpoch.Epoch.SealerBlockHash, consumerEpoch.SealerBlockHash)
-}
-
-// validateCheckpointInfo validates that checkpoint information is consistent between Babylon and consumer chain
-func (s *BCDConsumerIntegrationTestSuite) validateCheckpointInfo(epochNumber uint64, bbnClient *bbnclient.Client) {
-	// Fetch checkpoint data from both chains
-	consumerCheckpoint, err := s.cosmwasmController.QueryBabylonCheckpoint(epochNumber)
-	s.Require().NoError(err)
-	s.Require().NotNil(consumerCheckpoint)
-
-	babylonCheckpoint, err := bbnClient.RawCheckpoint(epochNumber)
-	s.Require().NoError(err)
-	s.Require().NotNil(babylonCheckpoint)
-
-	// Basic checkpoint data validation
-	s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.EpochNum, consumerCheckpoint.EpochNum)
-	s.Require().Equal(babylonCheckpoint.RawCheckpoint.Ckpt.BlockHashHex, consumerCheckpoint.BlockHash)
-
-	// Binary field validations
-	s.validateBinaryFields(
-		babylonCheckpoint.RawCheckpoint.Ckpt.Bitmap,
-		consumerCheckpoint.Bitmap)
-
-	s.validateBinaryFields(
-		babylonCheckpoint.RawCheckpoint.Ckpt.BlsMultiSig.MustMarshal(),
-		consumerCheckpoint.BlsMultiSig)
-}
-
-// validateConsumerHeader validates the consumer chain header
-func (s *BCDConsumerIntegrationTestSuite) validateConsumerHeader(epochNumber uint64, bbnClient *bbnclient.Client, consumerID string) {
-	babylonEpochChainInfo, err := bbnClient.ConnectedChainsEpochInfo([]string{consumerID}, epochNumber)
-	s.Require().NoError(err)
-	s.Require().NotNil(babylonEpochChainInfo)
-
-	// Only validate if we have header information
-	if len(babylonEpochChainInfo.ChainsInfo) > 0 && babylonEpochChainInfo.ChainsInfo[0].LatestHeader != nil {
-		latestHeader := babylonEpochChainInfo.ChainsInfo[0].LatestHeader
-		czHeight := latestHeader.Height
-
-		consumerEpochChainInfo, err := s.cosmwasmController.QueryCzHeader(czHeight)
-		s.Require().NoError(err)
-		s.Require().NotNil(consumerEpochChainInfo)
-
-		// Header validation
-		s.Require().Equal(consumerEpochChainInfo.Height, czHeight)
-		s.Require().Equal(consumerEpochChainInfo.Hash, hex.EncodeToString(latestHeader.Hash))
-		s.Require().Equal(consumerEpochChainInfo.BabylonEpoch, latestHeader.BabylonEpoch)
-		s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHeight, latestHeader.BabylonHeaderHeight)
-		s.Require().Equal(consumerEpochChainInfo.BabylonHeaderHash, hex.EncodeToString(latestHeader.BabylonHeaderHash))
-		s.Require().Equal(consumerEpochChainInfo.BabylonTxHash, hex.EncodeToString(latestHeader.BabylonTxHash))
-	}
 }
