@@ -196,7 +196,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 	privateRand *eots.PrivateRand,
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
-	heightToVote int64,
+	heightToVote uint64,
 ) (*types.TxResponse, error) {
 	invalidAppHash := datagen.GenRandomByteArray(r, 32)
 	invalidMsgToSign := append(sdk.Uint64ToBigEndian(uint64(heightToVote)), invalidAppHash...)
@@ -208,7 +208,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 
 	submitFinalitySig := &SubmitFinalitySignature{
 		FpPubkeyHex: bbntypes.NewBIP340PubKeyFromBTCPK(fpBtcPk).MarshalHex(),
-		Height:      uint64(heightToVote),
+		Height:      heightToVote,
 		PubRand:     pubRand.MustMarshal(),
 		Proof: Proof{
 			Total:    proof.Total,
@@ -1173,4 +1173,27 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 		return nil, err
 	}
 	return grpcConn, nil
+}
+
+func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*CzHeaderResponse, error) {
+	queryMsgStruct := QueryMsgCzLastHeader{
+		CzLastHeader: struct{}{},
+	}
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+
+	dataFromContract, err := cc.QuerySmartContractState(cc.cfg.BabylonContractAddress, string(queryMsgBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
+	}
+
+	var resp CzHeaderResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &resp, nil
 }
