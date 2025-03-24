@@ -1185,6 +1185,7 @@ func (s *BCDConsumerIntegrationTestSuite) initBabylonController() error {
 	cfg.KeyDirectory = filepath.Join(currentDir, "../../contrib/images/ibcsim-bcd/.testnets/node0/babylond")
 	cfg.GasPrices = "0.02ubbn"
 	cfg.GasAdjustment = 20
+	cfg.BlockTimeout = 10 * time.Minute
 
 	sdk.SetAddrCacheEnabled(false)
 	bbnparams.SetAddressPrefixes()
