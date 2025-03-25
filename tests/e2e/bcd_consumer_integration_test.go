@@ -155,7 +155,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 
 	// after the consumer is registered, wait till IBC connection/channel
 	// between babylon<->bcd is established
-	s.waitForIBCConnections()
+	s.waitForCustomChannel()
 }
 
 // Test03BTCHeaderPropagation
@@ -379,6 +379,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test06ActivateDelegation() {
 }
 
 func (s *BCDConsumerIntegrationTestSuite) Test07ConsumerFPRewards() {
+	s.waitForTransferChannel()
+
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(czFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -1235,9 +1237,9 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 	return nil
 }
 
-// helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
+// helper function: waitForCustomChannel waits for the custom channel to be established between Babylon and the
 // Consumer.
-func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
+func (s *BCDConsumerIntegrationTestSuite) waitForCustomChannel() {
 	var babylonChannel *channeltypes.IdentifiedChannel
 	// Wait for the custom channel
 	s.Eventually(func() bool {
@@ -1279,7 +1281,13 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.T().Logf("IBC custom channel established successfully")
 		return true
 	}, time.Minute, time.Second*2, "Failed to get expected Consumer custom IBC channel")
+}
 
+// waitForTransferChannel waits for the transfer channel to be established between Babylon and the
+// Consumer.
+func (s *BCDConsumerIntegrationTestSuite) waitForTransferChannel() {
+	var babylonChannel *channeltypes.IdentifiedChannel
+	var consumerChannel *channeltypes.IdentifiedChannel
 	// Wait for the transfer channel
 	s.Eventually(func() bool {
 		babylonChannelsResp, err := s.babylonController.IBCChannels()
