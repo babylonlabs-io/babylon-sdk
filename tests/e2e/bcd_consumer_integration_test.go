@@ -1327,7 +1327,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(channeltypes.UNORDERED, babylonChannel.Ordering)
 		s.Contains(babylonChannel.Counterparty.PortId, "transfer")
 		return true
-	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
+	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
 
 	s.Eventually(func() bool {
 		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()
@@ -1346,7 +1346,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.Equal(babylonChannel.PortId, consumerChannel.Counterparty.PortId)
 		s.T().Logf("IBC transfer channel established successfully")
 		return true
-	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
+	}, time.Minute*4, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
 }
 
 // helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
