@@ -5,7 +5,7 @@ FROM golang:1.23-alpine AS build-env
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM="linux/amd64"
 # Version to build. Default is empty
-ARG VERSION="314a276a4cc9ff3e846026ac20a4c5f991e2e493"
+ARG VERSION="v1.99.0-snapshot.250326"
 ARG BABYLON_BUILD_OPTIONS=""
 ARG COSMOS_BUILD_OPTIONS=""
 
@@ -25,11 +25,11 @@ RUN git clone https://github.com/babylonlabs-io/babylon.git /go/src/github.com/b
 # Checkout version (can be tag or commit hash)
 RUN if [ -n "${VERSION}" ]; then \
     if git rev-parse --verify "refs/tags/${VERSION}" >/dev/null 2>&1; then \
-        # If it's a tag
-        git fetch origin tag ${VERSION} --no-tags; \
+    # If it's a tag
+    git fetch origin tag ${VERSION} --no-tags; \
     else \
-        # If it's a commit
-        git fetch origin ${VERSION}; \
+    # If it's a commit
+    git fetch origin ${VERSION}; \
     fi; \
     git checkout -f ${VERSION}; \
     fi
