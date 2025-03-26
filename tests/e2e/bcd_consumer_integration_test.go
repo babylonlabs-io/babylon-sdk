@@ -1170,6 +1170,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 // helper function: initBabylonController initializes the Babylon controller with the default configuration.
 func (s *BCDConsumerIntegrationTestSuite) initBabylonController() error {
 	cfg := config.DefaultBabylonConfig()
+	cfg.BlockTimeout = 10 * time.Minute
 	btcParams := &chaincfg.RegressionNetParams // or whichever network you're using
 	logger, _ := zap.NewDevelopment()
 
@@ -1324,19 +1325,18 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 	var registeredConsumer *bsctypes.ConsumerRegister
 	var err error
 
+	// Register a random consumer on Babylon
+	registeredConsumer = bsctypes.NewCosmosConsumerRegister(
+		consumerID,
+		datagen.GenRandomHexStr(r, 5),
+		"Chain description: "+datagen.GenRandomHexStr(r, 15),
+	)
+
 	// wait until the consumer is registered
 	s.Eventually(func() bool {
-		// Register a random consumer on Babylon
-		registeredConsumer = bsctypes.NewCosmosConsumerRegister(
-			consumerID,
-			datagen.GenRandomHexStr(r, 5),
-			"Chain description: "+datagen.GenRandomHexStr(r, 15),
-		)
-		_, err = s.babylonController.RegisterConsumerChain(registeredConsumer.ConsumerId, registeredConsumer.ConsumerName, registeredConsumer.ConsumerDescription)
+		err = s.babylonController.RegisterConsumerChain(registeredConsumer.ConsumerId, registeredConsumer.ConsumerName, registeredConsumer.ConsumerDescription)
 		if err != nil {
-			if !strings.Contains(err.Error(), "consumer already registered") {
-				return false
-			}
+			return false
 		}
 
 		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(consumerID)
