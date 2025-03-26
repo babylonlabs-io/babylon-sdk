@@ -164,20 +164,31 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 // 3. Creates a fork in Babylon
 // 4. Verifies that fork headers propagate from Babylon -> Consumer
 func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
+	s.T().Log("Starting BTC header propagation test")
+
 	// Insert initial BTC headers in Babylon
+	s.T().Log("Inserting initial BTC headers in Babylon")
 	header1, err := s.babylonController.InsertNewEmptyBtcHeader(r)
 	s.Require().NoError(err)
+	s.T().Logf("Inserted header 1 with hash: %s", header1.Hash.MarshalHex())
+
 	header2, err := s.babylonController.InsertNewEmptyBtcHeader(r)
 	s.Require().NoError(err)
+	s.T().Logf("Inserted header 2 with hash: %s", header2.Hash.MarshalHex())
+
 	header3, err := s.babylonController.InsertNewEmptyBtcHeader(r)
 	s.Require().NoError(err)
+	s.T().Logf("Inserted header 3 with hash: %s", header3.Hash.MarshalHex())
 
 	// Wait until headers are inserted in Babylon
+	s.T().Log("Waiting for headers to be inserted in Babylon")
 	var bbnBtcHeaders *btclctypes.QueryMainChainResponse
 	s.Eventually(func() bool {
 		bbnBtcHeaders, err = s.babylonController.QueryBtcLightClientMainChain()
 		return err == nil && bbnBtcHeaders != nil && len(bbnBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
+	s.T().Logf("Found %d headers in Babylon", len(bbnBtcHeaders.Headers))
+
 	// Reverse the headers (as query returns headers in reverse order)
 	reverseHeaders := make([]*btclctypes.BTCHeaderInfoResponse, len(bbnBtcHeaders.Headers))
 	for i, header := range bbnBtcHeaders.Headers {
@@ -187,18 +198,24 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.Require().Equal(header1.Hash.MarshalHex(), reverseHeaders[1].HashHex)
 	s.Require().Equal(header2.Hash.MarshalHex(), reverseHeaders[2].HashHex)
 	s.Require().Equal(header3.Hash.MarshalHex(), reverseHeaders[3].HashHex)
+	s.T().Log("Successfully verified headers in Babylon")
 
 	// Headers should propagate from Babylon -> Consumer
+	s.T().Log("Waiting for headers to propagate to Consumer chain")
 	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
 		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
+	s.T().Logf("Found %d headers in Consumer chain", len(consumerBtcHeaders.Headers))
+
 	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
 	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
 	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.T().Log("Successfully verified headers in Consumer chain")
 
 	// Create fork from header2
+	s.T().Log("Creating fork from header2")
 	// TODO: In case of re-org Babylon should send headers from BSN base to tip but currently
 	// it only sends last W+1 headers, so if in tests we insert more then 2 fork headers (W is 2 in tests)
 	// Consumer chain will not be able to re-org as Babylon will not send more than 2 headers
@@ -206,17 +223,25 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	forkBase := header2 // Known ancestor to fork from
 	forkHeader1 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkBase)
 	forkHeader2 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkHeader1)
+	s.T().Logf("Generated fork headers with hashes: %s, %s", forkHeader1.Hash.MarshalHex(), forkHeader2.Hash.MarshalHex())
+
 	// Insert fork in Babylon
+	s.T().Log("Inserting fork headers in Babylon")
 	_, err = s.babylonController.InsertBtcBlockHeaders([]bbn.BTCHeaderBytes{
 		*forkHeader1.Header,
 		*forkHeader2.Header,
 	})
 	s.Require().NoError(err)
+	s.T().Log("Successfully inserted fork headers in Babylon")
+
 	// Wait until headers are inserted in Babylon
+	s.T().Log("Waiting for fork headers to be inserted in Babylon")
 	s.Eventually(func() bool {
 		bbnBtcHeaders, err = s.babylonController.QueryBtcLightClientMainChain()
 		return err == nil && bbnBtcHeaders != nil && len(bbnBtcHeaders.Headers) == 5
 	}, time.Second*60, time.Second)
+	s.T().Logf("Found %d headers in Babylon after fork", len(bbnBtcHeaders.Headers))
+
 	// Reverse the headers (as query returns headers in reverse order)
 	reverseHeaders = make([]*btclctypes.BTCHeaderInfoResponse, len(bbnBtcHeaders.Headers))
 	for i, header := range bbnBtcHeaders.Headers {
@@ -226,16 +251,21 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.Require().Equal(forkHeader1.Hash.MarshalHex(), reverseHeaders[3].HashHex)
 	s.Require().Equal(header2.Hash.MarshalHex(), reverseHeaders[2].HashHex)
 	s.Require().Equal(header1.Hash.MarshalHex(), reverseHeaders[1].HashHex)
+	s.T().Log("Successfully verified fork headers in Babylon")
 
 	// Fork headers should propagate from Babylon -> Consumer
+	s.T().Log("Waiting for fork headers to propagate to Consumer chain")
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
 		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
 	}, time.Second*60, time.Second)
+	s.T().Logf("Found %d headers in Consumer chain after fork", len(consumerBtcHeaders.Headers))
+
 	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[4].Hash)
 	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
 	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
 	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.T().Log("Successfully verified fork headers in Consumer chain")
 }
 
 // Test04CreateConsumerFinalityProvider
