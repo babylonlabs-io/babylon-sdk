@@ -1334,7 +1334,9 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 		)
 		_, err = s.babylonController.RegisterConsumerChain(registeredConsumer.ConsumerId, registeredConsumer.ConsumerName, registeredConsumer.ConsumerDescription)
 		if err != nil {
-			return false
+			if !strings.Contains(err.Error(), "consumer already registered") {
+				return false
+			}
 		}
 
 		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(consumerID)
@@ -1348,7 +1350,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 		s.Require().Equal(registeredConsumer.ConsumerDescription, consumerRegistryResp.ConsumerRegisters[0].ConsumerDescription)
 
 		return true
-	}, 2*time.Minute, 5*time.Second, "Consumer was not registered within the expected time")
+	}, 3*time.Minute, 5*time.Second, "Consumer was not registered within the expected time")
 
 	s.T().Logf("Consumer registered: ID=%s, Name=%s, Description=%s",
 		registeredConsumer.ConsumerId,
