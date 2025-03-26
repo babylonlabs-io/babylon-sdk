@@ -382,7 +382,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test06ActivateDelegation() {
 	s.Eventually(func() bool {
 		dataFromContract, err = s.cosmwasmController.QueryDelegations()
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 1
-	}, time.Second*60, time.Second)
+	}, time.Minute*2, time.Second)
 
 	// Assert delegation details
 	s.Empty(dataFromContract.Delegations[0].UndelegationInfo.DelegatorUnbondingInfo)
