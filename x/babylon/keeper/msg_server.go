@@ -38,6 +38,8 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 		req.CheckpointFinalizationTimeout,
 		req.NotifyCosmosZone,
 		req.IbcTransferChannelId,
+		req.BtcLightClientContractCodeId,
+		req.BtcLightClientMsg,
 		req.BtcStakingContractCodeId,
 		req.BtcStakingMsg,
 		req.BtcFinalityContractCodeId,
@@ -51,16 +53,18 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 	}
 
 	// instantiate the contracts
-	babylonContractAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, initMsg)
+	babylonContractAddr, btcLightClientAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, initMsg)
 	if err != nil {
 		return nil, err
 	}
 
 	// update params
 	params.BabylonContractCodeId = req.BabylonContractCodeId
+	params.BtcLightClientContractCodeId = req.BtcLightClientContractCodeId
 	params.BtcStakingContractCodeId = req.BtcStakingContractCodeId
 	params.BtcFinalityContractCodeId = req.BtcFinalityContractCodeId
 	params.BabylonContractAddress = babylonContractAddr
+	params.BtcLightClientContractAddress = btcLightClientAddr
 	params.BtcStakingContractAddress = btcStakingContractAddr
 	params.BtcFinalityContractAddress = btcFinalityContractAddr
 	if err := ms.k.SetParams(ctx, params); err != nil {
