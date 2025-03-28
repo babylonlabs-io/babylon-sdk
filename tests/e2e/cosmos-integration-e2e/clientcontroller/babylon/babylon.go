@@ -157,10 +157,14 @@ func (bc *BabylonController) RegisterFinalityProvider(
 
 	fpAddr := bc.MustGetTxSigner()
 	msg := &btcstakingtypes.MsgCreateFinalityProvider{
-		Addr:        fpAddr,
-		BtcPk:       fpPk,
-		Pop:         &bbnPop,
-		Commission:  commission,
+		Addr:  fpAddr,
+		BtcPk: fpPk,
+		Pop:   &bbnPop,
+		Commission: btcstakingtypes.CommissionRates{
+			Rate:          *commission,
+			MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
+			MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
+		},
 		Description: &sdkDescription,
 		ConsumerId:  chainID,
 	}
