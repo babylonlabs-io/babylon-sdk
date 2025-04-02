@@ -101,7 +101,7 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 
 func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 	// generate headers
-	headersMsg := types.GenBTCHeadersMsg()
+	headers, headersMsg := types.GenBTCHeadersMsg(nil)
 	headersMsgBytes, err := json.Marshal(headersMsg)
 	s.NoError(err)
 	// send headers to the BTCLightClient contract. This is to ensure that the contract is
@@ -120,6 +120,19 @@ func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 	s.NoError(err)
 	s.NotEmpty(tipHeader)
 	s.T().Logf("tipHeader: %v", tipHeader)
+
+	// insert more headers
+	_, headersMsg2 := types.GenBTCHeadersMsg(headers[len(headers)-1])
+	headersMsgBytes2, err := json.Marshal(headersMsg2)
+	s.NoError(err)
+	res, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCLightClient, headersMsgBytes2)
+	s.NoError(err, res)
+
+	// query the tip header again
+	tipHeader2, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_tip_header": {}})
+	s.NoError(err)
+	s.NotEmpty(tipHeader2)
+	s.T().Logf("tipHeader2: %v", tipHeader2)
 }
 
 func (s *BabylonSDKTestSuite) Test3MockConsumerFpDelegation() {

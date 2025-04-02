@@ -10,16 +10,23 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/babylonlabs-io/babylon/testutil/datagen"
 	bbn "github.com/babylonlabs-io/babylon/types"
+	btclctypes "github.com/babylonlabs-io/babylon/x/btclightclient/types"
 	bstypes "github.com/babylonlabs-io/babylon/x/btcstaking/types"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/stretchr/testify/require"
 )
 
-func GenBTCHeadersMsg() BabylonExecuteMsg {
+func GenBTCHeadersMsg(parent *btclctypes.BTCHeaderInfo) ([]*btclctypes.BTCHeaderInfo, BabylonExecuteMsg) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
 
-	chain := datagen.NewBTCHeaderChainWithLength(r, 0, 0, 10)
+	var chain *datagen.BTCHeaderPartialChain
+	if parent == nil {
+		chain = datagen.NewBTCHeaderChainWithLength(r, 0, 0, 10)
+	} else {
+		chain = datagen.NewBTCHeaderChainFromParentInfo(r, parent, 10)
+	}
+
 	headers := []BtcHeader{}
 	for _, header := range chain.Headers {
 		headers = append(headers, BtcHeader{
@@ -32,18 +39,24 @@ func GenBTCHeadersMsg() BabylonExecuteMsg {
 		})
 	}
 
-	firstHeader := chain.GetChainInfo()[0]
-	firstHeight := firstHeader.Height
-	firstWork, _ := firstHeader.Work.Marshal()
-	firstWorkHex := hex.EncodeToString(firstWork)
-
-	return BabylonExecuteMsg{
+	msg := BabylonExecuteMsg{
 		BtcHeaders: BTCHeadersMsg{
-			Headers:     headers,
-			FirstWork:   firstWorkHex,
-			FirstHeight: firstHeight,
+			Headers: headers,
 		},
 	}
+
+	if parent == nil {
+		firstHeader := chain.GetChainInfo()[0]
+		msg.BtcHeaders.FirstHeight = &firstHeader.Height
+		firstWork, _ := firstHeader.Work.Marshal()
+		firstWorkHex := hex.EncodeToString(firstWork)
+		msg.BtcHeaders.FirstWork = &firstWorkHex
+	} else {
+		msg.BtcHeaders.FirstHeight = nil
+		msg.BtcHeaders.FirstWork = nil
+	}
+
+	return chain.GetChainInfo(), msg
 }
 
 func GenExecMessage() ExecuteMessage {
@@ -281,8 +294,8 @@ type BabylonExecuteMsg struct {
 
 type BTCHeadersMsg struct {
 	Headers     []BtcHeader `json:"headers"`
-	FirstWork   string      `json:"first_work"`
-	FirstHeight uint32      `json:"first_height"`
+	FirstWork   *string     `json:"first_work,omitempty"`
+	FirstHeight *uint32     `json:"first_height,omitempty"`
 }
 
 type BtcHeader struct {
