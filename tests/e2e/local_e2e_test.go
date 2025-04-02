@@ -99,7 +99,7 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.Equal(adminRespFinality["admin"], s.ConsumerCli.GetSender().String())
 }
 
-func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
+func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 	// generate headers
 	headersMsg := types.GenBTCHeadersMsg()
 	headersMsgBytes, err := json.Marshal(headersMsg)
@@ -109,6 +109,20 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	res, err := s.ConsumerCli.Exec(s.ConsumerContract.BTCLightClient, headersMsgBytes)
 	s.NoError(err, res)
 
+	// query the base header
+	baseHeader, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_base_header": {}})
+	s.NoError(err)
+	s.NotEmpty(baseHeader)
+	s.T().Logf("baseHeader: %v", baseHeader)
+
+	// query the tip header
+	tipHeader, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_tip_header": {}})
+	s.NoError(err)
+	s.NotEmpty(tipHeader)
+	s.T().Logf("tipHeader: %v", tipHeader)
+}
+
+func (s *BabylonSDKTestSuite) Test3MockConsumerFpDelegation() {
 	testMsg = types.GenExecMessage()
 	msgBytes, err := json.Marshal(testMsg)
 	s.NoError(err)
@@ -135,7 +149,7 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.Equal(uint64(parsedActivatedHeight), uint64(currentHeight))
 }
 
-func (s *BabylonSDKTestSuite) Test3BeginBlock() {
+func (s *BabylonSDKTestSuite) Test4BeginBlock() {
 	err := s.ConsumerApp.BabylonKeeper.BeginBlocker(s.ConsumerChain.GetContext())
 	s.NoError(err)
 }
