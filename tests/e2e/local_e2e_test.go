@@ -8,7 +8,6 @@ import (
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting2 "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
@@ -76,12 +75,20 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.NotEmpty(consumerCli.Chain.ChainID)
 	s.NotEmpty(providerCli.Chain.ChainID)
 	s.NotEmpty(consumerContracts.Babylon)
+	s.NotEmpty(consumerContracts.BTCLightClient)
 	s.NotEmpty(consumerContracts.BTCStaking)
 	s.NotEmpty(consumerContracts.BTCFinality)
 
 	s.ProviderCli = providerCli
 	s.ConsumerCli = consumerCli
 	s.ConsumerContract = consumerContracts
+
+	// assert the contract addresses are updated
+	params := s.ConsumerApp.BabylonKeeper.GetParams(s.ConsumerChain.GetContext())
+	s.Equal(s.ConsumerContract.Babylon.String(), params.BabylonContractAddress)
+	s.Equal(s.ConsumerContract.BTCLightClient.String(), params.BtcLightClientContractAddress)
+	s.Equal(s.ConsumerContract.BTCStaking.String(), params.BtcStakingContractAddress)
+	s.Equal(s.ConsumerContract.BTCFinality.String(), params.BtcFinalityContractAddress)
 
 	// query admins
 	adminRespStaking, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"admin": {}})
@@ -90,41 +97,45 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	adminRespFinality, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{"admin": {}})
 	s.NoError(err)
 	s.Equal(adminRespFinality["admin"], s.ConsumerCli.GetSender().String())
-
-	// get contract addresses
-	babylonContractAddress := s.ConsumerContract.Babylon.String()
-	btcStakingContractAddress := s.ConsumerContract.BTCStaking.String()
-	btcFinalityContractAddress := s.ConsumerContract.BTCFinality.String()
-
-	// update the contract address in parameters
-	msgUpdateParams := &bbntypes.MsgUpdateParams{
-		Authority: s.ConsumerApp.BabylonKeeper.GetAuthority(),
-		Params: bbntypes.Params{
-			MaxGasBeginBlocker:         500_000,
-			BabylonContractAddress:     babylonContractAddress,
-			BtcStakingContractAddress:  btcStakingContractAddress,
-			BtcFinalityContractAddress: btcFinalityContractAddress,
-		},
-	}
-	s.ConsumerCli.MustExecGovProposal(msgUpdateParams)
-
-	// assert the contract addresses are updated
-	params := s.ConsumerApp.BabylonKeeper.GetParams(s.ConsumerChain.GetContext())
-	s.Equal(babylonContractAddress, params.BabylonContractAddress)
-	s.Equal(btcStakingContractAddress, params.BtcStakingContractAddress)
-	s.Equal(btcFinalityContractAddress, params.BtcFinalityContractAddress)
 }
 
-func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
+func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 	// generate headers
-	headersMsg := types.GenBTCHeadersMsg()
+	headers, headersMsg := types.GenBTCHeadersMsg(nil)
 	headersMsgBytes, err := json.Marshal(headersMsg)
 	s.NoError(err)
-	// send headers to the Babylon contract. This is to ensure that the contract is
+	// send headers to the BTCLightClient contract. This is to ensure that the contract is
 	// indexing BTC headers correctly.
-	res, err := s.ConsumerCli.Exec(s.ConsumerContract.Babylon, headersMsgBytes)
+	res, err := s.ConsumerCli.Exec(s.ConsumerContract.BTCLightClient, headersMsgBytes)
 	s.NoError(err, res)
 
+	// query the base header
+	baseHeader, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_base_header": {}})
+	s.NoError(err)
+	s.NotEmpty(baseHeader)
+	s.T().Logf("baseHeader: %v", baseHeader)
+
+	// query the tip header
+	tipHeader, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_tip_header": {}})
+	s.NoError(err)
+	s.NotEmpty(tipHeader)
+	s.T().Logf("tipHeader: %v", tipHeader)
+
+	// insert more headers
+	_, headersMsg2 := types.GenBTCHeadersMsg(headers[len(headers)-1])
+	headersMsgBytes2, err := json.Marshal(headersMsg2)
+	s.NoError(err)
+	res, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCLightClient, headersMsgBytes2)
+	s.NoError(err, res)
+
+	// query the tip header again
+	tipHeader2, err := s.ConsumerCli.Query(s.ConsumerContract.BTCLightClient, types.Query{"btc_tip_header": {}})
+	s.NoError(err)
+	s.NotEmpty(tipHeader2)
+	s.T().Logf("tipHeader2: %v", tipHeader2)
+}
+
+func (s *BabylonSDKTestSuite) Test3MockConsumerFpDelegation() {
 	testMsg = types.GenExecMessage()
 	msgBytes, err := json.Marshal(testMsg)
 	s.NoError(err)
@@ -151,7 +162,7 @@ func (s *BabylonSDKTestSuite) Test2MockConsumerFpDelegation() {
 	s.Equal(uint64(parsedActivatedHeight), uint64(currentHeight))
 }
 
-func (s *BabylonSDKTestSuite) Test3BeginBlock() {
+func (s *BabylonSDKTestSuite) Test4BeginBlock() {
 	err := s.ConsumerApp.BabylonKeeper.BeginBlocker(s.ConsumerChain.GetContext())
 	s.NoError(err)
 }

@@ -44,9 +44,11 @@ Params defines the parameters for the x/babylon module.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID of the Babylon contract |
+| `btc_light_client_contract_code_id` | [uint64](#uint64) |  | btc_light_client_contract_code_id is the code ID of the BTC light client contract |
 | `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID of the BTC staking contract |
 | `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID of the BTC finality contract |
 | `babylon_contract_address` | [string](#string) |  | babylon_contract_address is the address of the Babylon contract |
+| `btc_light_client_contract_address` | [string](#string) |  | btc_light_client_contract_address is the address of the BTC light client contract |
 | `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
 | `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
 | `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
@@ -167,6 +169,7 @@ type.
 | ----- | ---- | ----- | ----------- |
 | `signer` | [string](#string) |  | signer is the address who submits the message. |
 | `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID for the Babylon contract. |
+| `btc_light_client_contract_code_id` | [uint64](#uint64) |  | btc_light_client_contract_code_id is the code ID for the BTC light client contract. |
 | `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID for the BTC staking contract. |
 | `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID for the BTC finality contract. |
 | `network` | [string](#string) |  | network is the Bitcoin network to connect to (e.g. "regtest", "testnet", "mainnet") |
@@ -175,6 +178,7 @@ type.
 | `checkpoint_finalization_timeout` | [uint32](#uint32) |  | checkpoint_finalization_timeout is the timeout in blocks for checkpoint finalization |
 | `notify_cosmos_zone` | [bool](#bool) |  | notify_cosmos_zone indicates whether to notify the Cosmos zone of events |
 | `ibc_transfer_channel_id` | [string](#string) |  | ibc_transfer_channel_id is the IBC channel ID for the IBC transfer contract. If empty then the reward distribution will be done at the consumer side. |
+| `btc_light_client_msg` | [bytes](#bytes) |  | btc_light_client_msg is the initialization message for the BTC light client contract |
 | `btc_staking_msg` | [bytes](#bytes) |  | btc_staking_msg is the initialization message for the BTC staking contract |
 | `btc_finality_msg` | [bytes](#bytes) |  | btc_finality_msg is the initialization message for the BTC finality contract |
 | `consumer_name` | [string](#string) |  | consumer_name is the name of this consumer chain |

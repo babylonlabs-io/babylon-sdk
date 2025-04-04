@@ -17,7 +17,7 @@ ENV GOPATH=/go
 ENV PATH=$GOPATH/bin:$PATH
 
 ENV GO111MODULE=on
-ENV RELAYER_TAG=v2.5.2
+ENV RELAYER_TAG=v2.5.3
 
 # Install the relayer
 RUN git clone https://github.com/cosmos/relayer.git
@@ -52,6 +52,7 @@ WORKDIR /ibcsim-bcd
 COPY contrib/images/ibcsim-bcd/wrapper.sh /ibcsim-bcd/wrapper.sh
 COPY contrib/images/ibcsim-bcd/setup-bcd.sh /ibcsim-bcd/setup-bcd.sh
 COPY --from=build-env /work/babylon-sdk/tests/testdata/babylon_contract.wasm /ibcsim-bcd/babylon_contract.wasm
+COPY --from=build-env /work/babylon-sdk/tests/testdata/btc_light_client.wasm /ibcsim-bcd/btc_light_client.wasm
 COPY --from=build-env /work/babylon-sdk/tests/testdata/btc_staking.wasm /ibcsim-bcd/btc_staking.wasm
 COPY --from=build-env /work/babylon-sdk/tests/testdata/btc_finality.wasm /ibcsim-bcd/btc_finality.wasm
 

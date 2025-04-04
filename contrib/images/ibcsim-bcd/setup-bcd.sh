@@ -2,8 +2,8 @@
 
 display_usage() {
 	echo "Missing parameters. Please check if all parameters were specified."
-	echo "Usage: setup-bcd.sh [CHAIN_ID] [CHAIN_DIR] [RPC_PORT] [P2P_PORT] [PROFILING_PORT] [GRPC_PORT] [BABYLON_CONTRACT_CODE_FILE] [BTCSTAKING_CONTRACT_CODE_FILE] [BTCFINALITY_CONTRACT_CODE_FILE]"
-	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_staking.wasm ./btc_finality.wasm"
+	echo "Usage: setup-bcd.sh [CHAIN_ID] [CHAIN_DIR] [RPC_PORT] [P2P_PORT] [PROFILING_PORT] [GRPC_PORT] [BABYLON_CONTRACT_CODE_FILE] [BTC_LC_CONTRACT_CODE_FILE] [BTCSTAKING_CONTRACT_CODE_FILE] [BTCFINALITY_CONTRACT_CODE_FILE]"
+	echo "Example: setup-bcd.sh test-chain-id ./data 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_light_client.wasm ./btc_staking.wasm ./btc_finality.wasm"
 	exit 1
 }
 
@@ -33,8 +33,9 @@ P2PPORT=$4
 PROFPORT=$5
 GRPCPORT=$6
 BABYLON_CONTRACT_CODE_FILE=$7
-BTCSTAKING_CONTRACT_CODE_FILE=$8
-BTCFINALITY_CONTRACT_CODE_FILE=$9
+BTC_LC_CONTRACT_CODE_FILE=$8
+BTCSTAKING_CONTRACT_CODE_FILE=$9
+BTCFINALITY_CONTRACT_CODE_FILE=${10}
 
 # ensure the binary exists
 if ! command -v $BINARY &>/dev/null; then
@@ -94,18 +95,23 @@ sleep 20
 
 # upload contract code
 echo "Uploading babylon contract code $BABYLON_CONTRACT_CODE_FILE..."
-$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BABYLON_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 10
+$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BABYLON_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
+sleep 5
+
+# upload contract code
+echo "Uploading btc light client contract code $BTC_LC_CONTRACT_CODE_FILE..."
+$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTC_LC_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
+sleep 5
 
 # upload contract code
 echo "Uploading btcstaking contract code $BTCSTAKING_CONTRACT_CODE_FILE..."
-$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCSTAKING_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 10
+$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCSTAKING_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
+sleep 5
 
 # upload contract code
 echo "Uploading btcfinality contract code $BTCFINALITY_CONTRACT_CODE_FILE..."
-$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCFINALITY_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 20000000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 10
+$BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCFINALITY_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
+sleep 5
 
 # Echo the command with expanded variables
 echo "Instantiating contracts..."
@@ -125,7 +131,7 @@ FINALITY_MSG='{
 }'
 
 $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
-	1 2 3 \
+	1 2 3 4 \
 	"regtest" \
 	"01020304" \
 	1 2 false \
