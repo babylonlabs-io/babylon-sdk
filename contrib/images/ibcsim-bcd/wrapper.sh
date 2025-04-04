@@ -28,7 +28,7 @@ cat <<EOT >$RELAYER_CONF
 global:
     api-listen-addr: :5183
     max-retries: 20
-    timeout: 20s
+    timeout: 30s
     memo: ""
     light-cache-size: 10
 chains:
@@ -44,7 +44,7 @@ chains:
             gas-prices: 0.002ubbn
             min-gas-amount: 1
             debug: true
-            timeout: 10s
+            timeout: 30s
             output-format: json
             sign-mode: direct
             extra-codecs: []
@@ -60,7 +60,7 @@ chains:
             gas-prices: 0.002ustake
             min-gas-amount: 1
             debug: true
-            timeout: 10s
+            timeout: 30s
             output-format: json
             sign-mode: direct
             extra-codecs: []     
@@ -84,11 +84,11 @@ sleep 10
 
 # 3. Start relayer
 echo "Creating IBC channel for zoneconcierge"
-rly --home $RELAYER_CONF_DIR tx link bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1
-[ $? -eq 0 ] && echo "Created zonecincierge IBC channel successfully!" || echo "Error creating zonecincierge IBC channel"
+rly --home $RELAYER_CONF_DIR tx link bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1 --timeout 30s --max-retries 10
+[ $? -eq 0 ] && echo "Created zoneconcierge IBC channel successfully!" || echo "Error creating zoneconcierge IBC channel"
 
 echo "Creating IBC channel for IBC transfer"
-rly --home $RELAYER_CONF_DIR tx link bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 &
+rly --home $RELAYER_CONF_DIR tx channel bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 --timeout 30s --max-retries 10
 [ $? -eq 0 ] && echo "Created IBC transfer channel successfully!" || echo "Error creating IBC transfer channel"
 
 sleep 10
