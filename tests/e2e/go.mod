@@ -32,14 +32,13 @@ require (
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/math v1.5.0
 	github.com/babylonlabs-io/babylon v1.99.0-snapshot.250326
-	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20240814002132-55e711397a82
-	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20240814002132-55e711397a82
+	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250407051200-a5d652116d6d
+	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250407051200-a5d652116d6d
 	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250312153802-5b848d88c204
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/relayer/v2 v2.5.3
 	go.uber.org/zap v1.26.0
 )
@@ -98,6 +97,7 @@ require (
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
+	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/ibc-go/modules/apps/callbacks v0.2.1-0.20231113120333-342c00b0f8bd // indirect
