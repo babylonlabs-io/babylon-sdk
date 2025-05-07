@@ -125,11 +125,31 @@ FINALITY_MSG='{
     "max_active_finality_providers": 100,
     "min_pub_rand": 1,
     "finality_inflation_rate": "0.035",
-    "epoch_length": 10
+    "epoch_length": 10,
+    "missed_blocks_window": 250,
+    "jail_duration": 86400
   },
   "admin": "'"$ADMIN"'"
 }'
 
+echo $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
+	1 2 3 4 \
+	"regtest" \
+	"01020304" \
+	1 2 false \
+	"$STAKING_MSG" \
+	"$FINALITY_MSG" \
+	test-consumer \
+	test-consumer-description \
+	--admin=$ADMIN \
+	--ibc-transfer-channel-id=channel-1 \
+	$KEYRING \
+	--from user \
+	--chain-id $CHAINID \
+	--gas 20000000000 \
+	--gas-prices 0.001ustake \
+	--node http://localhost:$RPCPORT \
+	-y
 $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
 	1 2 3 4 \
 	"regtest" \
