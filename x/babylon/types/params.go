@@ -9,7 +9,6 @@ import (
 
 	"cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 // ValidateBasic performs basic validation on babylon parameters.
@@ -103,10 +102,4 @@ func (p Params) Validate() error {
 	}
 
 	return nil
-}
-
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
 }

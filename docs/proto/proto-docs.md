@@ -6,8 +6,6 @@
 
 - [babylonlabs/babylon/v1beta1/babylon.proto](#babylonlabs/babylon/v1beta1/babylon.proto)
     - [Gauge](#babylonlabs.babylon.v1beta1.Gauge)
-  
-- [babylonlabs/babylon/v1beta1/params.proto](#babylonlabs/babylon/v1beta1/params.proto)
     - [Params](#babylonlabs.babylon.v1beta1.Params)
   
 - [babylonlabs/babylon/v1beta1/genesis.proto](#babylonlabs/babylon/v1beta1/genesis.proto)
@@ -52,22 +50,6 @@ https://github.com/osmosis-labs/osmosis/blob/v18.0.0/proto/osmosis/incentives/ga
 
 
 
-
-
- <!-- end messages -->
-
- <!-- end enums -->
-
- <!-- end HasExtensions -->
-
- <!-- end services -->
-
-
-
-<a name="babylonlabs/babylon/v1beta1/params.proto"></a>
-<p align="right"><a href="#top">Top</a></p>
-
-## babylonlabs/babylon/v1beta1/params.proto
 
 
 
