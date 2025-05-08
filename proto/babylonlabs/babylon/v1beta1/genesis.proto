@@ -1,9 +1,9 @@
 syntax = "proto3";
 package babylonlabs.babylon.v1beta1;
 
-import "babylonlabs/babylon/v1beta1/babylon.proto";
 import "gogoproto/gogo.proto";
 import "amino/amino.proto";
+import "babylonlabs/babylon/v1beta1/params.proto";
 
 option go_package = "github.com/babylonlabs-io/babylon-sdk/x/babylon/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -13,6 +13,7 @@ option (gogoproto.equal_all) = false;
 message GenesisState {
   option (gogoproto.equal) = true;
 
+  // params defines all the parameters of the module.
   Params params = 1
       [ (gogoproto.nullable) = false, (amino.dont_omitempty) = true ];
 }

@@ -5,6 +5,9 @@
 ## Table of Contents
 
 - [babylonlabs/babylon/v1beta1/babylon.proto](#babylonlabs/babylon/v1beta1/babylon.proto)
+    - [Gauge](#babylonlabs.babylon.v1beta1.Gauge)
+  
+- [babylonlabs/babylon/v1beta1/params.proto](#babylonlabs/babylon/v1beta1/params.proto)
     - [Params](#babylonlabs.babylon.v1beta1.Params)
   
 - [babylonlabs/babylon/v1beta1/genesis.proto](#babylonlabs/babylon/v1beta1/genesis.proto)
@@ -35,6 +38,39 @@
 
 
 
+<a name="babylonlabs.babylon.v1beta1.Gauge"></a>
+
+### Gauge
+Gauge is an object that stores rewards to be distributed
+code adapted from
+https://github.com/osmosis-labs/osmosis/blob/v18.0.0/proto/osmosis/incentives/gauge.proto
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coins` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | coins are coins that have been in the gauge Can have multiple coin denoms |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="babylonlabs/babylon/v1beta1/params.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## babylonlabs/babylon/v1beta1/params.proto
+
+
+
 <a name="babylonlabs.babylon.v1beta1.Params"></a>
 
 ### Params
@@ -52,6 +88,7 @@ Params defines the parameters for the x/babylon module.
 | `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
 | `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
 | `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
+| `btc_staking_portion` | [string](#string) |  | btc_staking_portion is the portion of rewards that goes to Finality Providers/delegations NOTE: the portion of each Finality Provider/delegation is calculated by using its voting power and finality provider's commission |
 
 
 
@@ -82,7 +119,7 @@ GenesisState defines babylon module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  |  |
+| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  | params defines all the parameters of the module. |
 
 
 
@@ -210,7 +247,7 @@ MsgUpdateParams is the Msg/UpdateParams request type.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `authority` | [string](#string) |  | authority is the address that controls the module (defaults to x/gov unless overwritten). |
-| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  | params defines the x/auth parameters to update.
+| `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  | params defines the x/babylon parameters to update.
 
 NOTE: All parameters must be supplied. |
 

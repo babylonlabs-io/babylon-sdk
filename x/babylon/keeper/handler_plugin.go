@@ -1,8 +1,10 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
+	"context"
 	"encoding/json"
+
+	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
@@ -23,7 +25,7 @@ type AuthSource interface {
 
 // abstract keeper
 type babylonKeeper interface {
-	GetParams(ctx sdk.Context) types.Params
+	GetParams(ctx context.Context) types.Params
 	MintBlockRewards(ctx sdk.Context, recipient sdk.AccAddress, amount sdk.Coin) (sdkmath.Int, error)
 }
 

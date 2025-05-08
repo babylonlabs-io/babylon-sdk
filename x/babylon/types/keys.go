@@ -20,4 +20,7 @@ const (
 var (
 	// ParamsKey is the prefix for the module parameters
 	ParamsKey = []byte{0x1}
+
+	// BTCStakingGaugeKey is the prefix for the BTC staking gauge
+	BTCStakingGaugeKey = []byte{0x2}
 )

@@ -300,10 +300,13 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		appCodec,
 		keys[types.StoreKey],
 		memKeys[types.MemStoreKey],
+		runtime.NewKVStoreService(keys[types.StoreKey]),
+		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		&wasmKeeper,
 		authority,
+		authtypes.FeeCollectorName,
 		opts...,
 	)
 	require.NoError(t, babylonKeeper.SetParams(ctx, types.DefaultParams(sdk.DefaultBondDenom)))

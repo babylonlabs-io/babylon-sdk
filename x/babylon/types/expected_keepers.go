@@ -2,10 +2,10 @@ package types
 
 import (
 	context "context"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type BankKeeper interface {
@@ -15,6 +15,8 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule string, recipientModule string, amt sdk.Coins) error
 }
 
 // StakingKeeper expected staking keeper.
@@ -26,7 +28,8 @@ type StakingKeeper interface {
 // AccountKeeper interface contains functions for getting accounts and the module address
 type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
-	GetModuleAccount(context context.Context, name string) authtypes.ModuleAccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
+	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
 }
 
 // WasmKeeper abstract wasm keeper
