@@ -9,7 +9,6 @@ option go_package = "github.com/babylonlabs-io/babylon-sdk/x/babylon/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = false;
 
-
 // Params defines the parameters for the x/babylon module.
 message Params {
     option (gogoproto.equal) = true;
@@ -37,7 +36,6 @@ message Params {
     // max_gas_begin_blocker defines the maximum gas that can be spent in a
     // contract sudo callback
     uint32 max_gas_begin_blocker = 9;
-
     // btc_staking_portion is the portion of rewards that goes to Finality
     // Providers/delegations NOTE: the portion of each Finality
     // Provider/delegation is calculated by using its voting power and finality
