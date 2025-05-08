@@ -1,33 +1,35 @@
 package keeper
 
 import (
+	"context"
+
 	storetypes "cosmossdk.io/store/types"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetParams sets the module's parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
+// SetParams sets the x/incentive module parameters.
+func (k Keeper) SetParams(ctx context.Context, p types.Params) error {
+	if err := p.Validate(); err != nil {
 		return err
 	}
-	store.Set(types.ParamsKey, bz)
-
-	return nil
+	store := k.storeService.OpenKVStore(ctx)
+	bz := k.cdc.MustMarshal(&p)
+	return store.Set(types.ParamsKey, bz)
 }
 
-// GetParams gets the module's parameters.
-func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
-	store := clientCtx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKey)
-	if bz == nil {
-		return params
+// GetParams returns the current x/incentive module parameters.
+func (k Keeper) GetParams(ctx context.Context) (p types.Params) {
+	store := k.storeService.OpenKVStore(ctx)
+	bz, err := store.Get(types.ParamsKey)
+	if err != nil {
+		panic(err)
 	}
-
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
+	if bz == nil {
+		return p
+	}
+	k.cdc.MustUnmarshal(bz, &p)
+	return p
 }
 
 func (k Keeper) GetMaxSudoGas(ctx sdk.Context) storetypes.Gas {

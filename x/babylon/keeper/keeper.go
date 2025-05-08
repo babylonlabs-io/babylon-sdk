@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -17,15 +18,20 @@ type Option interface {
 }
 
 type Keeper struct {
-	storeKey storetypes.StoreKey
-	memKey   storetypes.StoreKey
-	cdc      codec.Codec
-	bank     types.BankKeeper
-	Staking  types.StakingKeeper
-	wasm     *wasmkeeper.Keeper
+	storeKey      storetypes.StoreKey
+	memKey        storetypes.StoreKey
+	cdc           codec.Codec
+	bank          types.BankKeeper
+	Staking       types.StakingKeeper
+	wasm          *wasmkeeper.Keeper
+	accountKeeper types.AccountKeeper
+	storeService  corestoretypes.KVStoreService
+
 	// the address capable of executing a MsgUpdateParams message. Typically, this
 	// should be the x/gov module account.
 	authority string
+	// name of the FeeCollector ModuleAccount
+	feeCollectorName string
 }
 
 // NewKeeper constructor with vanilla sdk keepers
@@ -33,20 +39,26 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey storetypes.StoreKey,
 	memoryStoreKey storetypes.StoreKey,
+	storeService corestoretypes.KVStoreService,
+	accountKeeper types.AccountKeeper,
 	bank types.BankKeeper,
 	staking types.StakingKeeper,
 	wasm *wasmkeeper.Keeper,
 	authority string,
+	feeCollectorName string,
 	opts ...Option,
 ) *Keeper {
 	k := &Keeper{
-		storeKey:  storeKey,
-		memKey:    memoryStoreKey,
-		cdc:       cdc,
-		bank:      bank,
-		Staking:   staking,
-		wasm:      wasm,
-		authority: authority,
+		storeKey:         storeKey,
+		memKey:           memoryStoreKey,
+		storeService:     storeService,
+		accountKeeper:    accountKeeper,
+		cdc:              cdc,
+		bank:             bank,
+		Staking:          staking,
+		wasm:             wasm,
+		authority:        authority,
+		feeCollectorName: feeCollectorName,
 	}
 	for _, o := range opts {
 		o.apply(k)
