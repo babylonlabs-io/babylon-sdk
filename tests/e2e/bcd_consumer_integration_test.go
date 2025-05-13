@@ -563,16 +563,19 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 }
 
 // Test09BabylonFPCascadedSlashing
-// 1. Submits a Babylon FP valid finality sig to Babylon
-// 2. Block is finalized.
-// 3. Equivocates/ Submits a invalid finality sig to Babylon
-// 4. Babylon FP is slashed
-// 5. Babylon notifies involved consumer about the delegations.
+// 1. Submits a Babylon FP valid finality sig to Babylon.
+// 2. The block is finalized.
+// 3. Equivocates/ Submits an invalid finality sig to Babylon.
+// 4. Babylon FP is slashed.
+// 5. Babylon notifies the involved consumer about the delegations.
 // 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
 func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
-	// get the last finalized epoch
+	// Finalize the next epoch, so that the babylon chain finality is activated
+	s.finalizeNextEpoch()
+
+	// Get the last finalized epoch
 	lastFinalizedEpoch := s.getLastFinalizedEpoch()
-	// get the first non finalized height
+	// get the first non-finalized height
 	firstNonFinalizedHeight := lastFinalizedEpoch.FirstBlockHeight + lastFinalizedEpoch.CurrentEpochInterval
 
 	// get the block at the activated height
@@ -580,13 +583,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.NoError(err)
 	s.NotNil(firstNonFinalizedBlock)
 
-	// get the babylon finality provider
+	// Get the babylon finality provider
 	babylonFp, err := s.babylonController.QueryFinalityProviders()
 	s.NoError(err)
 	s.NotNil(babylonFp)
 
 	babylonFpBIP340PK := bbn.NewBIP340PubKeyFromBTCPK(babylonFpBTCPK)
-	randIdx := firstNonFinalizedHeight - 1 // pub rand was committed from height 1-100
+	randIdx := firstNonFinalizedHeight - 1 // pub rand was committed from height 1-1000
 
 	// submit finality signature
 	txResp, err := s.babylonController.SubmitFinalitySignature(
@@ -599,7 +602,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// ensure vote is eventually cast
+	// ensure the vote is eventually cast
 	var votes []bbn.BIP340PubKey
 	s.Eventually(func() bool {
 		votes, err = s.babylonController.QueryVotesAtHeight(firstNonFinalizedHeight)
