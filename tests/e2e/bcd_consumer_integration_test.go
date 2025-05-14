@@ -843,7 +843,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
 		}
-
 		return fpInfo != nil && fpInfo.Power == delegation.TotalSat && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 

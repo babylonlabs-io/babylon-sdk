@@ -132,24 +132,6 @@ FINALITY_MSG='{
   "admin": "'"$ADMIN"'"
 }'
 
-echo $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
-	1 2 3 4 \
-	"regtest" \
-	"01020304" \
-	1 2 false \
-	"$STAKING_MSG" \
-	"$FINALITY_MSG" \
-	test-consumer \
-	test-consumer-description \
-	--admin=$ADMIN \
-	--ibc-transfer-channel-id=channel-1 \
-	$KEYRING \
-	--from user \
-	--chain-id $CHAINID \
-	--gas 20000000000 \
-	--gas-prices 0.001ustake \
-	--node http://localhost:$RPCPORT \
-	-y
 $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
 	1 2 3 4 \
 	"regtest" \
