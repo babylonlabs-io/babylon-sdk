@@ -312,11 +312,11 @@ type SinglePendingRewardsResponse struct {
 	Rewards       sdk.Coin `json:"rewards"`
 }
 
-type QueryMsgCzLastHeader struct {
-	CzLastHeader struct{} `json:"cz_last_header"`
+type QueryMsgLastConsumerHeader struct {
+	LastConsumerHeader struct{} `json:"last_consumer_header"`
 }
 
-type CzHeaderResponse struct {
+type ConsumerHeaderResponse struct {
 	ConsumerID          string `json:"consumer_id"`
 	Hash                string `json:"hash"`
 	Height              uint64 `json:"height"`

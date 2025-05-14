@@ -125,7 +125,9 @@ FINALITY_MSG='{
     "max_active_finality_providers": 100,
     "min_pub_rand": 1,
     "finality_inflation_rate": "0.035",
-    "epoch_length": 10
+    "epoch_length": 10,
+    "missed_blocks_window": 250,
+    "jail_duration": 86400
   },
   "admin": "'"$ADMIN"'"
 }'

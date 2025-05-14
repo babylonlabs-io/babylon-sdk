@@ -1037,9 +1037,9 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 	return grpcConn, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*CzHeaderResponse, error) {
-	queryMsgStruct := QueryMsgCzLastHeader{
-		CzLastHeader: struct{}{},
+func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
+	queryMsgStruct := QueryMsgLastConsumerHeader{
+		LastConsumerHeader: struct{}{},
 	}
 	queryMsgBytes, err := json.Marshal(queryMsgStruct)
 	if err != nil {
@@ -1051,7 +1051,7 @@ func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*CzHeader
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
 
-	var resp CzHeaderResponse
+	var resp ConsumerHeaderResponse
 	err = json.Unmarshal(dataFromContract.Data, &resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
