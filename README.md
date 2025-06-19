@@ -23,4 +23,13 @@ The code is forked from https://github.com/osmosis-labs/mesh-security-sdk.
 Babylon SDK provides a thin layer that BSNs need to integrate, in the form of a
 Cosmos module.
 
+## Code Reference
+
+### Babylon Module
+
 See the [Babylon module README](x/babylon/README.md) for more information.
+
+### GRPC Queries
+
+See the `demo/app/wasm/grpc_whitelist.go` file for the `WhitelistedGrpcQuery`
+function, which defines the list of whitelisted GRPC queries.

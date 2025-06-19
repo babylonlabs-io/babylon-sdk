@@ -30,8 +30,3 @@ the `btc-finality` smart contract.
 See the `x/babylon/keeper/msg_server.go` file for the
 `InstantiateBabylonContracts` function, which is used to instantiate the
 Cosmos BSN smart contracts with the necessary parameters.
-
-### GRPC Queries
-
-See the `demo/app/wasm/grpc_whitelist.go` file for the `WhitelistedGrpcQuery`
-function, which defines the list of whitelisted GRPC queries.
