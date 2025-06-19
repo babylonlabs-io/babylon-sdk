@@ -14,9 +14,9 @@ The code is forked from https://github.com/osmosis-labs/mesh-security-sdk.
 
 ## Project Structure
 
-* x/babylon - Module code that is to be imported by BSNs.
-* demo/app - Example application and CLI that is using the babylon module.
-* tests/e2e - End-to-end tests with the demo app and Cosmos BSN smart contracts.
+* `x/babylon` - Module code that is to be imported by BSNs.
+* `demo/app` - Example application and CLI that is using the babylon module.
+* `tests/e2e` - End-to-end tests with the demo app and Cosmos BSN smart contracts.
 
 ## High Level Overview
 
