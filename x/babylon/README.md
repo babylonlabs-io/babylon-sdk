@@ -1,4 +1,4 @@
-# Babylon Cosmos module implementation
+# Babylon Cosmos Module
 
 The `babylon` module provides the following functionalities:
 
