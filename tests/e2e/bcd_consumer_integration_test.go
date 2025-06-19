@@ -1360,8 +1360,6 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
 }
 
-// helper function: verifyConsumerRegistration verifies the automatic registration of a consumer
-// and returns the consumer details.
 func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.ConsumerRegister {
 	var registeredConsumer *bsctypes.ConsumerRegister
 	var err error
