@@ -336,10 +336,13 @@ func NewConsumerApp(
 		app.appCodec,
 		keys[bbntypes.StoreKey],
 		memKeys[bbntypes.MemStoreKey],
+		runtime.NewKVStoreService(keys[bbntypes.StoreKey]),
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		&app.WasmKeeper, // ensure this is a pointer as we instantiate the keeper a bit later
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authtypes.FeeCollectorName,
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
