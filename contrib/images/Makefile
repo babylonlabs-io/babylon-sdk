@@ -12,12 +12,12 @@ ibcsim-bcd:
 ibcsim-bcd-rmi:
 	docker rmi babylonlabs-io/ibcsim-bcd 2>/dev/null; true
 
-start-bcd-consumer-integration: stop-bcd-consumer-integration
+start-bcd-bsn-integration: stop-bcd-bsn-integration
 	ibcsim-bcd/pre-deployment.sh
 	docker compose -f ibcsim-bcd/docker-compose.yml up -d
 
-stop-bcd-consumer-integration:
+stop-bcd-bsn-integration:
 	docker compose -f ibcsim-bcd/docker-compose.yml down
 	rm -rf ibcsim-bcd/.testnets
 
-.PHONY: ibcsim-bcd ibcsim-bcd-rmi start-bcd-consumer-integration stop-bcd-consumer-integration babylond babylond-rmi
+.PHONY: ibcsim-bcd ibcsim-bcd-rmi start-bcd-bsn-integration stop-bcd-bsn-integration babylond babylond-rmi

@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
-func (cc *CosmwasmConsumerController) MustQueryBabylonParams() *types.Params {
+func (cc *CosmwasmBSNController) MustQueryBabylonParams() *types.Params {
 	ctx := context.Background()
 
 	clientCtx := client.Context{Client: cc.cwClient.RPCClient}

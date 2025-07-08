@@ -9,15 +9,16 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
-	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
+	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var emptyWasmOpts []wasm.Option
@@ -58,7 +59,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	require.NoError(t, err)
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewConsumerApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()), emptyWasmOpts)
+	app2 := NewBSNApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()), emptyWasmOpts)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
@@ -98,36 +99,36 @@ func GetGZippedContractCodes() ([]byte, []byte, []byte, []byte) {
 }
 
 func TestInstantiateBabylonContracts(t *testing.T) {
-	consumerApp := Setup(t)
-	ctx := consumerApp.NewContext(false)
+	bsnApp := Setup(t)
+	ctx := bsnApp.NewContext(false)
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
-	babylonKeeper := consumerApp.BabylonKeeper
+	babylonKeeper := bsnApp.BabylonKeeper
 	babylonMsgServer := babylonkeeper.NewMsgServer(babylonKeeper)
-	wasmKeeper := consumerApp.WasmKeeper
+	wasmKeeper := bsnApp.WasmKeeper
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
 
 	// store Babylon contract codes
 	babylonContractCode, btcLightClientContractCode, btcStakingContractCode, btcFinalityContractCode := GetGZippedContractCodes()
 	resp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
-		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		Sender:       bsnApp.BabylonKeeper.GetAuthority(),
 		WASMByteCode: babylonContractCode,
 	})
 	babylonContractCodeID := resp.CodeID
 	require.NoError(t, err)
 	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
-		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		Sender:       bsnApp.BabylonKeeper.GetAuthority(),
 		WASMByteCode: btcLightClientContractCode,
 	})
 	btcLightClientContractCodeID := resp.CodeID
 	require.NoError(t, err)
 	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
-		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		Sender:       bsnApp.BabylonKeeper.GetAuthority(),
 		WASMByteCode: btcStakingContractCode,
 	})
 	btcStakingContractCodeID := resp.CodeID
 	require.NoError(t, err)
 	resp, err = wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
-		Sender:       consumerApp.BabylonKeeper.GetAuthority(),
+		Sender:       bsnApp.BabylonKeeper.GetAuthority(),
 		WASMByteCode: btcFinalityContractCode,
 	})
 	btcFinalityContractCodeID := resp.CodeID

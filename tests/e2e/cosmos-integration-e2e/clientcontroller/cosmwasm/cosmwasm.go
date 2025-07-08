@@ -25,8 +25,6 @@ import (
 	sdkErr "cosmossdk.io/errors"
 	wasmdparams "github.com/CosmWasm/wasmd/app/params"
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 	"github.com/babylonlabs-io/babylon/crypto/eots"
 	"github.com/babylonlabs-io/babylon/testutil/datagen"
 	bbntypes "github.com/babylonlabs-io/babylon/types"
@@ -40,19 +38,22 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/cosmos/relayer/v2/relayer/provider"
 	"go.uber.org/zap"
+
+	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 )
 
-type CosmwasmConsumerController struct {
+type CosmwasmBSNController struct {
 	cwClient *cwcclient.Client
 	cfg      *cwconfig.CosmwasmConfig
 	logger   *zap.Logger
 }
 
-func NewCosmwasmConsumerController(
+func NewCosmwasmBSNController(
 	cfg *cwconfig.CosmwasmConfig,
 	encodingCfg wasmdparams.EncodingConfig,
 	logger *zap.Logger,
-) (*CosmwasmConsumerController, error) {
+) (*CosmwasmBSNController, error) {
 	wasmdConfig := cfg.ToQueryClientConfig()
 
 	if err := wasmdConfig.Validate(); err != nil {
@@ -69,18 +70,18 @@ func NewCosmwasmConsumerController(
 		return nil, fmt.Errorf("failed to create Wasmd client: %w", err)
 	}
 
-	return &CosmwasmConsumerController{
+	return &CosmwasmBSNController{
 		wc,
 		cfg,
 		logger,
 	}, nil
 }
 
-func (cc *CosmwasmConsumerController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
 	return cc.sendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
 
-func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
 	return cc.cwClient.SendMsgs(
 		context.Background(),
 		msgs,
@@ -89,11 +90,11 @@ func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*s
 	)
 }
 
-func (cc *CosmwasmConsumerController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
 	return cc.reliablySendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
 
-func (cc *CosmwasmConsumerController) reliablySendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) reliablySendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
 	return cc.cwClient.ReliablySendMsgs(
 		context.Background(),
 		msgs,
@@ -104,7 +105,7 @@ func (cc *CosmwasmConsumerController) reliablySendMsgs(msgs []sdk.Msg, expectedE
 
 // CommitPubRandList commits a list of Schnorr public randomness to contract deployed on Consumer Chain
 // it returns tx hash and error
-func (cc *CosmwasmConsumerController) CommitPubRandList(
+func (cc *CosmwasmBSNController) CommitPubRandList(
 	fpPk *btcec.PublicKey,
 	startHeight uint64,
 	numPubRand uint64,
@@ -138,7 +139,7 @@ func (cc *CosmwasmConsumerController) CommitPubRandList(
 	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
-func (cc *CosmwasmConsumerController) SubmitFinalitySig(
+func (cc *CosmwasmBSNController) SubmitFinalitySig(
 	fpSK *btcec.PrivateKey,
 	fpBtcPk *btcec.PublicKey,
 	privateRand *eots.PrivateRand,
@@ -189,7 +190,7 @@ func (cc *CosmwasmConsumerController) SubmitFinalitySig(
 	return &types.TxResponse{TxHash: res.TxHash, Events: fromCosmosEventsToBytes(res.Events)}, nil
 }
 
-func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
+func (cc *CosmwasmBSNController) SubmitInvalidFinalitySig(
 	r *rand.Rand,
 	fpSK *btcec.PrivateKey,
 	fpBtcPk *btcec.PublicKey,
@@ -238,7 +239,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 }
 
 // SubmitBatchFinalitySigs submits a batch of finality signatures to Babylon
-func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
+func (cc *CosmwasmBSNController) SubmitBatchFinalitySigs(
 	fpPk *btcec.PublicKey,
 	blocks []*types.BlockInfo,
 	pubRandList []*btcec.FieldVal,
@@ -292,7 +293,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 }
 
 // QueryFinalityProviderHasPower queries whether the finality provider has voting power at a given height
-func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
+func (cc *CosmwasmBSNController) QueryFinalityProviderHasPower(
 	fpPk *btcec.PublicKey,
 	blockHeight uint64,
 ) (bool, error) {
@@ -322,7 +323,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 	return resp.Power > 0, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalityProviderInfo(
+func (cc *CosmwasmBSNController) QueryFinalityProviderInfo(
 	fpPk *btcec.PublicKey,
 	opts ...uint64,
 ) (*ConsumerFpInfoResponse, error) {
@@ -357,7 +358,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderInfo(
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalityProvidersByPower() (*ConsumerFpsByPowerResponse, error) {
+func (cc *CosmwasmBSNController) QueryFinalityProvidersByPower() (*ConsumerFpsByPowerResponse, error) {
 	queryMsgStruct := QueryMsgFinalityProvidersByPower{
 		FinalityProvidersByPower: struct{}{},
 	}
@@ -381,7 +382,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvidersByPower() (*Consumer
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryLatestFinalizedBlock() (*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) QueryLatestFinalizedBlock() (*types.BlockInfo, error) {
 	isFinalized := true
 	limit := uint32(1)
 	blocks, err := cc.queryLatestBlocks(nil, &limit, &isFinalized, nil)
@@ -394,11 +395,11 @@ func (cc *CosmwasmConsumerController) QueryLatestFinalizedBlock() (*types.BlockI
 	return blocks[0], nil
 }
 
-func (cc *CosmwasmConsumerController) QueryBlocks(startHeight, endHeight, limit uint64) ([]*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) QueryBlocks(startHeight, endHeight, limit uint64) ([]*types.BlockInfo, error) {
 	return cc.queryCometBlocksInRange(startHeight, endHeight)
 }
 
-func (cc *CosmwasmConsumerController) QueryBlock(height uint64) (*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) QueryBlock(height uint64) (*types.BlockInfo, error) {
 	block, err := cc.cwClient.GetBlock(int64(height))
 	if err != nil {
 		return nil, err
@@ -410,7 +411,7 @@ func (cc *CosmwasmConsumerController) QueryBlock(height uint64) (*types.BlockInf
 }
 
 // QueryLastPublicRandCommit returns the last public randomness commitments
-func (cc *CosmwasmConsumerController) QueryLastPublicRandCommit(fpPk *btcec.PublicKey) (*types.PubRandCommit, error) {
+func (cc *CosmwasmBSNController) QueryLastPublicRandCommit(fpPk *btcec.PublicKey) (*types.PubRandCommit, error) {
 	fpBtcPk := bbntypes.NewBIP340PubKeyFromBTCPK(fpPk)
 
 	// Construct the query message
@@ -449,7 +450,7 @@ func (cc *CosmwasmConsumerController) QueryLastPublicRandCommit(fpPk *btcec.Publ
 	return &commit, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeadersResponse, error) {
+func (cc *CosmwasmBSNController) QueryBtcHeaders(limit *uint32) (*BtcHeadersResponse, error) {
 	queryMsgStruct := QueryMsgBtcHeaders{
 		BtcHeaders: BtcHeadersQuery{
 			Limit: limit,
@@ -475,7 +476,7 @@ func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeader
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryIsBlockFinalized(height uint64) (bool, error) {
+func (cc *CosmwasmBSNController) QueryIsBlockFinalized(height uint64) (bool, error) {
 	resp, err := cc.QueryIndexedBlock(height)
 	if err != nil || resp == nil {
 		return false, nil
@@ -484,7 +485,7 @@ func (cc *CosmwasmConsumerController) QueryIsBlockFinalized(height uint64) (bool
 	return resp.Finalized, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
+func (cc *CosmwasmBSNController) QueryActivatedHeight() (uint64, error) {
 	// Construct the query message
 	queryMsg := QueryMsgActivatedHeight{
 		ActivatedHeight: struct{}{},
@@ -518,7 +519,7 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 	return resp.Height, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryLatestBlockHeight() (uint64, error) {
+func (cc *CosmwasmBSNController) QueryLatestBlockHeight() (uint64, error) {
 	block, err := cc.queryCometBestBlock()
 	if err != nil {
 		return 0, err
@@ -526,7 +527,7 @@ func (cc *CosmwasmConsumerController) QueryLatestBlockHeight() (uint64, error) {
 	return block.Height, err
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalitySignature(fpBtcPkHex string, height uint64) (*FinalitySignatureResponse, error) {
+func (cc *CosmwasmBSNController) QueryFinalitySignature(fpBtcPkHex string, height uint64) (*FinalitySignatureResponse, error) {
 	queryMsgStruct := QueryMsgFinalitySignature{
 		FinalitySignature: FinalitySignatureQuery{
 			BtcPkHex: fpBtcPkHex,
@@ -552,7 +553,7 @@ func (cc *CosmwasmConsumerController) QueryFinalitySignature(fpBtcPkHex string, 
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalityProviders() (*ConsumerFpsResponse, error) {
+func (cc *CosmwasmBSNController) QueryFinalityProviders() (*ConsumerFpsResponse, error) {
 	queryMsgStruct := QueryMsgFinalityProviders{
 		FinalityProviders: struct{}{},
 	}
@@ -576,7 +577,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviders() (*ConsumerFpsResp
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalityProvider(btcPkHex string) (*SingleConsumerFpResponse, error) {
+func (cc *CosmwasmBSNController) QueryFinalityProvider(btcPkHex string) (*SingleConsumerFpResponse, error) {
 	queryMsgStruct := QueryMsgFinalityProvider{
 		FinalityProvider: FinalityProviderQuery{
 			BtcPkHex: btcPkHex,
@@ -602,7 +603,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvider(btcPkHex string) (*S
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsResponse, error) {
+func (cc *CosmwasmBSNController) QueryDelegations() (*ConsumerDelegationsResponse, error) {
 	queryMsgStruct := QueryMsgDelegations{
 		Delegations: struct{}{},
 	}
@@ -626,7 +627,7 @@ func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsRe
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryPendingRewards(stakerAddress, fpPubkeyHex string) (*ConsumerPendingRewardsResponse, error) {
+func (cc *CosmwasmBSNController) QueryPendingRewards(stakerAddress, fpPubkeyHex string) (*ConsumerPendingRewardsResponse, error) {
 	queryMsgStruct := QueryMsgPendingRewards{
 		PendingRewards: PendingRewardsQuery{
 			StakerAddr:  stakerAddress,
@@ -653,7 +654,7 @@ func (cc *CosmwasmConsumerController) QueryPendingRewards(stakerAddress, fpPubke
 	return &resp, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryAllPendingRewards(stakerAddress string, startAfter *SinglePendingRewardsResponse, limit *uint32) (*ConsumerAllPendingRewardsResponse, error) {
+func (cc *CosmwasmBSNController) QueryAllPendingRewards(stakerAddress string, startAfter *SinglePendingRewardsResponse, limit *uint32) (*ConsumerAllPendingRewardsResponse, error) {
 	queryMsgStruct := QueryMsgAllPendingRewards{
 		PendingRewards: AllPendingRewardsQuery{
 			StakerAddr: stakerAddress,
@@ -682,7 +683,7 @@ func (cc *CosmwasmConsumerController) QueryAllPendingRewards(stakerAddress strin
 }
 
 // WithdrawRewards
-func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex string) (*types.TxResponse, error) {
+func (cc *CosmwasmBSNController) WithdrawRewards(stakerAddress, fpPubkeyHex string) (*types.TxResponse, error) {
 	// Construct the ExecMsg struct
 	msg := ExecMsg{
 		WithdrawRewards: &WithdrawRewards{
@@ -705,19 +706,19 @@ func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex
 	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryBabylonContractBalances() (sdk.Coins, error) {
+func (cc *CosmwasmBSNController) QueryBabylonContractBalances() (sdk.Coins, error) {
 	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
 }
 
-func (cc *CosmwasmConsumerController) QueryFinalityContractBalances() (sdk.Coins, error) {
+func (cc *CosmwasmBSNController) QueryFinalityContractBalances() (sdk.Coins, error) {
 	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcFinalityContractAddress)
 }
 
-func (cc *CosmwasmConsumerController) QueryStakingContractBalances() (sdk.Coins, error) {
+func (cc *CosmwasmBSNController) QueryStakingContractBalances() (sdk.Coins, error) {
 	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
 }
 
-func (cc *CosmwasmConsumerController) QueryBalance(address string, denom string) (*sdk.Coin, error) {
+func (cc *CosmwasmBSNController) QueryBalance(address string, denom string) (*sdk.Coin, error) {
 	grpcConn, err := cc.createGrpcConnection()
 	if err != nil {
 		return nil, err
@@ -738,7 +739,7 @@ func (cc *CosmwasmConsumerController) QueryBalance(address string, denom string)
 }
 
 // QueryBalances returns balances at the address
-func (cc *CosmwasmConsumerController) QueryBalances(address string) (sdk.Coins, error) {
+func (cc *CosmwasmBSNController) QueryBalances(address string) (sdk.Coins, error) {
 	grpcConn, err := cc.createGrpcConnection()
 	if err != nil {
 		return nil, err
@@ -757,7 +758,7 @@ func (cc *CosmwasmConsumerController) QueryBalances(address string) (sdk.Coins, 
 	return bankRes.GetBalances(), nil
 }
 
-func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter *uint64, limit *uint32, finalized, reverse *bool) ([]*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) queryLatestBlocks(startAfter *uint64, limit *uint32, finalized, reverse *bool) ([]*types.BlockInfo, error) {
 	// Construct the query message
 	queryMsg := QueryMsgBlocks{
 		Blocks: BlocksQuery{
@@ -800,7 +801,7 @@ func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter *uint64, limi
 	return blocks, nil
 }
 
-func (cc *CosmwasmConsumerController) queryCometBestBlock() (*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) queryCometBestBlock() (*types.BlockInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cc.cfg.Timeout)
 	defer cancel()
 
@@ -818,7 +819,7 @@ func (cc *CosmwasmConsumerController) queryCometBestBlock() (*types.BlockInfo, e
 	}, nil
 }
 
-func (cc *CosmwasmConsumerController) queryCometBlocksInRange(startHeight, endHeight uint64) ([]*types.BlockInfo, error) {
+func (cc *CosmwasmBSNController) queryCometBlocksInRange(startHeight, endHeight uint64) ([]*types.BlockInfo, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), cc.cfg.Timeout)
 	defer cancel()
 
@@ -851,7 +852,7 @@ func (cc *CosmwasmConsumerController) queryCometBlocksInRange(startHeight, endHe
 	return blocks, nil
 }
 
-func (cc *CosmwasmConsumerController) Close() error {
+func (cc *CosmwasmBSNController) Close() error {
 	if !cc.cwClient.IsRunning() {
 		return nil
 	}
@@ -859,7 +860,7 @@ func (cc *CosmwasmConsumerController) Close() error {
 	return cc.cwClient.Stop()
 }
 
-func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) ExecuteStakingContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
 	emptyErrs := []*sdkErr.Error{}
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
@@ -876,7 +877,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 	return res, nil
 }
 
-func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmBSNController) ExecuteFinalityContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
 	emptyErrs := []*sdkErr.Error{}
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
@@ -895,55 +896,55 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 
 // QuerySmartContractState queries the smart contract state
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) QuerySmartContractState(contractAddress string, queryData string) (*wasmdtypes.QuerySmartContractStateResponse, error) {
+func (cc *CosmwasmBSNController) QuerySmartContractState(contractAddress string, queryData string) (*wasmdtypes.QuerySmartContractStateResponse, error) {
 	return cc.cwClient.QuerySmartContractState(contractAddress, queryData)
 }
 
 // StoreWasmCode stores the wasm code on the consumer chain
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) StoreWasmCode(wasmFile string) error {
+func (cc *CosmwasmBSNController) StoreWasmCode(wasmFile string) error {
 	return cc.cwClient.StoreWasmCode(wasmFile)
 }
 
 // InstantiateContract instantiates a contract with the given code id and init msg
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) InstantiateContract(codeID uint64, initMsg []byte) error {
+func (cc *CosmwasmBSNController) InstantiateContract(codeID uint64, initMsg []byte) error {
 	return cc.cwClient.InstantiateContract(codeID, initMsg)
 }
 
 // GetLatestCodeId returns the latest wasm code id.
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) GetLatestCodeId() (uint64, error) {
+func (cc *CosmwasmBSNController) GetLatestCodeId() (uint64, error) {
 	return cc.cwClient.GetLatestCodeId()
 }
 
 // ListContractsByCode lists all contracts by wasm code id
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, pagination *sdkquerytypes.PageRequest) (*wasmdtypes.QueryContractsByCodeResponse, error) {
+func (cc *CosmwasmBSNController) ListContractsByCode(codeID uint64, pagination *sdkquerytypes.PageRequest) (*wasmdtypes.QueryContractsByCodeResponse, error) {
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
 // MustGetValidatorAddress gets the validator address of the consumer chain
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
+func (cc *CosmwasmBSNController) MustGetValidatorAddress() string {
 	return cc.cwClient.MustGetAddr()
 }
 
 // GetCometNodeStatus gets the tendermint node status of the consumer chain
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) GetCometNodeStatus() (*coretypes.ResultStatus, error) {
+func (cc *CosmwasmBSNController) GetCometNodeStatus() (*coretypes.ResultStatus, error) {
 	return cc.cwClient.GetStatus()
 }
 
 // GetCometBlock gets the tendermint block at a given height
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) GetCometBlock(height int64) (*coretypes.ResultBlock, error) {
+func (cc *CosmwasmBSNController) GetCometBlock(height int64) (*coretypes.ResultBlock, error) {
 	return cc.cwClient.GetBlock(height)
 }
 
 // QueryIndexedBlock queries the indexed block at a given height
 // NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) QueryIndexedBlock(height uint64) (*IndexedBlock, error) {
+func (cc *CosmwasmBSNController) QueryIndexedBlock(height uint64) (*IndexedBlock, error) {
 	// Construct the query message
 	queryMsgStruct := QueryMsgBlock{
 		Block: BlockQuery{
@@ -979,11 +980,11 @@ func fromCosmosEventsToBytes(events []provider.RelayerEvent) []byte {
 	return bytes
 }
 
-func (cc *CosmwasmConsumerController) QueryNodeStatus() (*coretypes.ResultStatus, error) {
+func (cc *CosmwasmBSNController) QueryNodeStatus() (*coretypes.ResultStatus, error) {
 	return cc.cwClient.QueryClient.RPCClient.Status(context.Background())
 }
 
-func (cc *CosmwasmConsumerController) QueryChannelClientState(channelID, portID string) (*channeltypes.QueryChannelClientStateResponse, error) {
+func (cc *CosmwasmBSNController) QueryChannelClientState(channelID, portID string) (*channeltypes.QueryChannelClientStateResponse, error) {
 	var resp *channeltypes.QueryChannelClientStateResponse
 	err := cc.cwClient.QueryClient.QueryIBCChannel(func(ctx context.Context, queryClient channeltypes.QueryClient) error {
 		var err error
@@ -998,7 +999,7 @@ func (cc *CosmwasmConsumerController) QueryChannelClientState(channelID, portID 
 	return resp, err
 }
 
-func (cc *CosmwasmConsumerController) QueryNextSequenceReceive(channelID, portID string) (*channeltypes.QueryNextSequenceReceiveResponse, error) {
+func (cc *CosmwasmBSNController) QueryNextSequenceReceive(channelID, portID string) (*channeltypes.QueryNextSequenceReceiveResponse, error) {
 	var resp *channeltypes.QueryNextSequenceReceiveResponse
 	err := cc.cwClient.QueryClient.QueryIBCChannel(func(ctx context.Context, queryClient channeltypes.QueryClient) error {
 		var err error
@@ -1013,11 +1014,11 @@ func (cc *CosmwasmConsumerController) QueryNextSequenceReceive(channelID, portID
 }
 
 // IBCChannels queries the IBC channels
-func (cc *CosmwasmConsumerController) IBCChannels() (*channeltypes.QueryChannelsResponse, error) {
+func (cc *CosmwasmBSNController) IBCChannels() (*channeltypes.QueryChannelsResponse, error) {
 	return cc.cwClient.IBCChannels()
 }
 
-func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, error) {
+func (cc *CosmwasmBSNController) createGrpcConnection() (*grpc.ClientConn, error) {
 	// Create a connection to the gRPC server.
 	parsedUrl, err := url.Parse(cc.cfg.GRPCAddr)
 	if err != nil {
@@ -1037,7 +1038,7 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 	return grpcConn, nil
 }
 
-func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
+func (cc *CosmwasmBSNController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
 	queryMsgStruct := QueryMsgLastConsumerHeader{
 		LastConsumerHeader: struct{}{},
 	}

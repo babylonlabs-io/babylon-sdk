@@ -55,7 +55,7 @@ message MsgInstantiateBabylonContracts {
   // notify_cosmos_zone indicates whether to notify the Cosmos zone of events
   bool notify_cosmos_zone = 10;
   // ibc_transfer_channel_id is the IBC channel ID for the IBC transfer
-  // contract. If empty then the reward distribution will be done at the consumer
+  // contract. If empty then the reward distribution will be done at the bsn
   // side.
   string ibc_transfer_channel_id = 11;
   // btc_light_client_msg is the initialization message for the BTC light client
@@ -66,10 +66,10 @@ message MsgInstantiateBabylonContracts {
   // btc_finality_msg is the initialization message for the BTC finality
   // contract
   bytes btc_finality_msg = 14;
-  // consumer_name is the name of this consumer chain
-  string consumer_name = 15;
-  // consumer_description is a description of this consumer chain
-  string consumer_description = 16;
+  // bsn_name is the name of this bsn chain
+  string bsn_name = 15;
+  // bsn_description is a description of this bsn chain
+  string bsn_description = 16;
   // admin is the address that controls the Babylon module
   string admin = 17 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }

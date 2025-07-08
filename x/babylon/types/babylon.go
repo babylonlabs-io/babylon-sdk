@@ -12,16 +12,16 @@ type BabylonContractConfig struct {
 	// NOTE: if set to true, then the Cosmos zone needs to integrate the corresponding message
 	// handler as well
 	NotifyCosmosZone bool `json:"notify_cosmos_zone"`
-	// BTCLightClient stores a BTC light client contract used for BTC light client on the Consumer if set
+	// BTCLightClient stores a BTC light client contract used for BTC light client on the BSN if set
 	BTCLightClient string `json:"btc_light_client,omitempty"`
 	// BTCStaking stores a BTC staking contract used for BTC multi-staking if set
 	BTCStaking string `json:"btc_staking,omitempty"`
-	// BTCFinality stores a BTC finality contract used for BTC finality on the Consumer if set
+	// BTCFinality stores a BTC finality contract used for BTC finality on the BSN if set
 	BTCFinality string `json:"btc_finality,omitempty"`
-	// ConsumerName represents the name of the Consumer
-	ConsumerName string `json:"consumer_name,omitempty"`
-	// ConsumerDescription represents the description of the Consumer
-	ConsumerDescription string `json:"consumer_description,omitempty"`
+	// BSNName represents the name of the BSN
+	BSNName string `json:"bsn_name,omitempty"`
+	// BSNDescription represents the description of the BSN
+	BSNDescription string `json:"bsn_description,omitempty"`
 }
 
 // NewInitMsg creates the init message for the Babylon contract
@@ -38,8 +38,8 @@ func NewInitMsg(
 	btcStakingInitMsgBytes []byte,
 	btcFinalityCodeId uint64,
 	btcFinalityInitMsgBytes []byte,
-	consumerName string,
-	consumerDescription string,
+	bsnName string,
+	bsnDescription string,
 	admin string,
 ) ([]byte, error) {
 	initMsg := map[string]interface{}{
@@ -54,8 +54,9 @@ func NewInitMsg(
 		"btc_staking_msg":                 btcStakingInitMsgBytes,
 		"btc_finality_code_id":            btcFinalityCodeId,
 		"btc_finality_msg":                btcFinalityInitMsgBytes,
-		"consumer_name":                   consumerName,
-		"consumer_description":            consumerDescription,
+		// TODO consumer naming needs to be changed from babylon side
+		"consumer_name":        bsnName,
+		"consumer_description": bsnDescription,
 	}
 	if len(ibcTransferChannelId) > 0 {
 		initMsg["ics20_channel_id"] = ibcTransferChannelId

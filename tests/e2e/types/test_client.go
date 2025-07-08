@@ -6,13 +6,14 @@ import (
 
 	"github.com/CosmWasm/wasmd/tests/ibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
+
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // Query is a query type used in tests only
@@ -77,30 +78,30 @@ func (p *TestProviderClient) Exec(contract sdk.AccAddress, payload []byte, funds
 	return rsp, err
 }
 
-type TestConsumerClient struct {
+type TestBSNClient struct {
 	t         *testing.T
 	Chain     *ibctesting.TestChain
-	Contracts ConsumerContract
-	App       *app.ConsumerApp
+	Contracts BSNContract
+	App       *app.BSNApp
 }
 
-func NewConsumerClient(t *testing.T, chain *ibctesting.TestChain) *TestConsumerClient {
-	return &TestConsumerClient{t: t, Chain: chain, App: chain.App.(*app.ConsumerApp)}
+func NewBSNClient(t *testing.T, chain *ibctesting.TestChain) *TestBSNClient {
+	return &TestBSNClient{t: t, Chain: chain, App: chain.App.(*app.BSNApp)}
 }
 
-type ConsumerContract struct {
+type BSNContract struct {
 	Babylon        sdk.AccAddress
 	BTCLightClient sdk.AccAddress
 	BTCStaking     sdk.AccAddress
 	BTCFinality    sdk.AccAddress
 }
 
-func (p *TestConsumerClient) GetSender() sdk.AccAddress {
+func (p *TestBSNClient) GetSender() sdk.AccAddress {
 	return p.Chain.SenderAccount.GetAddress()
 }
 
 // TODO(babylon): deploy Babylon contracts
-func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
+func (p *TestBSNClient) BootstrapContracts() (*BSNContract, error) {
 	babylonContractWasmId := p.Chain.StoreCodeFile("../testdata/babylon_contract.wasm").CodeID
 	btcLightClientContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_light_client.wasm").CodeID
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
@@ -142,7 +143,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 		return nil, err
 	}
 
-	r := ConsumerContract{
+	r := BSNContract{
 		Babylon:        babylonAddr,
 		BTCLightClient: btcLightClientAddr,
 		BTCStaking:     btcStakingAddr,
@@ -152,7 +153,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	return &r, nil
 }
 
-func (p *TestConsumerClient) Exec(contract sdk.AccAddress, payload []byte, funds ...sdk.Coin) (*abci.ExecTxResult, error) {
+func (p *TestBSNClient) Exec(contract sdk.AccAddress, payload []byte, funds ...sdk.Coin) (*abci.ExecTxResult, error) {
 	rsp, err := p.Chain.SendMsgs(&wasmtypes.MsgExecuteContract{
 		Sender:   p.GetSender().String(),
 		Contract: contract.String(),
@@ -162,19 +163,19 @@ func (p *TestConsumerClient) Exec(contract sdk.AccAddress, payload []byte, funds
 	return rsp, err
 }
 
-func (p *TestConsumerClient) Query(contractAddr sdk.AccAddress, query Query) (QueryResponse, error) {
+func (p *TestBSNClient) Query(contractAddr sdk.AccAddress, query Query) (QueryResponse, error) {
 	return Querier(p.t, p.Chain)(contractAddr.String(), query)
 }
 
 // MustExecGovProposal submit and vote yes on proposal
-func (p *TestConsumerClient) MustExecGovProposal(msg *bbntypes.MsgUpdateParams) {
+func (p *TestBSNClient) MustExecGovProposal(msg *bbntypes.MsgUpdateParams) {
 	proposalID := submitGovProposal(p.t, p.Chain, msg)
 	voteAndPassGovProposal(p.t, p.Chain, proposalID)
 }
 
 func submitGovProposal(t *testing.T, chain *ibctesting.TestChain, msgs ...sdk.Msg) uint64 {
 	// get gov module parameters
-	chainApp := chain.App.(*app.ConsumerApp)
+	chainApp := chain.App.(*app.BSNApp)
 	govParams, err := chainApp.GovKeeper.Params.Get(chain.GetContext())
 	require.NoError(t, err)
 
@@ -195,7 +196,7 @@ func submitGovProposal(t *testing.T, chain *ibctesting.TestChain, msgs ...sdk.Ms
 
 func voteAndPassGovProposal(t *testing.T, chain *ibctesting.TestChain, proposalID uint64) {
 	// get gov module parameters
-	chainApp := chain.App.(*app.ConsumerApp)
+	chainApp := chain.App.(*app.BSNApp)
 	govParams, err := chainApp.GovKeeper.Params.Get(chain.GetContext())
 	require.NoError(t, err)
 

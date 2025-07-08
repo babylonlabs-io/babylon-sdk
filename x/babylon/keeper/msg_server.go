@@ -44,8 +44,8 @@ func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *type
 		req.BtcStakingMsg,
 		req.BtcFinalityContractCodeId,
 		req.BtcFinalityMsg,
-		req.ConsumerName,
-		req.ConsumerDescription,
+		req.BsnName,
+		req.BsnDescription,
 		req.Admin,
 	)
 	if err != nil {

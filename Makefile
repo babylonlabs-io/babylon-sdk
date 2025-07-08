@@ -34,7 +34,7 @@ test-integration:
 test-e2e: build-docker-e2e test-e2e-cache
 
 test-e2e-cache:
-	$(MAKE) test-e2e-bcd-consumer-integration
+	$(MAKE) test-e2e-bcd-bsn-integration
 
 clean-e2e:
 	docker container rm -f $(shell docker container ls -a -q) || true
@@ -99,8 +99,8 @@ build-ibcsim-bcd:
 build-babylond:
 	$(MAKE) -C contrib/images babylond
 
-start-bcd-consumer-integration:
-	$(MAKE) -C contrib/images start-bcd-consumer-integration
+start-bcd-bsn-integration:
+	$(MAKE) -C contrib/images start-bcd-bsn-integration
 
-test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
-	@cd tests/e2e && go test -count 1 -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=30m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e
+test-e2e-bcd-bsn-integration: start-bcd-bsn-integration
+	@cd tests/e2e && go test -count 1 -run TestBCDBSNIntegrationTestSuite -mod=readonly -timeout=30m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e

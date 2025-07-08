@@ -11,30 +11,30 @@ import (
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 )
 
-func (app *ConsumerApp) GetIBCKeeper() *ibckeeper.Keeper {
+func (app *BSNApp) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.IBCKeeper
 }
 
-func (app *ConsumerApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+func (app *BSNApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
-func (app *ConsumerApp) GetBaseApp() *baseapp.BaseApp {
+func (app *BSNApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
 }
 
-func (app *ConsumerApp) GetBankKeeper() bankkeeper.Keeper {
+func (app *BSNApp) GetBankKeeper() bankkeeper.Keeper {
 	return app.BankKeeper
 }
 
-func (app *ConsumerApp) GetStakingKeeper() *stakingkeeper.Keeper {
+func (app *BSNApp) GetStakingKeeper() *stakingkeeper.Keeper {
 	return app.StakingKeeper
 }
 
-func (app *ConsumerApp) GetAccountKeeper() authkeeper.AccountKeeper {
+func (app *BSNApp) GetAccountKeeper() authkeeper.AccountKeeper {
 	return app.AccountKeeper
 }
 
-func (app *ConsumerApp) GetWasmKeeper() wasmkeeper.Keeper {
+func (app *BSNApp) GetWasmKeeper() wasmkeeper.Keeper {
 	return app.WasmKeeper
 }

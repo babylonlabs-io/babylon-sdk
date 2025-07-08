@@ -3,9 +3,6 @@
 
 // Core Babylon RPC/gRPC client lives under https://github.com/babylonlabs-io/babylon/tree/main/client/client
 
-// Clientcontroller is adapted from:
-// https://github.com/babylonlabs-io/finality-provider/blob/base/consumer-chain-support/clientcontroller/babylon/babylon.go
-
 package babylon
 
 import (
@@ -14,12 +11,13 @@ import (
 	"math/rand"
 	"net/url"
 
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 
 	sdkErr "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -438,8 +436,8 @@ func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderB
 }
 
 // TODO: only used in test. this should not be put here. it causes confusion that this is a method
-// that will be used when FP runs. in that's the case, it implies it should work all all consumer
-// types. but `bbnClient.QueryClient.FinalityProviders` doesn't work for consumer chains
+// that will be used when FP runs. in that's the case, it implies it should work for all BSN
+// types. but `bbnClient.QueryClient.FinalityProviders` doesn't work for BSNs
 func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.FinalityProviderResponse, error) {
 	var fps []*btcstakingtypes.FinalityProviderResponse
 	pagination := &sdkquery.PageRequest{
@@ -462,30 +460,8 @@ func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.Finali
 	return fps, nil
 }
 
-func (bc *BabylonController) QueryConsumerFinalityProviders(consumerId string) ([]*bsctypes.FinalityProviderResponse, error) {
-	var fps []*bsctypes.FinalityProviderResponse
-	pagination := &sdkquery.PageRequest{
-		Limit: 100,
-	}
-
-	for {
-		res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProviders(consumerId, pagination)
-		if err != nil {
-			return nil, fmt.Errorf("failed to query finality providers: %v", err)
-		}
-		fps = append(fps, res.FinalityProviders...)
-		if res.Pagination == nil || res.Pagination.NextKey == nil {
-			break
-		}
-
-		pagination.Key = res.Pagination.NextKey
-	}
-
-	return fps, nil
-}
-
-func (bc *BabylonController) QueryConsumerFinalityProvider(consumerId, fpBtcPkHex string) (*bsctypes.FinalityProviderResponse, error) {
-	res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProvider(consumerId, fpBtcPkHex)
+func (bc *BabylonController) QueryBSNFinalityProvider(bsnId, fpBtcPkHex string) (*bsctypes.FinalityProviderResponse, error) {
+	res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProvider(bsnId, fpBtcPkHex)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query finality provider: %v", err)
 	}
@@ -663,8 +639,8 @@ func (bc *BabylonController) InsertSpvProofs(submitter string, proofs []*btcctyp
 	return res, nil
 }
 
-// RegisterConsumerChain registers a consumer chain via a MsgRegisterChain to Babylon
-func (bc *BabylonController) RegisterConsumerChain(id, name, description string) (*types.TxResponse, error) {
+// RegisterBSN registers a BSN via a MsgRegisterConsumer to Babylon
+func (bc *BabylonController) RegisterBSN(id, name, description string) (*types.TxResponse, error) {
 	msg := &bsctypes.MsgRegisterConsumer{
 		Signer:              bc.MustGetTxSigner(),
 		ConsumerId:          id,
@@ -770,8 +746,8 @@ func (bc *BabylonController) IBCChannels() (*channeltypes.QueryChannelsResponse,
 	return bc.bbnClient.IBCChannels()
 }
 
-func (bc *BabylonController) QueryConsumerRegistry(consumerID string) (*bsctypes.QueryConsumersRegistryResponse, error) {
-	return bc.bbnClient.QueryConsumersRegistry([]string{consumerID})
+func (bc *BabylonController) QueryConsumerRegistry(bsnID string) (*bsctypes.QueryConsumersRegistryResponse, error) {
+	return bc.bbnClient.QueryConsumersRegistry([]string{bsnID})
 }
 
 func (bc *BabylonController) QueryChannelClientState(channelID, portID string) (*channeltypes.QueryChannelClientStateResponse, error) {

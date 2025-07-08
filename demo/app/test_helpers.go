@@ -53,7 +53,7 @@ type SetupOptions struct {
 	AppOpts            servertypes.AppOptions
 }
 
-func setup(t testing.TB, chainID string, withGenesis bool, invCheckPeriod uint, opts ...wasmkeeper.Option) (*ConsumerApp, GenesisState) {
+func setup(t testing.TB, chainID string, withGenesis bool, invCheckPeriod uint, opts ...wasmkeeper.Option) (*BSNApp, GenesisState) {
 	db := dbm.NewMemDB()
 	nodeHome := t.TempDir()
 	snapshotDir := filepath.Join(nodeHome, "data", "snapshots")
@@ -68,15 +68,15 @@ func setup(t testing.TB, chainID string, withGenesis bool, invCheckPeriod uint, 
 	appOptions[flags.FlagHome] = nodeHome // ensure unique folder
 	appOptions[server.FlagTrace] = true
 	appOptions[server.FlagInvCheckPeriod] = invCheckPeriod
-	app := NewConsumerApp(log.NewNopLogger(), db, nil, true, appOptions, opts, bam.SetChainID(chainID), bam.SetSnapshot(snapshotStore, snapshottypes.SnapshotOptions{KeepRecent: 2}))
+	app := NewBSNApp(log.NewNopLogger(), db, nil, true, appOptions, opts, bam.SetChainID(chainID), bam.SetSnapshot(snapshotStore, snapshottypes.SnapshotOptions{KeepRecent: 2}))
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
 	return app, GenesisState{}
 }
 
-// NewAppWithCustomOptions initializes a new ConsumerApp with custom options.
-func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *ConsumerApp {
+// NewAppWithCustomOptions initializes a new BSNApp with custom options.
+func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *BSNApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -94,7 +94,7 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
-	app := NewConsumerApp(options.Logger, options.DB, nil, true, options.AppOpts, emptyWasmOptions)
+	app := NewBSNApp(options.Logger, options.DB, nil, true, options.AppOpts, emptyWasmOptions)
 	genesisState := NewDefaultGenesisState(app.appCodec)
 	genesisState, err = GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
@@ -122,8 +122,8 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 	return app
 }
 
-// Setup initializes a new ConsumerApp. A Nop logger is set in ConsumerApp.
-func Setup(t *testing.T, opts ...wasmkeeper.Option) *ConsumerApp {
+// Setup initializes a new BSNApp. A Nop logger is set in BSNApp.
+func Setup(t *testing.T, opts ...wasmkeeper.Option) *BSNApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -147,11 +147,11 @@ func Setup(t *testing.T, opts ...wasmkeeper.Option) *ConsumerApp {
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new ConsumerApp with a validator set and genesis accounts
+// SetupWithGenesisValSet initializes a new BSNApp with a validator set and genesis accounts
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit in the default token of the ConsumerApp from first genesis
-// account. A Nop logger is set in ConsumerApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, opts []wasmkeeper.Option, balances ...banktypes.Balance) *ConsumerApp {
+// of one consensus engine unit in the default token of the BSNApp from first genesis
+// account. A Nop logger is set in BSNApp.
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, opts []wasmkeeper.Option, balances ...banktypes.Balance) *BSNApp {
 	t.Helper()
 
 	app, genesisState := setup(t, chainID, true, 5, opts...)
@@ -188,14 +188,14 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 }
 
 // SetupWithEmptyStore set up a wasmd app instance with empty DB
-func SetupWithEmptyStore(t testing.TB) *ConsumerApp {
+func SetupWithEmptyStore(t testing.TB) *BSNApp {
 	app, _ := setup(t, "testing", false, 0)
 	return app
 }
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, app *ConsumerApp) GenesisState {
+func GenesisStateWithSingleValidator(t *testing.T, app *BSNApp) GenesisState {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -225,7 +225,7 @@ func GenesisStateWithSingleValidator(t *testing.T, app *ConsumerApp) GenesisStat
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *ConsumerApp, ctx sdk.Context, accNum int, accAmt math.Int) ([]sdk.AccAddress, error) {
+func AddTestAddrs(app *BSNApp, ctx sdk.Context, accNum int, accAmt math.Int) ([]sdk.AccAddress, error) {
 	testAddrs := createRandomAccounts(accNum)
 
 	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
@@ -252,7 +252,7 @@ func createRandomAccounts(accNum int) []sdk.AccAddress {
 	return testAddrs
 }
 
-func initAccountWithCoins(app *ConsumerApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
+func initAccountWithCoins(app *BSNApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
 		panic(err)
@@ -266,14 +266,14 @@ func initAccountWithCoins(app *ConsumerApp, ctx sdk.Context, addr sdk.AccAddress
 
 // ModuleAccountAddrs provides a list of blocked module accounts from configuration in AppConfig
 //
-// Ported from ConsumerApp
+// Ported from BSNApp
 func ModuleAccountAddrs() map[string]bool {
 	return BlockedAddresses()
 }
 
 var emptyWasmOptions []wasmkeeper.Option
 
-// NewTestNetworkFixture returns a new ConsumerApp AppConstructor for network simulation tests
+// NewTestNetworkFixture returns a new BSNApp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	dir, err := os.MkdirTemp("", "simapp")
 	if err != nil {
@@ -281,9 +281,9 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewConsumerApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simsutils.NewAppOptionsWithFlagHome(dir), emptyWasmOptions)
+	app := NewBSNApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simsutils.NewAppOptionsWithFlagHome(dir), emptyWasmOptions)
 	appCtr := func(val network.ValidatorI) servertypes.Application {
-		return NewConsumerApp(val.GetCtx().Logger, dbm.NewMemDB(), nil, true, simsutils.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir), emptyWasmOptions, bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)), bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices), bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)))
+		return NewBSNApp(val.GetCtx().Logger, dbm.NewMemDB(), nil, true, simsutils.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir), emptyWasmOptions, bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)), bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices), bam.SetChainID(val.GetCtx().Viper.GetString(flags.FlagChainID)))
 	}
 
 	return network.TestFixture{

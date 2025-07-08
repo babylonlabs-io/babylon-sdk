@@ -7,35 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	appwasm "github.com/babylonlabs-io/babylon-sdk/demo/app/wasm"
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmos "github.com/cometbft/cometbft/libs/os"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/std"
-	simsutils "github.com/cosmos/cosmos-sdk/testutil/sims"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
-	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	"github.com/spf13/cast"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -46,6 +20,13 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -59,11 +40,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/std"
+	simsutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -110,13 +94,27 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	"github.com/spf13/cast"
 
-	babylon "github.com/babylonlabs-io/babylon-sdk/x/babylon"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	appwasm "github.com/babylonlabs-io/babylon-sdk/demo/app/wasm"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon"
 	bbnkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
-const appName = "ConsumerApp"
+const appName = "BSNApp"
 
 // We pull these out so we can set them with LDFLAGS in the Makefile
 var (
@@ -146,12 +144,12 @@ var maccPerms = map[string][]string{
 }
 
 var (
-	_ runtime.AppI            = (*ConsumerApp)(nil)
-	_ servertypes.Application = (*ConsumerApp)(nil)
+	_ runtime.AppI            = (*BSNApp)(nil)
+	_ servertypes.Application = (*BSNApp)(nil)
 )
 
-// ConsumerApp extended ABCI application
-type ConsumerApp struct {
+// BSNApp extended ABCI application
+type BSNApp struct {
 	*baseapp.BaseApp
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
@@ -202,8 +200,8 @@ type ConsumerApp struct {
 	configurator module.Configurator
 }
 
-// NewConsumerApp returns a reference to an initialized ConsumerApp.
-func NewConsumerApp(
+// NewBSNApp returns a reference to an initialized BSNApp.
+func NewBSNApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -211,7 +209,7 @@ func NewConsumerApp(
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *ConsumerApp {
+) *BSNApp {
 	encCfg := appparams.DefaultEncodingConfig()
 	interfaceRegistry := encCfg.InterfaceRegistry
 	appCodec := encCfg.Codec
@@ -246,7 +244,7 @@ func NewConsumerApp(
 		panic(err)
 	}
 
-	app := &ConsumerApp{
+	app := &BSNApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -759,7 +757,7 @@ func NewConsumerApp(
 	return app
 }
 
-func (app *ConsumerApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasmtypes.NodeConfig, txCounterStoreKey storetypes.StoreKey) {
+func (app *BSNApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasmtypes.NodeConfig, txCounterStoreKey storetypes.StoreKey) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			HandlerOptions: ante.HandlerOptions{
@@ -780,7 +778,7 @@ func (app *ConsumerApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasm
 	app.SetAnteHandler(anteHandler)
 }
 
-func (app *ConsumerApp) setPostHandler() {
+func (app *BSNApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
 	)
@@ -792,24 +790,24 @@ func (app *ConsumerApp) setPostHandler() {
 }
 
 // Name returns the name of the App
-func (app *ConsumerApp) Name() string { return app.BaseApp.Name() }
+func (app *BSNApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
-func (app *ConsumerApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+func (app *BSNApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	return app.ModuleManager.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
-func (app *ConsumerApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+func (app *BSNApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return app.ModuleManager.EndBlock(ctx)
 }
 
-func (app *ConsumerApp) Configurator() module.Configurator {
+func (app *BSNApp) Configurator() module.Configurator {
 	return app.configurator
 }
 
 // InitChainer application update at chain initialization
-func (app *ConsumerApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func (app *BSNApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -821,7 +819,7 @@ func (app *ConsumerApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain)
 }
 
 // LoadHeight loads a particular height
-func (app *ConsumerApp) LoadHeight(height int64) error {
+func (app *BSNApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
@@ -829,7 +827,7 @@ func (app *ConsumerApp) LoadHeight(height int64) error {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *ConsumerApp) LegacyAmino() *codec.LegacyAmino {
+func (app *BSNApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
@@ -837,16 +835,16 @@ func (app *ConsumerApp) LegacyAmino() *codec.LegacyAmino {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *ConsumerApp) AppCodec() codec.Codec {
+func (app *BSNApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns ConsumerApp's InterfaceRegistry
-func (app *ConsumerApp) InterfaceRegistry() types.InterfaceRegistry {
+// InterfaceRegistry returns BSNApp's InterfaceRegistry
+func (app *BSNApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
-func (app *ConsumerApp) EncodingConfig() *appparams.EncodingConfig {
+func (app *BSNApp) EncodingConfig() *appparams.EncodingConfig {
 	return &appparams.EncodingConfig{
 		InterfaceRegistry: app.InterfaceRegistry(),
 		Codec:             app.AppCodec(),
@@ -855,53 +853,53 @@ func (app *ConsumerApp) EncodingConfig() *appparams.EncodingConfig {
 	}
 }
 
-// TxConfig returns ConsumerApp's TxConfig
-func (app *ConsumerApp) TxConfig() client.TxConfig {
+// TxConfig returns BSNApp's TxConfig
+func (app *BSNApp) TxConfig() client.TxConfig {
 	return app.txConfig
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
-func (app *ConsumerApp) DefaultGenesis() map[string]json.RawMessage {
+func (app *BSNApp) DefaultGenesis() map[string]json.RawMessage {
 	return app.BasicModuleManager.DefaultGenesis(app.appCodec)
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *ConsumerApp) GetKey(storeKey string) *storetypes.KVStoreKey {
+func (app *BSNApp) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *ConsumerApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
+func (app *BSNApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *ConsumerApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
+func (app *BSNApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *ConsumerApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *BSNApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *ConsumerApp) SimulationManager() *module.SimulationManager {
+func (app *BSNApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *ConsumerApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *BSNApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -921,17 +919,17 @@ func (app *ConsumerApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 	}
 }
 
-func (app *ConsumerApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+func (app *BSNApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *ConsumerApp) RegisterTxService(clientCtx client.Context) {
+func (app *BSNApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *ConsumerApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *BSNApp) RegisterTendermintService(clientCtx client.Context) {
 	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
@@ -990,8 +988,8 @@ func TestAppOptions() simsutils.AppOptionsMap {
 	return appOpts
 }
 
-func NewTmpApp() *ConsumerApp {
-	return NewConsumerApp(
+func NewTmpApp() *BSNApp {
+	return NewBSNApp(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		nil,

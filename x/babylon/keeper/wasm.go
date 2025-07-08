@@ -8,9 +8,10 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
-	types "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 func (k Keeper) InstantiateBabylonContracts(
@@ -66,7 +67,7 @@ func (k Keeper) getBTCLightClientContractAddr(ctx sdk.Context) sdk.AccAddress {
 	addr, err := sdk.AccAddressFromBech32(addrStr)
 	if err != nil {
 		// Although this is a programming error so we should panic, we emit
-		// a warning message to minimise the impact on the consumer chain's operation
+		// a warning message to minimise the impact on the BSNs' operation
 		k.Logger(ctx).Warn("the BTC light client contract address is malformed", "contract", addrStr, "error", err)
 		return nil
 	}
