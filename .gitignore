@@ -21,6 +21,8 @@ vendor/
 
 .vscode/
 
+.DS_Store
+
 # Go workspace file
 coverage.txt
 
