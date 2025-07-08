@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
