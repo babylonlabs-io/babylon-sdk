@@ -57,12 +57,11 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
@@ -236,14 +235,6 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 	msgRouter := baseapp.NewMsgServiceRouter()
 	msgRouter.SetInterfaceRegistry(encConfig.InterfaceRegistry)
 
-	capabilityKeeper := capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedWasmKeeper := capabilityKeeper.ScopeToModule(types.ModuleName)
-
 	paramsKeeper := paramskeeper.NewKeeper(
 		appCodec,
 		encConfig.Amino,
@@ -262,11 +253,9 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 
 	ibcKeeper := ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibcexported.StoreKey],
+		runtime.NewKVStoreService(keys[ibcexported.StoreKey]),
 		paramsKeeper.Subspace(ibcexported.ModuleName),
-		stakingKeeper,
 		upgradeKeeper,
-		scopedIBCKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -280,10 +269,8 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		bankKeeper,
 		stakingKeeper,
 		distributionkeeper.NewQuerier(distKeeper),
-		ibcKeeper.ChannelKeeper, // ICS4Wrapper
 		ibcKeeper.ChannelKeeper,
-		ibcKeeper.PortKeeper,
-		scopedWasmKeeper,
+		ibcKeeper.ChannelKeeper,
 		wasmtesting.MockIBCTransferKeeper{},
 		msgRouter,
 		querier,
