@@ -10,10 +10,11 @@ jobs:
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
      run-unit-tests: true
-     run-integration-tests: true
+      # NOTE: Temporarily block integration-tests due to ibc version compatibility issue
+     run-integration-tests: false
      integration-tests-command: |
       make test-integration
-     
+
   docker_pipeline:
     uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.11.2
     needs: ["test"]
