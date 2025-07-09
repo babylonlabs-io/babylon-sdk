@@ -7,32 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/log"
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	appwasm "github.com/babylonlabs-io/babylon-sdk/demo/app/wasm"
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmos "github.com/cometbft/cometbft/libs/os"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/std"
-	simsutils "github.com/cosmos/cosmos-sdk/testutil/sims"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v10/modules/core"
-	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
-	"github.com/spf13/cast"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -43,6 +20,13 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -56,11 +40,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/std"
+	simsutils "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -104,8 +91,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/v10/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
+	"github.com/spf13/cast"
 
-	babylon "github.com/babylonlabs-io/babylon-sdk/x/babylon"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	appwasm "github.com/babylonlabs-io/babylon-sdk/demo/app/wasm"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon"
 	bbnkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
@@ -141,6 +140,7 @@ var maccPerms = map[string][]string{
 var (
 	_ runtime.AppI            = (*ConsumerApp)(nil)
 	_ servertypes.Application = (*ConsumerApp)(nil)
+	_ ibctesting.TestingApp   = (*ConsumerApp)(nil)
 )
 
 // ConsumerApp extended ABCI application
@@ -186,6 +186,10 @@ type ConsumerApp struct {
 
 	// module configurator
 	configurator module.Configurator
+}
+
+func (app *ConsumerApp) GetTxConfig() client.TxConfig {
+	return app.txConfig
 }
 
 // NewConsumerApp returns a reference to an initialized ConsumerApp.
