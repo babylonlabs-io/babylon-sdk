@@ -62,7 +62,7 @@ LABEL org.opencontainers.image.source="https://github.com/babylonlabs-io/babylon
 # COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
 # COPY --from=build-env /lib/ld-musl*.so.1* /lib
 
-COPY --from=build-env /go/src/github.com/babylonlabs-io/babylon/v3/build/babylond /bin/babylond
+COPY --from=build-env /go/src/github.com/babylonlabs-io/babylon/build/babylond /bin/babylond
 
 # Set home directory and user
 WORKDIR /home/babylon
