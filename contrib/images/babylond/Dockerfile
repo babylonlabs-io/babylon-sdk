@@ -5,7 +5,7 @@ FROM golang:1.23-alpine AS build-env
 # TARGETPLATFORM should be one of linux/amd64 or linux/arm64.
 ARG TARGETPLATFORM="linux/amd64"
 # Version to build. Default is empty
-ARG VERSION="v1.99.0-snapshot.250505"
+ARG VERSION="v3.0.0-snapshot.250709"
 ARG BABYLON_BUILD_OPTIONS=""
 ARG COSMOS_BUILD_OPTIONS=""
 
@@ -62,7 +62,7 @@ LABEL org.opencontainers.image.source="https://github.com/babylonlabs-io/babylon
 # COPY --from=build-env /usr/lib/libgcc_s.so.1 /lib/
 # COPY --from=build-env /lib/ld-musl*.so.1* /lib
 
-COPY --from=build-env /go/src/github.com/babylonlabs-io/babylon/build/babylond /bin/babylond
+COPY --from=build-env /go/src/github.com/babylonlabs-io/babylon/v3/build/babylond /bin/babylond
 
 # Set home directory and user
 WORKDIR /home/babylon
