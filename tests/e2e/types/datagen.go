@@ -141,6 +141,7 @@ func genBTCDelegation() (*bstypes.Params, ActiveBtcDelegation) {
 		net,
 		fpBTCPKs,
 		delSK,
+		"",
 		covenantSigners,
 		covenantPKs,
 		covenantQuorum,

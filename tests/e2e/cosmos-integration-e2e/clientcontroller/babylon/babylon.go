@@ -441,14 +441,14 @@ func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderB
 // TODO: only used in test. this should not be put here. it causes confusion that this is a method
 // that will be used when FP runs. in that's the case, it implies it should work all all consumer
 // types. but `bbnClient.QueryClient.FinalityProviders` doesn't work for consumer chains
-func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.FinalityProviderResponse, error) {
+func (bc *BabylonController) QueryFinalityProviders(consumerId string) ([]*btcstakingtypes.FinalityProviderResponse, error) {
 	var fps []*btcstakingtypes.FinalityProviderResponse
 	pagination := &sdkquery.PageRequest{
 		Limit: 100,
 	}
 
 	for {
-		res, err := bc.bbnClient.QueryClient.FinalityProviders(pagination)
+		res, err := bc.bbnClient.QueryClient.FinalityProviders(consumerId, pagination)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query finality providers: %v", err)
 		}
@@ -461,15 +461,6 @@ func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.Finali
 	}
 
 	return fps, nil
-}
-
-func (bc *BabylonController) QueryConsumerFinalityProvider(consumerId, fpBtcPkHex string) (*bsctypes.FinalityProviderResponse, error) {
-	res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProvider(consumerId, fpBtcPkHex)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query finality provider: %v", err)
-	}
-
-	return res, nil
 }
 
 func (bc *BabylonController) QueryBtcLightClientTip() (*btclctypes.BTCHeaderInfoResponse, error) {
