@@ -12,7 +12,8 @@ Mention whether you follow Semantic Versioning.
 Usage:
 
 Change log entries are to be added to the Unreleased section under the
-appropriate stanza (see below). Each entry should have following format:
+appropriate stanza (see below). Each entry should have the following
+format:
 
 * [#PullRequestNumber](PullRequestLink) message
 
