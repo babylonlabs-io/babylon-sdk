@@ -12,13 +12,8 @@ import (
 	"time"
 
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
-	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
 
 	sdkmath "cosmossdk.io/math"
-	wasmparams "github.com/CosmWasm/wasmd/app/params"
-	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
-	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbnparams "github.com/babylonlabs-io/babylon/v3/app/params"
 	txformat "github.com/babylonlabs-io/babylon/v3/btctxformatter"
 	"github.com/babylonlabs-io/babylon/v3/client/config"
@@ -38,7 +33,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
@@ -83,8 +77,7 @@ func TestBCDConsumerIntegrationTestSuite(t *testing.T) {
 type BCDConsumerIntegrationTestSuite struct {
 	suite.Suite
 
-	babylonController  *babylon.BabylonController
-	cosmwasmController *cosmwasm.CosmwasmConsumerController
+	babylonController *babylon.BabylonController
 }
 
 func (s *BCDConsumerIntegrationTestSuite) SetupSuite() {
@@ -92,9 +85,6 @@ func (s *BCDConsumerIntegrationTestSuite) SetupSuite() {
 
 	err := s.initBabylonController()
 	s.Require().NoError(err, "Failed to initialize BabylonController")
-
-	err = s.initCosmwasmController()
-	s.Require().NoError(err, "Failed to initialize CosmwasmConsumerController")
 }
 
 func (s *BCDConsumerIntegrationTestSuite) TearDownSuite() {
@@ -122,9 +112,8 @@ func (s *BCDConsumerIntegrationTestSuite) TearDownSuite() {
 
 func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 	var (
-		babylonStatus  *coretypes.ResultStatus
-		consumerStatus *coretypes.ResultStatus
-		err            error
+		babylonStatus *coretypes.ResultStatus
+		err           error
 	)
 
 	// Use Babylon controller
@@ -133,13 +122,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 		return err == nil && babylonStatus != nil && babylonStatus.SyncInfo.LatestBlockHeight >= 1
 	}, time.Minute, time.Second, "Failed to query Babylon node status", err)
 	s.T().Logf("Babylon node status: %v", babylonStatus.SyncInfo.LatestBlockHeight)
-
-	// Use Cosmwasm controller
-	s.Eventually(func() bool {
-		consumerStatus, err = s.cosmwasmController.GetCometNodeStatus()
-		return err == nil && consumerStatus != nil && consumerStatus.SyncInfo.LatestBlockHeight >= 1
-	}, time.Minute, time.Second, "Failed to query Consumer node status", err)
-	s.T().Logf("Consumer node status: %v", consumerStatus.SyncInfo.LatestBlockHeight)
 }
 
 // Test02RegisterAndIntegrateConsumer registers a new consumer and
@@ -200,9 +182,9 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 
 	// Headers should propagate from Babylon -> Consumer
 	s.T().Log("Waiting for headers to propagate to Consumer chain")
-	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
+	var consumerBtcHeaders *babylon.BtcHeadersResponse
 	s.Eventually(func() bool {
-		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
+		consumerBtcHeaders, err = s.babylonController.QueryContractBtcHeaders(nil)
 		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain", len(consumerBtcHeaders.Headers))
@@ -254,7 +236,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	// Fork headers should propagate from Babylon -> Consumer
 	s.T().Log("Waiting for fork headers to propagate to Consumer chain")
 	s.Eventually(func() bool {
-		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
+		consumerBtcHeaders, err = s.babylonController.QueryContractBtcHeaders(nil)
 		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain after fork", len(consumerBtcHeaders.Headers))
@@ -285,7 +267,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 		consumerFps = append(consumerFps, consumerFp)
 	}
 
-	dataFromContract, err := s.cosmwasmController.QueryFinalityProviders()
+	dataFromContract, err := s.babylonController.QueryContractFinalityProviders()
 	s.Require().NoError(err)
 
 	// create a map of expected finality providers for verification
@@ -361,7 +343,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	randListInfo2 = randListInfo
 
 	// Submit the public randomness to the consumer chain
-	txResp, err := s.cosmwasmController.CommitPubRandList(
+	txResp, err := s.babylonController.ContractCommitPubRandList(
 		consumerFpBTCPK,
 		consumerInitialHeight,
 		numPubRand,
@@ -372,7 +354,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	s.NotNil(txResp)
 
 	// wait until the consumer chain has finalized the current height
-	consumerHeight, err := s.cosmwasmController.QueryLatestBlockHeight()
+	consumerHeight, err := s.babylonController.GetCurrentHeight()
 	s.NoError(err)
 	s.T().Logf("Wait until consumer chain has finalized height %d", consumerHeight)
 	s.finalizeUntilConsumerHeight(consumerHeight)
@@ -407,9 +389,9 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	s.True(activeDel.HasCovenantQuorums(1))
 
 	// Query the staking contract for delegations on the consumer chain
-	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
+	var dataFromContract *babylon.ConsumerDelegationsResponse
 	s.Eventually(func() bool {
-		dataFromContract, err = s.cosmwasmController.QueryDelegations()
+		dataFromContract, err = s.babylonController.QueryContractDelegations()
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 1
 	}, time.Minute*2, time.Second)
 
@@ -427,7 +409,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 
 	// Query and assert finality provider voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
@@ -444,25 +426,26 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	s.Require().NotNil(consumerFp)
 
 	// Get the activated block height and block on the consumer chain
-	consumerActivatedHeight, err := s.cosmwasmController.QueryActivatedHeight()
+	consumerActivatedHeightResp, err := s.babylonController.QueryActivatedHeight()
 	s.NoError(err)
-	consumerActivatedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerActivatedHeight)
+	consumerActivatedHeight := consumerActivatedHeightResp.Height
+	consumerActivatedBlock, err := s.babylonController.QueryIndexedBlock(consumerActivatedHeight)
 	s.NoError(err)
 	s.NotNil(consumerActivatedBlock)
 
 	// Ensure the finality contract balance is initially empty
-	rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
+	rewards, err := s.babylonController.QueryContractFinalityContractBalances()
 	s.NoError(err)
 	s.Empty(rewards)
 
 	// Ensure the staking contract balance is initially empty
-	balance, err := s.cosmwasmController.QueryStakingContractBalances()
+	balance, err := s.babylonController.QueryContractStakingContractBalances()
 	s.NoError(err)
 	s.Empty(balance)
 
 	// Consumer finality provider submits finality signature for first activated
 	// block to the consumer chain
-	_, err = s.cosmwasmController.SubmitFinalitySig(
+	_, err = s.babylonController.ContractSubmitFinalitySig(
 		consumerFpBTCSK,
 		consumerFpBTCPK,
 		randListInfo2.SRList[consumerActivatedHeight-1],
@@ -475,7 +458,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 
 	// Ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
+		fpSigsResponse, err := s.babylonController.QueryContractFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -487,7 +470,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 
 	// Once the vote is cast, ensure the block is finalised
-	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(consumerActivatedHeight))
+	finalizedBlock, err := s.babylonController.QueryIndexedBlock(uint64(consumerActivatedHeight))
 	fmt.Println("Finalized block: ", finalizedBlock)
 	s.NoError(err)
 	s.NotEmpty(finalizedBlock)
@@ -497,7 +480,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	// Ensure consumer rewards are generated.
 	// Initially sent to the finality contract, then sent to the staking contract.
 	s.Eventually(func() bool {
-		balance, err := s.cosmwasmController.QueryStakingContractBalances()
+		balance, err := s.babylonController.QueryContractStakingContractBalances()
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
@@ -517,7 +500,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 
 	// Assert rewards are distributed among delegators
 	// Get staker address through a delegations query
-	delegations, err := s.cosmwasmController.QueryDelegations()
+	delegations, err := s.babylonController.QueryContractDelegations()
 	s.NoError(err)
 	s.Len(delegations.Delegations, 1)
 	delegation := delegations.Delegations[0]
@@ -525,7 +508,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	s.Len(delegation.FpBtcPkList, 2)
 
 	// Get staker pending rewards
-	pendingRewards, err := s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
+	pendingRewards, err := s.babylonController.QueryContractAllPendingRewards(stakerAddr, nil, nil)
 	s.NoError(err)
 	s.Len(pendingRewards.Rewards, 1)
 	// Assert pending rewards for this staker are greater than 0
@@ -534,7 +517,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	// Withdraw rewards for this staker and FP
 	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
 	fmt.Println("Withdrawing rewards for staker: ", stakerAddr, " and FP: ", fpPubkeyHex)
-	withdrawRewardsTx, err := s.cosmwasmController.WithdrawRewards(stakerAddr, fpPubkeyHex)
+	withdrawRewardsTx, err := s.babylonController.WithdrawRewards(stakerAddr, fpPubkeyHex)
 	s.NoError(err)
 	s.NotNil(withdrawRewardsTx)
 
@@ -643,7 +626,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 
 	// query and assert finality provider voting power is zero after slashing
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
 			return false
@@ -675,15 +658,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.submitCovenantSigs(consumerFp.FinalityProvider)
 
 	// query the staking contract for delegations on the consumer chain
-	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
+	var dataFromContract *babylon.ConsumerDelegationsResponse
 	s.Eventually(func() bool {
-		dataFromContract, err = s.cosmwasmController.QueryDelegations()
+		dataFromContract, err = s.babylonController.QueryContractDelegations()
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 2
 	}, time.Second*30, time.Second)
 
 	// query and assert consumer finality provider's voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
@@ -693,11 +676,11 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 
 	// get the latest block height and block on the consumer chain
-	consumerNodeStatus, err := s.cosmwasmController.GetCometNodeStatus()
+	consumerNodeStatus, err := s.babylonController.QueryNodeStatus()
 	s.NoError(err)
 	s.NotNil(consumerNodeStatus)
 	consumerLatestBlockHeight := uint64(consumerNodeStatus.SyncInfo.LatestBlockHeight)
-	consumerLatestBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerLatestBlockHeight)
+	consumerLatestBlock, err := s.babylonController.QueryIndexedBlock(consumerLatestBlockHeight)
 	s.NoError(err)
 	s.NotNil(consumerLatestBlock)
 
@@ -705,7 +688,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, "", consumerLatestBlockHeight, 200)
 	s.NoError(err)
 
-	txResp, err := s.cosmwasmController.CommitPubRandList(consumerFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
+	txResp, err := s.babylonController.ContractCommitPubRandList(consumerFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
 	s.NoError(err)
 	s.NotNil(txResp)
 
@@ -713,7 +696,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.finalizeUntilConsumerHeight(consumerLatestBlockHeight)
 
 	// Consumer finality provider submits finality signature
-	_, err = s.cosmwasmController.SubmitFinalitySig(
+	_, err = s.babylonController.ContractSubmitFinalitySig(
 		consumerFpBTCSK2,
 		consumerFpBTCPK2,
 		randListInfo.SRList[0],
@@ -726,7 +709,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerLatestBlockHeight))
+		fpSigsResponse, err := s.babylonController.QueryContractFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerLatestBlockHeight))
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -738,7 +721,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 
 	// consumer finality provider submits invalid finality signature
-	txResp, err = s.cosmwasmController.SubmitInvalidFinalitySig(
+	txResp, err = s.babylonController.ContractSubmitInvalidFinalitySig(
 		r,
 		consumerFpBTCSK2,
 		consumerFpBTCPK2,
@@ -752,13 +735,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// ensure consumer finality provider is slashed
 	s.Eventually(func() bool {
-		fp, err := s.cosmwasmController.QueryFinalityProvider(consumerFp.FinalityProvider.BtcPk.MarshalHex())
-		return err == nil && fp != nil && fp.SlashedHeight > 0
+		fp, err := s.babylonController.QueryFinalityProvider(consumerFp.FinalityProvider.BtcPk.MarshalHex())
+		return err == nil && fp != nil && fp.FinalityProvider.SlashedBtcHeight > 0
 	}, time.Minute, time.Second*5)
 
 	// query and assert consumer finality provider's voting power is zero after slashing
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
 			return false
@@ -827,15 +810,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 	s.submitCovenantSigs(consumerFp.FinalityProvider)
 
 	// query the staking contract for delegations on the consumer chain
-	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
+	var dataFromContract *babylon.ConsumerDelegationsResponse
 	s.Eventually(func() bool {
-		dataFromContract, err = s.cosmwasmController.QueryDelegations()
+		dataFromContract, err = s.babylonController.QueryContractDelegations()
 		return err == nil && dataFromContract != nil
 	}, time.Second*30, time.Second)
 
 	// query and assert consumer finality provider's voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
@@ -851,7 +834,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 
 	// query and assert consumer finality provider's voting power is zero after inserting headers
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		fpInfo, err := s.babylonController.QueryContractFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		return err == nil && fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 }
@@ -975,12 +958,12 @@ func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bstypes
 
 	// ensure BTC staking is activated
 	s.Eventually(func() bool {
-		activatedHeight, err := s.babylonController.QueryActivatedHeight()
+		activatedHeightResp, err := s.babylonController.QueryActivatedHeight()
 		if err != nil {
 			s.T().Logf("Error querying activated height: %v", err)
 			return false
 		}
-		return activatedHeight != nil && activatedHeight.Height > 0
+		return activatedHeightResp != nil && activatedHeightResp.Height > 0
 	}, 90*time.Second, time.Second*5)
 }
 
@@ -1239,40 +1222,6 @@ func (s *BCDConsumerIntegrationTestSuite) initBabylonController() error {
 	return nil
 }
 
-// helper function: initCosmwasmController initializes the Cosmwasm controller with the default configuration.
-func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
-	cfg := cwconfig.DefaultCosmwasmConfig()
-
-	// Get the current working directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		s.T().Fatalf("Failed to get current working directory: %v", err)
-	}
-
-	cfg.ChainID = "bcd-test"
-	cfg.KeyDirectory = filepath.Join(currentDir, "../../contrib/images/ibcsim-bcd/.testnets/bcd/bcd-test")
-	cfg.AccountPrefix = "bbnc"
-
-	// Create a logger
-	logger, _ := zap.NewDevelopment()
-
-	sdk.SetAddrCacheEnabled(false)
-	bcdparams.SetAddressPrefixes()
-	tempApp := bcdapp.NewTmpApp()
-	encodingCfg := wasmparams.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
-	}
-
-	wcc, err := cosmwasm.NewCosmwasmConsumerController(cfg, encodingCfg, logger)
-	require.NoError(s.T(), err)
-
-	s.cosmwasmController = wcc
-	return nil
-}
-
 // helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
 // Consumer.
 func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
@@ -1298,10 +1247,10 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		return true
 	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon custom IBC channel")
 
-	// TODO: For cosmwasmChannel, we need to use ibc v8 as cosmos client has not bumped
+	// TODO: For channel query, we need to use ibc v8 as cosmos client has not bumped
 	var consumerChannel *channeltypes.IdentifiedChannel
 	s.Eventually(func() bool {
-		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()
+		consumerChannelsResp, err := s.babylonController.IBCChannels()
 		if err != nil {
 			s.T().Logf("Error querying Consumer IBC channels: %v", err)
 			return false
@@ -1341,7 +1290,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 	}, time.Minute*3, time.Second*10, "Failed to get expected Babylon transfer IBC channel")
 
 	s.Eventually(func() bool {
-		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()
+		consumerChannelsResp, err := s.babylonController.IBCChannels()
 		if err != nil {
 			s.T().Logf("Error querying Consumer IBC channels: %v", err)
 			return false
@@ -1402,7 +1351,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 func (s *BCDConsumerIntegrationTestSuite) finalizeUntilConsumerHeight(consumerHeight uint64) {
 	s.Eventually(func() bool {
 		s.finalizeNextEpoch()
-		consumerLastTimestampedHeader, err := s.cosmwasmController.QueryLastBTCTimestampedHeader()
+		consumerLastTimestampedHeader, err := s.babylonController.QueryContractLastBTCTimestampedHeader()
 		if err != nil {
 			s.T().Logf("error querying last timestamped header: %v", err)
 			return false

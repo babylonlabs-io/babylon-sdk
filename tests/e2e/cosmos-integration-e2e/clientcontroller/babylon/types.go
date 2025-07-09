@@ -1,18 +1,16 @@
-package cosmwasm
+package babylon
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Contract message structures for CosmWasm integration
+// These types are used for interacting with Babylon smart contracts
+
 type ConsumerFpsResponse struct {
 	Fps []SingleConsumerFpResponse `json:"fps"`
 }
 
-// SingleConsumerFpResponse represents the finality provider data returned by the contract query.
-// For more details, refer to the following links:
-// https://github.com/babylonchain/babylon-contract/blob/v0.5.3/packages/apis/src/btc_staking_api.rs
-// https://github.com/babylonchain/babylon-contract/blob/v0.5.3/contracts/btc-staking/src/msg.rs
-// https://github.com/babylonchain/babylon-contract/blob/v0.5.3/contracts/btc-staking/schema/btc-staking.json
 type SingleConsumerFpResponse struct {
 	BtcPkHex         string `json:"btc_pk_hex"`
 	SlashedHeight    uint64 `json:"slashed_height"`
@@ -135,6 +133,7 @@ type UnbondedBtcDelegation struct {
 	// Define fields as needed
 }
 
+// Contract execution messages
 type ExecMsg struct {
 	BtcStaking              *BtcStaking              `json:"btc_staking,omitempty"`
 	SubmitFinalitySignature *SubmitFinalitySignature `json:"submit_finality_signature,omitempty"`
@@ -183,6 +182,7 @@ type WithdrawRewards struct {
 	FpPubkeyHex string `json:"fp_pubkey_hex"`
 }
 
+// Query message structures
 type QueryMsgFinalityProviderInfo struct {
 	FinalityProviderInfo FinalityProviderInfo `json:"finality_provider_info"`
 }

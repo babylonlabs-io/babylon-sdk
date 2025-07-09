@@ -33,13 +33,11 @@ require (
 	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250407051200-a5d652116d6d
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250407051200-a5d652116d6d
 	github.com/babylonlabs-io/babylon/v3 v3.0.0-20250707142850-fd530110d705
-	github.com/babylonlabs-io/cosmwasm-client v0.0.0-20250709092114-890c2b584ff7
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/btcsuite/btcd/btcutil v1.1.6
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/ibc-go/v10 v10.2.0
-	github.com/cosmos/relayer/v2 v2.5.3
 	go.uber.org/zap v1.26.0
 )
 
@@ -111,9 +109,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v10 v10.1.0 // indirect
 	github.com/cosmos/ibc-apps/modules/rate-limiting/v10 v10.1.0 // indirect
-	github.com/cosmos/ibc-go/modules/capability v1.0.1 // indirect
 	github.com/cosmos/ibc-go/modules/light-clients/08-wasm/v10 v10.1.1 // indirect
-	github.com/cosmos/ibc-go/v8 v8.7.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
@@ -201,7 +197,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -237,7 +232,6 @@ require (
 	github.com/spf13/afero v1.12.0 // indirect
 	github.com/spf13/viper v1.20.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
-	github.com/strangelove-ventures/cometbft-client v0.1.1 // indirect
 	github.com/strangelove-ventures/tokenfactory v0.50.6-wasmvm2 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -251,7 +245,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.1.3 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
@@ -288,7 +281,6 @@ require (
 	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
-	rsc.io/qr v0.2.0 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
