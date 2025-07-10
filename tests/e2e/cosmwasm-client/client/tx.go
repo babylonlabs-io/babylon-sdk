@@ -8,16 +8,16 @@ import (
 	"cosmossdk.io/errors"
 	"github.com/avast/retry-go/v4"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/relayer/v2/relayer/chains/cosmos"
-	pv "github.com/cosmos/relayer/v2/relayer/provider"
 	"go.uber.org/zap"
+
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/wasmclient"
 )
 
 // ToProviderMsgs converts a list of sdk.Msg to a list of provider.RelayerMessage
-func ToProviderMsgs(msgs []sdk.Msg) []pv.RelayerMessage {
-	relayerMsgs := []pv.RelayerMessage{}
+func ToProviderMsgs(msgs []sdk.Msg) []wasmclient.RelayerMessage {
+	relayerMsgs := []wasmclient.RelayerMessage{}
 	for _, m := range msgs {
-		relayerMsgs = append(relayerMsgs, cosmos.NewCosmosMessage(m, func(signer string) {}))
+		relayerMsgs = append(relayerMsgs, wasmclient.NewCosmosMessage(m, func(signer string) {}))
 	}
 	return relayerMsgs
 }
@@ -38,7 +38,7 @@ func (c *Client) SendMsgsToMempool(ctx context.Context, msgs []sdk.Msg) error {
 	if err := retry.Do(func() error {
 		var sendMsgErr error
 		krErr := c.accessKeyWithLock(func() {
-			sendMsgErr = c.provider.SendMessagesToMempool(ctx, relayerMsgs, "", ctx, []func(*pv.RelayerTxResponse, error){})
+			sendMsgErr = c.provider.SendMessagesToMempool(ctx, relayerMsgs, "", ctx, []func(*wasmclient.RelayerTxResponse, error){})
 		})
 		if krErr != nil {
 			c.logger.Error("unrecoverable err when submitting the tx, skip retrying", zap.Error(krErr))
@@ -55,26 +55,26 @@ func (c *Client) SendMsgsToMempool(ctx context.Context, msgs []sdk.Msg) error {
 }
 
 // SendMsg sends a message to the chain.
-func (c *Client) SendMsg(ctx context.Context, msg sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error) (*pv.RelayerTxResponse, error) {
+func (c *Client) SendMsg(ctx context.Context, msg sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error) (*wasmclient.RelayerTxResponse, error) {
 	return c.SendMsgs(ctx, []sdk.Msg{msg}, expectedErrors, unrecoverableErrors)
 }
 
 // SendMsgs sends a list of messages to the chain.
-func (c *Client) SendMsgs(ctx context.Context, msgs []sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error) (*pv.RelayerTxResponse, error) {
+func (c *Client) SendMsgs(ctx context.Context, msgs []sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error) (*wasmclient.RelayerTxResponse, error) {
 	return c.ReliablySendMsgs(ctx, msgs, expectedErrors, unrecoverableErrors, 1)
 }
 
 // ReliablySendMsg reliable sends a message to the chain.
 // It utilizes a file lock as well as a keyring lock to ensure atomic access.
 // TODO: needs tests
-func (c *Client) ReliablySendMsg(ctx context.Context, msg sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error, retries ...uint) (*pv.RelayerTxResponse, error) {
+func (c *Client) ReliablySendMsg(ctx context.Context, msg sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error, retries ...uint) (*wasmclient.RelayerTxResponse, error) {
 	return c.ReliablySendMsgs(ctx, []sdk.Msg{msg}, expectedErrors, unrecoverableErrors, retries...)
 }
 
 // ReliablySendMsgs reliably sends a list of messages to the chain.
 // It utilizes a file lock as well as a keyring lock to ensure atomic access.
 // TODO: needs tests
-func (c *Client) ReliablySendMsgs(ctx context.Context, msgs []sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error, retries ...uint) (*pv.RelayerTxResponse, error) {
+func (c *Client) ReliablySendMsgs(ctx context.Context, msgs []sdk.Msg, expectedErrors []*errors.Error, unrecoverableErrors []*errors.Error, retries ...uint) (*wasmclient.RelayerTxResponse, error) {
 	rty := rtyAttNum
 	rtyAttempts := rtyAtt
 	if len(retries) > 0 {
@@ -85,12 +85,12 @@ func (c *Client) ReliablySendMsgs(ctx context.Context, msgs []sdk.Msg, expectedE
 	defer c.mu.Unlock()
 
 	var (
-		rlyResp     *pv.RelayerTxResponse
+		rlyResp     *wasmclient.RelayerTxResponse
 		callbackErr error
 		wg          sync.WaitGroup
 	)
 
-	callback := func(rtr *pv.RelayerTxResponse, err error) {
+	callback := func(rtr *wasmclient.RelayerTxResponse, err error) {
 		rlyResp = rtr
 		callbackErr = err
 		wg.Done()
@@ -105,7 +105,7 @@ func (c *Client) ReliablySendMsgs(ctx context.Context, msgs []sdk.Msg, expectedE
 	if err := retry.Do(func() error {
 		var sendMsgErr error
 		krErr := c.accessKeyWithLock(func() {
-			sendMsgErr = c.provider.SendMessagesToMempool(ctx, relayerMsgs, "", ctx, []func(*pv.RelayerTxResponse, error){callback})
+			sendMsgErr = c.provider.SendMessagesToMempool(ctx, relayerMsgs, "", ctx, []func(*wasmclient.RelayerTxResponse, error){callback})
 		})
 		if krErr != nil {
 			c.logger.Error("unrecoverable err when submitting the tx, skip retrying", zap.Error(krErr))

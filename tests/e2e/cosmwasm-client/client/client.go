@@ -1,15 +1,14 @@
 package client
 
 import (
-	"context"
 	"sync"
 	"time"
 
 	wasmdparams "github.com/CosmWasm/wasmd/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/query"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/wasmclient"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cosmos/relayer/v2/relayer/chains/cosmos"
 	"go.uber.org/zap"
 )
 
@@ -17,7 +16,7 @@ type Client struct {
 	mu sync.Mutex
 	*query.QueryClient
 
-	provider *cosmos.CosmosProvider
+	provider *wasmclient.CosmosProvider
 	timeout  time.Duration
 	logger   *zap.Logger
 	cfg      *config.CosmwasmConfig
@@ -44,29 +43,22 @@ func New(cfg *config.CosmwasmConfig, chainName string, encodingCfg wasmdparams.E
 	}
 
 	provider, err := cfg.ToCosmosProviderConfig().NewProvider(
-		zapLogger,
 		"", // TODO: set home path
-		true,
 		chainName,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	cp := provider.(*cosmos.CosmosProvider)
+	cp := provider.(*wasmclient.CosmosProvider)
 	cp.PCfg.KeyDirectory = cfg.KeyDirectory
-	cp.Cdc = cosmos.Codec{
-		InterfaceRegistry: encodingCfg.InterfaceRegistry,
-		Marshaler:         encodingCfg.Codec,
-		TxConfig:          encodingCfg.TxConfig,
-		Amino:             encodingCfg.Amino,
-	}
+	cp.Cdc = &encodingCfg
 
 	// initialise Cosmos provider
 	// NOTE: this will create a RPC client. The RPC client will be used for
 	// submitting txs and making ad hoc queries. It won't create WebSocket
 	// connection with wasmd node
-	err = cp.Init(context.Background())
+	err = cp.Init()
 	if err != nil {
 		return nil, err
 	}

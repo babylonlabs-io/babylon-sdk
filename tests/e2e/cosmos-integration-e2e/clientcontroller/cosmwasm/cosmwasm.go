@@ -28,6 +28,8 @@ import (
 	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 	cwcclient "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/client"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/wasmclient"
+
 	"github.com/babylonlabs-io/babylon/v3/crypto/eots"
 	"github.com/babylonlabs-io/babylon/v3/testutil/datagen"
 	bbntypes "github.com/babylonlabs-io/babylon/v3/types"
@@ -38,7 +40,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
-	"github.com/cosmos/relayer/v2/relayer/provider"
 	"go.uber.org/zap"
 )
 
@@ -76,11 +77,11 @@ func NewCosmwasmConsumerController(
 	}, nil
 }
 
-func (cc *CosmwasmConsumerController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) sendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*wasmclient.RelayerTxResponse, error) {
 	return cc.sendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
 
-func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*wasmclient.RelayerTxResponse, error) {
 	return cc.cwClient.SendMsgs(
 		context.Background(),
 		msgs,
@@ -89,11 +90,11 @@ func (cc *CosmwasmConsumerController) sendMsgs(msgs []sdk.Msg, expectedErrs []*s
 	)
 }
 
-func (cc *CosmwasmConsumerController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) reliablySendMsg(msg sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*wasmclient.RelayerTxResponse, error) {
 	return cc.reliablySendMsgs([]sdk.Msg{msg}, expectedErrs, unrecoverableErrs)
 }
 
-func (cc *CosmwasmConsumerController) reliablySendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) reliablySendMsgs(msgs []sdk.Msg, expectedErrs []*sdkErr.Error, unrecoverableErrs []*sdkErr.Error) (*wasmclient.RelayerTxResponse, error) {
 	return cc.cwClient.ReliablySendMsgs(
 		context.Background(),
 		msgs,
@@ -859,7 +860,7 @@ func (cc *CosmwasmConsumerController) Close() error {
 	return cc.cwClient.Stop()
 }
 
-func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
 	emptyErrs := []*sdkErr.Error{}
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
@@ -876,7 +877,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 	return res, nil
 }
 
-func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*provider.RelayerTxResponse, error) {
+func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
 	emptyErrs := []*sdkErr.Error{}
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
@@ -971,7 +972,7 @@ func (cc *CosmwasmConsumerController) QueryIndexedBlock(height uint64) (*Indexed
 	return &resp, nil
 }
 
-func fromCosmosEventsToBytes(events []provider.RelayerEvent) []byte {
+func fromCosmosEventsToBytes(events []wasmclient.RelayerEvent) []byte {
 	bytes, err := json.Marshal(events)
 	if err != nil {
 		return nil
