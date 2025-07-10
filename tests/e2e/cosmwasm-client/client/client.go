@@ -5,11 +5,12 @@ import (
 	"time"
 
 	wasmdparams "github.com/CosmWasm/wasmd/app/params"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"go.uber.org/zap"
+
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/query"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/wasmclient"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"go.uber.org/zap"
 )
 
 type Client struct {

@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
-	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 )
 
 var testMsg types.ExecuteMessage
