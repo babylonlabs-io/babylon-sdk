@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/babylonlabs-io/babylon/client/babylonclient"
+	"github.com/babylonlabs-io/babylon/v3/client/babylonclient"
 	"github.com/cosmos/relayer/v2/relayer/provider"
 )
 

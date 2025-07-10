@@ -1,7 +1,7 @@
-go 1.23.4
+go 1.23.8
 
 use (
-	demo
-	tests/e2e
-	x
+	./demo
+	./tests/e2e
+	./x
 )

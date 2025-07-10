@@ -1,7 +1,7 @@
 // Package clientcontroller/babylon wraps the Babylon RPC/gRPC client for easy interaction with a Babylon node.
 // It simplifies querying and submitting transactions.
 
-// Core Babylon RPC/gRPC client lives under https://github.com/babylonlabs-io/babylon/tree/main/client/client
+// Core Babylon RPC/gRPC client lives under https://github.com/babylonlabs-io/babylon/v3/tree/main/client/client
 
 // Clientcontroller is adapted from:
 // https://github.com/babylonlabs-io/finality-provider/blob/base/consumer-chain-support/clientcontroller/babylon/babylon.go
@@ -14,37 +14,38 @@ import (
 	"math/rand"
 	"net/url"
 
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	sdkErr "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/babylonlabs-io/babylon/client/babylonclient"
-	bbnclient "github.com/babylonlabs-io/babylon/client/client"
-	"github.com/babylonlabs-io/babylon/client/config"
-	"github.com/babylonlabs-io/babylon/crypto/eots"
-	"github.com/babylonlabs-io/babylon/testutil/datagen"
-	bbntypes "github.com/babylonlabs-io/babylon/types"
-	btcctypes "github.com/babylonlabs-io/babylon/x/btccheckpoint/types"
-	btclctypes "github.com/babylonlabs-io/babylon/x/btclightclient/types"
-	btcstakingtypes "github.com/babylonlabs-io/babylon/x/btcstaking/types"
-	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
-	finalitytypes "github.com/babylonlabs-io/babylon/x/finality/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/btcsuite/btcd/btcutil"
 	"github.com/btcsuite/btcd/chaincfg"
 	cmtcrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkquery "github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sttypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/babylonlabs-io/babylon/v3/client/babylonclient"
+	bbnclient "github.com/babylonlabs-io/babylon/v3/client/client"
+	"github.com/babylonlabs-io/babylon/v3/client/config"
+	"github.com/babylonlabs-io/babylon/v3/crypto/eots"
+	"github.com/babylonlabs-io/babylon/v3/testutil/datagen"
+	bbntypes "github.com/babylonlabs-io/babylon/v3/types"
+	btcctypes "github.com/babylonlabs-io/babylon/v3/x/btccheckpoint/types"
+	btclctypes "github.com/babylonlabs-io/babylon/v3/x/btclightclient/types"
+	btcstakingtypes "github.com/babylonlabs-io/babylon/v3/x/btcstaking/types"
+	bsctypes "github.com/babylonlabs-io/babylon/v3/x/btcstkconsumer/types"
+	finalitytypes "github.com/babylonlabs-io/babylon/v3/x/finality/types"
+
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/types"
 )
 
 var emptyErrs = []*sdkErr.Error{}
@@ -166,7 +167,7 @@ func (bc *BabylonController) RegisterFinalityProvider(
 			MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
 		},
 		Description: &sdkDescription,
-		ConsumerId:  chainID,
+		BsnId:       chainID,
 	}
 
 	res, err := bc.sendMsg(msg, emptyErrs, emptyErrs)
@@ -440,14 +441,14 @@ func (bc *BabylonController) InsertBtcBlockHeaders(headers []bbntypes.BTCHeaderB
 // TODO: only used in test. this should not be put here. it causes confusion that this is a method
 // that will be used when FP runs. in that's the case, it implies it should work all all consumer
 // types. but `bbnClient.QueryClient.FinalityProviders` doesn't work for consumer chains
-func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.FinalityProviderResponse, error) {
+func (bc *BabylonController) QueryFinalityProviders(consumerId string) ([]*btcstakingtypes.FinalityProviderResponse, error) {
 	var fps []*btcstakingtypes.FinalityProviderResponse
 	pagination := &sdkquery.PageRequest{
 		Limit: 100,
 	}
 
 	for {
-		res, err := bc.bbnClient.QueryClient.FinalityProviders(pagination)
+		res, err := bc.bbnClient.QueryClient.FinalityProviders(consumerId, pagination)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query finality providers: %v", err)
 		}
@@ -460,37 +461,6 @@ func (bc *BabylonController) QueryFinalityProviders() ([]*btcstakingtypes.Finali
 	}
 
 	return fps, nil
-}
-
-func (bc *BabylonController) QueryConsumerFinalityProviders(consumerId string) ([]*bsctypes.FinalityProviderResponse, error) {
-	var fps []*bsctypes.FinalityProviderResponse
-	pagination := &sdkquery.PageRequest{
-		Limit: 100,
-	}
-
-	for {
-		res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProviders(consumerId, pagination)
-		if err != nil {
-			return nil, fmt.Errorf("failed to query finality providers: %v", err)
-		}
-		fps = append(fps, res.FinalityProviders...)
-		if res.Pagination == nil || res.Pagination.NextKey == nil {
-			break
-		}
-
-		pagination.Key = res.Pagination.NextKey
-	}
-
-	return fps, nil
-}
-
-func (bc *BabylonController) QueryConsumerFinalityProvider(consumerId, fpBtcPkHex string) (*bsctypes.FinalityProviderResponse, error) {
-	res, err := bc.bbnClient.QueryClient.QueryConsumerFinalityProvider(consumerId, fpBtcPkHex)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query finality provider: %v", err)
-	}
-
-	return res, nil
 }
 
 func (bc *BabylonController) QueryBtcLightClientTip() (*btclctypes.BTCHeaderInfoResponse, error) {

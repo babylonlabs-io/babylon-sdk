@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting2 "github.com/cosmos/ibc-go/v8/testing"
+	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -26,8 +26,8 @@ type BabylonSDKTestSuite struct {
 
 	// provider/consumer and their metadata
 	Coordinator      *ibctesting.Coordinator
-	ConsumerChain    *ibctesting.TestChain
-	ProviderChain    *ibctesting.TestChain
+	ConsumerChain    *wasmibctesting.WasmTestChain
+	ProviderChain    *wasmibctesting.WasmTestChain
 	ConsumerApp      *app.ConsumerApp
 	IbcPath          *ibctesting.Path
 	ProviderDenom    string
@@ -47,13 +47,13 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 
 	// set up coordinator and chains
 	t := s.T()
-	coord := types.NewIBCCoordinator(t)
-	provChain := coord.GetChain(ibctesting2.GetChainID(1))
-	consChain := coord.GetChain(ibctesting2.GetChainID(2))
+	coord := wasmibctesting.NewCoordinator(t, 2)
+	provChain := coord.GetChain(ibctesting.GetChainID(1))
+	consChain := coord.GetChain(ibctesting.GetChainID(2))
 
 	s.Coordinator = coord
-	s.ConsumerChain = consChain
-	s.ProviderChain = provChain
+	s.ConsumerChain = wasmibctesting.NewWasmTestChain(consChain)
+	s.ProviderChain = wasmibctesting.NewWasmTestChain(provChain)
 	s.ConsumerApp = consChain.App.(*app.ConsumerApp)
 	s.IbcPath = ibctesting.NewPath(consChain, provChain)
 	s.ProviderDenom = sdk.DefaultBondDenom

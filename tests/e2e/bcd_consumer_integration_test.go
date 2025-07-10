@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -22,25 +19,25 @@ import (
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	bbnparams "github.com/babylonlabs-io/babylon/app/params"
-	txformat "github.com/babylonlabs-io/babylon/btctxformatter"
-	"github.com/babylonlabs-io/babylon/client/config"
-	"github.com/babylonlabs-io/babylon/testutil/datagen"
-	bbn "github.com/babylonlabs-io/babylon/types"
-	btcctypes "github.com/babylonlabs-io/babylon/x/btccheckpoint/types"
-	btclctypes "github.com/babylonlabs-io/babylon/x/btclightclient/types"
-	bstypes "github.com/babylonlabs-io/babylon/x/btcstaking/types"
-	bsctypes "github.com/babylonlabs-io/babylon/x/btcstkconsumer/types"
-	ckpttypes "github.com/babylonlabs-io/babylon/x/checkpointing/types"
-	epochingtypes "github.com/babylonlabs-io/babylon/x/epoching/types"
-	ftypes "github.com/babylonlabs-io/babylon/x/finality/types"
+	bbnparams "github.com/babylonlabs-io/babylon/v3/app/params"
+	txformat "github.com/babylonlabs-io/babylon/v3/btctxformatter"
+	"github.com/babylonlabs-io/babylon/v3/client/config"
+	"github.com/babylonlabs-io/babylon/v3/testutil/datagen"
+	bbn "github.com/babylonlabs-io/babylon/v3/types"
+	btcctypes "github.com/babylonlabs-io/babylon/v3/x/btccheckpoint/types"
+	btclctypes "github.com/babylonlabs-io/babylon/v3/x/btclightclient/types"
+	bstypes "github.com/babylonlabs-io/babylon/v3/x/btcstaking/types"
+	bsctypes "github.com/babylonlabs-io/babylon/v3/x/btcstkconsumer/types"
+	ckpttypes "github.com/babylonlabs-io/babylon/v3/x/checkpointing/types"
+	epochingtypes "github.com/babylonlabs-io/babylon/v3/x/epoching/types"
+	ftypes "github.com/babylonlabs-io/babylon/v3/x/finality/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -304,7 +301,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 		s.Equal(fpFromMap.BtcPk.MarshalHex(), consumerFp.BtcPkHex)
 		s.Equal(fpFromMap.SlashedBabylonHeight, consumerFp.SlashedHeight)
 		s.Equal(fpFromMap.SlashedBtcHeight, consumerFp.SlashedBtcHeight)
-		s.Equal(fpFromMap.ConsumerId, consumerFp.ConsumerId)
+		s.Equal(fpFromMap.BsnId, consumerFp.ConsumerId)
 	}
 }
 
@@ -312,7 +309,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
 func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs() {
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
@@ -324,7 +321,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 
 	// create a delegation and restake to both Babylon and consumer finality providers
 	// NOTE: this will create delegation in pending state as covenant sigs are not provided
-	delBtcPk, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp, uint16(10000))
+	delBtcPk, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp.FinalityProvider, uint16(10000))
 
 	// check delegation
 	delegation, err := s.babylonController.QueryBTCDelegation(stakingTxHash)
@@ -332,7 +329,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	s.NotNil(delegation)
 
 	// check consumer finality provider delegation
-	consumerPendingDelSet, err := s.babylonController.QueryFinalityProviderDelegations(consumerFp.BtcPk.MarshalHex(), 1)
+	consumerPendingDelSet, err := s.babylonController.QueryFinalityProviderDelegations(consumerFp.FinalityProvider.BtcPk.MarshalHex(), 1)
 	s.Require().NoError(err)
 	s.Len(consumerPendingDelSet, 1)
 	consumerPendingDels := consumerPendingDelSet[0]
@@ -352,14 +349,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 
 func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	// Query consumer finality providers
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
 	// Commit public randomness at the initial block height on the consumer chain
 	consumerInitialHeight := uint64(1)
 	numPubRand := uint64(1000)
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, consumerInitialHeight, numPubRand)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, "", consumerInitialHeight, numPubRand)
 	s.NoError(err)
 	randListInfo2 = randListInfo
 
@@ -389,15 +386,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 // 5. Confirms the consumer FP voting power equals the total stake amount
 func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	// Query consumer finality provider
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
 	// Activate the delegation by submitting covenant sigs
-	s.submitCovenantSigs(consumerFp)
+	s.submitCovenantSigs(consumerFp.FinalityProvider)
 
 	// ensure the BTC delegation has covenant sigs now
-	activeDelsSet, err := s.babylonController.QueryFinalityProviderDelegations(consumerFp.BtcPk.MarshalHex(), 1)
+	activeDelsSet, err := s.babylonController.QueryFinalityProviderDelegations(consumerFp.FinalityProvider.BtcPk.MarshalHex(), 1)
 	s.NoError(err)
 	s.Len(activeDelsSet, 1)
 
@@ -430,19 +427,19 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 
 	// Query and assert finality provider voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
 		}
 
-		return fpInfo != nil && fpInfo.Power == activeDel.TotalSat && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		return fpInfo != nil && fpInfo.Power == activeDel.TotalSat && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 }
 
 func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	// Query consumer finality providers
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
@@ -478,7 +475,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 
 	// Ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
+		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -584,7 +581,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.NotNil(firstNonFinalizedBlock)
 
 	// Get the babylon finality provider
-	babylonFp, err := s.babylonController.QueryFinalityProviders()
+	babylonFp, err := s.babylonController.QueryFinalityProviders(consumerID)
 	s.NoError(err)
 	s.NotNil(babylonFp)
 
@@ -640,26 +637,26 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 
 	// query consumer finality provider
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
 	// query and assert finality provider voting power is zero after slashing
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
 			return false
 		}
 
-		return fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		return fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 }
 
 func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	// create a new consumer finality provider
 	resp, consumerFpBTCSK2, consumerFpBTCPK2 := s.createVerifyConsumerFP()
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, resp.BtcPk.MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
 	s.NoError(err)
 
 	// register a babylon finality provider
@@ -667,7 +664,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// create a new delegation and restake to both Babylon and consumer finality provider
 	// NOTE: this will create delegation in pending state as covenant sigs are not provided
-	_, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp, uint16(10000))
+	_, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp.FinalityProvider, uint16(10000))
 
 	// check delegation
 	delegation, err := s.babylonController.QueryBTCDelegation(stakingTxHash)
@@ -675,7 +672,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NotNil(delegation)
 
 	// activate the delegation by submitting covenant sigs
-	s.submitCovenantSigs(consumerFp)
+	s.submitCovenantSigs(consumerFp.FinalityProvider)
 
 	// query the staking contract for delegations on the consumer chain
 	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
@@ -686,13 +683,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// query and assert consumer finality provider's voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
 		}
 
-		return fpInfo != nil && fpInfo.Power == delegation.TotalSat && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		return fpInfo != nil && fpInfo.Power == delegation.TotalSat && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 
 	// get the latest block height and block on the consumer chain
@@ -705,7 +702,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NotNil(consumerLatestBlock)
 
 	// commit public randomness at the latest block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, uint64(consumerLatestBlockHeight), 200)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, "", consumerLatestBlockHeight, 200)
 	s.NoError(err)
 
 	txResp, err := s.cosmwasmController.CommitPubRandList(consumerFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
@@ -729,7 +726,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.BtcPk.MarshalHex(), uint64(consumerLatestBlockHeight))
+		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerLatestBlockHeight))
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -755,19 +752,19 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// ensure consumer finality provider is slashed
 	s.Eventually(func() bool {
-		fp, err := s.cosmwasmController.QueryFinalityProvider(consumerFp.BtcPk.MarshalHex())
+		fp, err := s.cosmwasmController.QueryFinalityProvider(consumerFp.FinalityProvider.BtcPk.MarshalHex())
 		return err == nil && fp != nil && fp.SlashedHeight > 0
 	}, time.Minute, time.Second*5)
 
 	// query and assert consumer finality provider's voting power is zero after slashing
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
 			return false
 		}
 
-		return fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		return fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 
 	// check the babylon finality provider's voting power is discounted (cascaded slashing)
@@ -783,7 +780,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 
 	// check consumer FP record in Babylon is updated
-	consumerFpBIP340PKHex := consumerFp.BtcPk.MarshalHex()
+	consumerFpBIP340PKHex := consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	s.Eventually(func() bool {
 		fp, err := s.babylonController.QueryFinalityProvider(consumerFpBIP340PKHex)
 		if err != nil {
@@ -804,7 +801,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 	// create a new consumer finality provider
 	resp, _, _ := s.createVerifyConsumerFP()
-	consumerFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, resp.BtcPk.MarshalHex())
+	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
 	s.NoError(err)
 
 	// register a babylon finality provider
@@ -819,7 +816,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 	// create a new delegation and restake to both Babylon and consumer finality provider
 	// NOTE: this will create delegation in pending state as covenant sigs are not provided
 	stakingTimeBlocks := uint16(11) // just enough to exceed the min staking time
-	_, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp, stakingTimeBlocks)
+	_, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp.FinalityProvider, stakingTimeBlocks)
 
 	// check delegation
 	delegation, err := s.babylonController.QueryBTCDelegation(stakingTxHash)
@@ -827,7 +824,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 	s.NotNil(delegation)
 
 	// activate the delegation by submitting covenant sigs
-	s.submitCovenantSigs(consumerFp)
+	s.submitCovenantSigs(consumerFp.FinalityProvider)
 
 	// query the staking contract for delegations on the consumer chain
 	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
@@ -838,12 +835,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 
 	// query and assert consumer finality provider's voting power is equal to the total stake
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality provider info: %v", err)
 			return false
 		}
-		return fpInfo != nil && fpInfo.Power == delegation.TotalSat && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		return fpInfo != nil && fpInfo.Power == delegation.TotalSat && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 
 	// just enough headers to exceed the delegation's end height
@@ -854,13 +851,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
 
 	// query and assert consumer finality provider's voting power is zero after inserting headers
 	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.BtcPk.MustToBTCPK())
-		return err == nil && fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.BtcPk.MarshalHex()
+		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
+		return err == nil && fpInfo != nil && fpInfo.Power == 0 && fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex()
 	}, time.Minute, time.Second*5)
 }
 
 // helper function: submitCovenantSigs submits the covenant signatures to activate the BTC delegation
-func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bsctypes.FinalityProviderResponse) {
+func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bstypes.FinalityProviderResponse) {
 	cvSK, _, _, err := getDeterministicCovenantKey()
 	s.NoError(err)
 
@@ -988,7 +985,7 @@ func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bsctype
 }
 
 // helper function: createBabylonDelegation creates a random BTC delegation restaking to Babylon and consumer finality providers
-func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bstypes.FinalityProviderResponse, consumerFp *bsctypes.FinalityProviderResponse, stakingTimeBlocks uint16) (*btcec.PublicKey, string) {
+func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bstypes.FinalityProviderResponse, consumerFp *bstypes.FinalityProviderResponse, stakingTimeBlocks uint16) (*btcec.PublicKey, string) {
 	delBabylonAddr, err := sdk.AccAddressFromBech32(s.babylonController.MustGetTxSigner())
 	s.NoError(err)
 	// BTC staking params, BTC delegation key pairs and PoP
@@ -999,7 +996,7 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	unbondingTime := uint16(params.MinUnbondingTime)
 
 	// NOTE: we use the node's secret key as Babylon secret key for the BTC delegation
-	pop, err := datagen.NewPoPBTC(delBabylonAddr, consumerDelBtcSk)
+	pop, err := datagen.NewPoPBTC("", delBabylonAddr, consumerDelBtcSk)
 	s.NoError(err)
 	// generate staking tx and slashing tx
 	testStakingInfo := datagen.GenBTCStakingSlashingInfo(
@@ -1115,7 +1112,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 	bbnparams.SetAddressPrefixes()
 	fpBabylonAddr, err := sdk.AccAddressFromBech32(s.babylonController.MustGetTxSigner())
 	s.NoError(err)
-	babylonFp, err := datagen.GenCustomFinalityProvider(r, babylonFpBTCSK, fpBabylonAddr, "")
+	babylonFp, err := datagen.GenCustomFinalityProvider(r, babylonFpBTCSK, "", fpBabylonAddr, "")
 	s.NoError(err)
 	babylonFp.Commission = &minCommissionRate
 	bbnFpPop, err := babylonFp.Pop.Marshal()
@@ -1147,7 +1144,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 func (s *BCDConsumerIntegrationTestSuite) commitAndFinalizePubRand(babylonFpBTCSK *btcec.PrivateKey, babylonFpBTCPK *btcec.PublicKey, commitStartHeight uint64) *datagen.RandListInfo {
 	// commit public randomness list
 	numPubRand := uint64(1000)
-	randList, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, babylonFpBTCSK, commitStartHeight, numPubRand)
+	randList, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, babylonFpBTCSK, "", commitStartHeight, numPubRand)
 	s.NoError(err)
 
 	_, err = s.babylonController.CommitPublicRandomness(msgCommitPubRandList)
@@ -1181,7 +1178,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	bbnparams.SetAddressPrefixes()
 	fpBabylonAddr, err := sdk.AccAddressFromBech32(s.babylonController.MustGetTxSigner())
 	s.NoError(err)
-	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, fpBabylonAddr, consumerID)
+	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, "", fpBabylonAddr, consumerID)
 	s.NoError(err)
 	consumerFp.Commission = &minCommissionRate
 	consumerFpPop, err := consumerFp.Pop.Marshal()
@@ -1199,15 +1196,17 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.NoError(err)
 
 	// query the existence of finality provider and assert equivalence
-	actualFp, err := s.babylonController.QueryConsumerFinalityProvider(consumerID, consumerFp.BtcPk.MarshalHex())
+	actualFpResp, err := s.babylonController.QueryFinalityProvider(consumerFp.BtcPk.MarshalHex())
 	s.NoError(err)
+	s.NotNil(actualFpResp)
+	actualFp := actualFpResp.FinalityProvider
 	s.Equal(consumerFp.Description, actualFp.Description)
 	s.Equal(consumerFp.Commission.String(), actualFp.Commission.String())
 	s.Equal(consumerFp.BtcPk, actualFp.BtcPk)
 	s.Equal(consumerFp.Pop, actualFp.Pop)
 	s.Equal(consumerFp.SlashedBabylonHeight, actualFp.SlashedBabylonHeight)
 	s.Equal(consumerFp.SlashedBtcHeight, actualFp.SlashedBtcHeight)
-	s.Equal(consumerID, actualFp.ConsumerId)
+	s.Equal(consumerID, actualFp.BsnId)
 	return consumerFp, consumerFpBTCSecretKey, consumerFpBTCPublicKey
 }
 
@@ -1299,6 +1298,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		return true
 	}, time.Minute*4, time.Second*10, "Failed to get expected Babylon custom IBC channel")
 
+	// TODO: For cosmwasmChannel, we need to use ibc v8 as cosmos client has not bumped
 	var consumerChannel *channeltypes.IdentifiedChannel
 	s.Eventually(func() bool {
 		consumerChannelsResp, err := s.cosmwasmController.IBCChannels()

@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CosmWasm/wasmd/tests/ibctesting"
+	ibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
+
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // Query is a query type used in tests only
@@ -47,7 +48,7 @@ func (q QueryResponse) Array(key string) []QueryResponse {
 	return result
 }
 
-func Querier(t *testing.T, chain *ibctesting.TestChain) func(contract string, query Query) (QueryResponse, error) {
+func Querier(t *testing.T, chain *ibctesting.WasmTestChain) func(contract string, query Query) (QueryResponse, error) {
 	return func(contract string, query Query) (QueryResponse, error) {
 		qRsp := make(map[string]any)
 		err := chain.SmartQuery(contract, query, &qRsp)
@@ -60,10 +61,10 @@ func Querier(t *testing.T, chain *ibctesting.TestChain) func(contract string, qu
 
 type TestProviderClient struct {
 	t     *testing.T
-	Chain *ibctesting.TestChain
+	Chain *ibctesting.WasmTestChain
 }
 
-func NewProviderClient(t *testing.T, chain *ibctesting.TestChain) *TestProviderClient {
+func NewProviderClient(t *testing.T, chain *ibctesting.WasmTestChain) *TestProviderClient {
 	return &TestProviderClient{t: t, Chain: chain}
 }
 
@@ -79,12 +80,12 @@ func (p *TestProviderClient) Exec(contract sdk.AccAddress, payload []byte, funds
 
 type TestConsumerClient struct {
 	t         *testing.T
-	Chain     *ibctesting.TestChain
+	Chain     *ibctesting.WasmTestChain
 	Contracts ConsumerContract
 	App       *app.ConsumerApp
 }
 
-func NewConsumerClient(t *testing.T, chain *ibctesting.TestChain) *TestConsumerClient {
+func NewConsumerClient(t *testing.T, chain *ibctesting.WasmTestChain) *TestConsumerClient {
 	return &TestConsumerClient{t: t, Chain: chain, App: chain.App.(*app.ConsumerApp)}
 }
 
@@ -172,7 +173,7 @@ func (p *TestConsumerClient) MustExecGovProposal(msg *bbntypes.MsgUpdateParams) 
 	voteAndPassGovProposal(p.t, p.Chain, proposalID)
 }
 
-func submitGovProposal(t *testing.T, chain *ibctesting.TestChain, msgs ...sdk.Msg) uint64 {
+func submitGovProposal(t *testing.T, chain *ibctesting.WasmTestChain, msgs ...sdk.Msg) uint64 {
 	// get gov module parameters
 	chainApp := chain.App.(*app.ConsumerApp)
 	govParams, err := chainApp.GovKeeper.Params.Get(chain.GetContext())
@@ -193,7 +194,7 @@ func submitGovProposal(t *testing.T, chain *ibctesting.TestChain, msgs ...sdk.Ms
 	return proposalID - 1
 }
 
-func voteAndPassGovProposal(t *testing.T, chain *ibctesting.TestChain, proposalID uint64) {
+func voteAndPassGovProposal(t *testing.T, chain *ibctesting.WasmTestChain, proposalID uint64) {
 	// get gov module parameters
 	chainApp := chain.App.(*app.ConsumerApp)
 	govParams, err := chainApp.GovKeeper.Params.Get(chain.GetContext())
@@ -207,7 +208,7 @@ func voteAndPassGovProposal(t *testing.T, chain *ibctesting.TestChain, proposalI
 	// pass voting period
 	coord := chain.Coordinator
 	coord.IncrementTimeBy(*govParams.VotingPeriod)
-	coord.CommitBlock(chain)
+	coord.CommitBlock(chain.TestChain)
 
 	// ensure proposal is passed
 	proposal, err := chainApp.GovKeeper.Proposals.Get(chain.GetContext(), proposalID)
