@@ -40,7 +40,7 @@ require (
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/ibc-go/v10 v10.2.0
 	github.com/cosmos/relayer/v2 v2.5.3
-	go.uber.org/zap v1.26.0
+	go.uber.org/zap v1.27.0
 )
 
 require (
