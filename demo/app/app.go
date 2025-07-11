@@ -562,6 +562,7 @@ func NewConsumerApp(
 
 	// NOTE: upgrade module is required to be prioritized
 	app.ModuleManager.SetOrderPreBlockers(
+		authtypes.ModuleName,
 		upgradetypes.ModuleName,
 	)
 
