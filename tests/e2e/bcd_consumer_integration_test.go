@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -17,8 +20,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
-	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
-	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbnparams "github.com/babylonlabs-io/babylon/v3/app/params"
 	txformat "github.com/babylonlabs-io/babylon/v3/btctxformatter"
 	"github.com/babylonlabs-io/babylon/v3/client/config"
@@ -41,6 +42,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
+
+	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
+	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 )
 
 var (
