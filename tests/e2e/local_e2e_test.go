@@ -48,7 +48,7 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 
 	// set up coordinator and chains
 	t := s.T()
-	coord := wasmibctesting.NewCoordinator(t, 2)
+	coord := types.NewCoordinator(t, 2)
 	provChain := coord.GetChain(ibctesting.GetChainID(1))
 	consChain := coord.GetChain(ibctesting.GetChainID(2))
 
@@ -63,8 +63,6 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 }
 
 func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
-	s.Coordinator.SetupConnections(s.IbcPath)
-
 	// consumer client
 	consumerCli := types.NewConsumerClient(s.T(), s.ConsumerChain)
 	// setup contracts on consumer
