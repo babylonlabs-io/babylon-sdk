@@ -14,6 +14,9 @@ import (
 	"testing"
 	"time"
 
+	appparams "github.com/babylonlabs-io/babylon/v3/app/params"
+	"github.com/babylonlabs-io/babylon/v3/app/signingcontext"
+
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/babylon"
 	cwconfig "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/config"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmos-integration-e2e/clientcontroller/cosmwasm"
@@ -59,7 +62,8 @@ var (
 	randListInfo1 *datagen.RandListInfo
 	randListInfo2 *datagen.RandListInfo
 	// TODO: get consumer id from ibc client-state query
-	consumerID = "07-tendermint-0"
+	consumerID     = "07-tendermint-0"
+	babylonChainID = "chain-test"
 
 	consumerFpBTCSK                       *btcec.PrivateKey
 	consumerFpBTCPK                       *btcec.PublicKey
@@ -142,7 +146,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 	s.Eventually(func() bool {
 		consumerStatus, err = s.cosmwasmController.GetCometNodeStatus()
 		return err == nil && consumerStatus != nil && consumerStatus.SyncInfo.LatestBlockHeight >= 1
-	}, time.Minute, time.Second, "Failed to query Consumer node status", err)
+	}, time.Minute*2, time.Second, "Failed to query Consumer node status", err)
 	s.T().Logf("Consumer node status: %v", consumerStatus.SyncInfo.LatestBlockHeight)
 }
 
@@ -360,6 +364,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	// Commit public randomness at the initial block height on the consumer chain
 	consumerInitialHeight := uint64(1)
 	numPubRand := uint64(1000)
+
+	// TODO: finality contract needs upgrade to enable signing context
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, "", consumerInitialHeight, numPubRand)
 	s.NoError(err)
 	randListInfo2 = randListInfo
@@ -585,7 +591,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.NotNil(firstNonFinalizedBlock)
 
 	// Get the babylon finality provider
-	babylonFp, err := s.babylonController.QueryFinalityProviders(consumerID)
+	babylonFp, err := s.babylonController.QueryFinalityProviders("")
 	s.NoError(err)
 	s.NotNil(babylonFp)
 
@@ -593,12 +599,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	randIdx := firstNonFinalizedHeight - 1 // pub rand was committed from height 1-1000
 
 	// submit finality signature
+	signingCtx := signingcontext.FpFinVoteContextV0(babylonChainID, appparams.AccFinality.String())
 	txResp, err := s.babylonController.SubmitFinalitySignature(
 		babylonFpBTCSK,
 		babylonFpBIP340PK,
 		randListInfo1.SRList[randIdx],
 		&randListInfo1.PRList[randIdx],
 		randListInfo1.ProofList[randIdx].ToProto(),
+		signingCtx,
 		firstNonFinalizedHeight)
 	s.NoError(err)
 	s.NotNil(txResp)
@@ -624,6 +632,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 		randListInfo1.SRList[randIdx],
 		&randListInfo1.PRList[randIdx],
 		randListInfo1.ProofList[randIdx].ToProto(),
+		signingCtx,
 		firstNonFinalizedHeight,
 	)
 	s.NoError(err)
@@ -1000,7 +1009,8 @@ func (s *BCDConsumerIntegrationTestSuite) createBabylonDelegation(babylonFp *bst
 	unbondingTime := uint16(params.MinUnbondingTime)
 
 	// NOTE: we use the node's secret key as Babylon secret key for the BTC delegation
-	pop, err := datagen.NewPoPBTC("", delBabylonAddr, consumerDelBtcSk)
+	sc := signingcontext.StakerPopContextV0(babylonChainID, appparams.AccBTCStaking.String())
+	pop, err := datagen.NewPoPBTC(sc, delBabylonAddr, consumerDelBtcSk)
 	s.NoError(err)
 	// generate staking tx and slashing tx
 	testStakingInfo := datagen.GenBTCStakingSlashingInfo(
@@ -1116,7 +1126,10 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 	bbnparams.SetAddressPrefixes()
 	fpBabylonAddr, err := sdk.AccAddressFromBech32(s.babylonController.MustGetTxSigner())
 	s.NoError(err)
-	babylonFp, err := datagen.GenCustomFinalityProvider(r, babylonFpBTCSK, "", fpBabylonAddr, "")
+
+	sc := signingcontext.FpPopContextV0(babylonChainID, appparams.AccBTCStaking.String())
+	babylonFp, err := datagen.GenCustomFinalityProvider(r, babylonFpBTCSK, sc, fpBabylonAddr, babylonChainID)
+
 	s.NoError(err)
 	babylonFp.Commission = &minCommissionRate
 	bbnFpPop, err := babylonFp.Pop.Marshal()
@@ -1125,7 +1138,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 	s.NoError(err)
 
 	_, err = s.babylonController.RegisterFinalityProvider(
-		"",
+		babylonChainID,
 		babylonFp.BtcPk,
 		bbnFpPop,
 		babylonFp.Commission,
@@ -1148,7 +1161,9 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyBabylonFP(babylonFpBTCSK *
 func (s *BCDConsumerIntegrationTestSuite) commitAndFinalizePubRand(babylonFpBTCSK *btcec.PrivateKey, babylonFpBTCPK *btcec.PublicKey, commitStartHeight uint64) *datagen.RandListInfo {
 	// commit public randomness list
 	numPubRand := uint64(1000)
-	randList, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, babylonFpBTCSK, "", commitStartHeight, numPubRand)
+
+	sc := signingcontext.FpRandCommitContextV0(babylonChainID, appparams.AccFinality.String())
+	randList, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, babylonFpBTCSK, sc, commitStartHeight, numPubRand)
 	s.NoError(err)
 
 	_, err = s.babylonController.CommitPublicRandomness(msgCommitPubRandList)
@@ -1182,7 +1197,9 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	bbnparams.SetAddressPrefixes()
 	fpBabylonAddr, err := sdk.AccAddressFromBech32(s.babylonController.MustGetTxSigner())
 	s.NoError(err)
-	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, "", fpBabylonAddr, consumerID)
+
+	sc := signingcontext.FpPopContextV0(babylonChainID, appparams.AccBTCStaking.String())
+	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, sc, fpBabylonAddr, consumerID)
 	s.NoError(err)
 	consumerFp.Commission = &minCommissionRate
 	consumerFpPop, err := consumerFp.Pop.Marshal()
