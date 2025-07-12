@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	wasmibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
-	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 )
 
 var testMsg types.ExecuteMessage
@@ -47,7 +48,7 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 
 	// set up coordinator and chains
 	t := s.T()
-	coord := wasmibctesting.NewCoordinator(t, 2)
+	coord := types.NewCoordinator(t, 2)
 	provChain := coord.GetChain(ibctesting.GetChainID(1))
 	consChain := coord.GetChain(ibctesting.GetChainID(2))
 
@@ -62,8 +63,6 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 }
 
 func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
-	s.Coordinator.SetupConnections(s.IbcPath)
-
 	// consumer client
 	consumerCli := types.NewConsumerClient(s.T(), s.ConsumerChain)
 	// setup contracts on consumer

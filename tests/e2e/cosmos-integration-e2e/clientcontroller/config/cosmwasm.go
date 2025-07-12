@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/babylonlabs-io/cosmwasm-client/config"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/config"
 )
 
 type CosmwasmConfig struct {
