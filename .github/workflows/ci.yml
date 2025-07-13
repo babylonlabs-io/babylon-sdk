@@ -13,8 +13,7 @@ jobs:
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
      run-unit-tests: true
-      # NOTE: Temporarily block integration-tests due to ibc version compatibility issue
-     run-integration-tests: false
+     run-integration-tests: true
      integration-tests-command: |
       make test-integration
 

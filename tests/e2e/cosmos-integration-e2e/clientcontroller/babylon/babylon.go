@@ -669,21 +669,14 @@ func (bc *BabylonController) SubmitFinalitySignature(
 	privateRand *eots.PrivateRand,
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
+	signingCtx string,
 	heightToVote uint64,
 ) (*types.TxResponse, error) {
 	block, err := bc.bbnClient.QueryClient.GetBlock(int64(heightToVote))
 	if err != nil {
 		return nil, err
 	}
-	msgToSign := append(sdk.Uint64ToBigEndian(heightToVote), block.Block.AppHash...)
-	sig, err := eots.Sign(fpSK, privateRand, msgToSign)
-	if err != nil {
-		return nil, err
-	}
-	eotsSig := bbntypes.NewSchnorrEOTSSigFromModNScalar(sig)
-
 	signerAddr := bc.MustGetTxSigner()
-
 	msgAddFinalitySig := &finalitytypes.MsgAddFinalitySig{
 		Signer:       signerAddr,
 		FpBtcPk:      fpBtcPk,
@@ -691,8 +684,15 @@ func (bc *BabylonController) SubmitFinalitySignature(
 		PubRand:      pubRand,
 		Proof:        proof,
 		BlockAppHash: block.Block.AppHash,
-		FinalitySig:  eotsSig,
+		FinalitySig:  nil,
 	}
+
+	msgToSign := msgAddFinalitySig.MsgToSign(signingCtx)
+	sig, err := eots.Sign(fpSK, privateRand, msgToSign)
+	if err != nil {
+		return nil, err
+	}
+	msgAddFinalitySig.FinalitySig = bbntypes.NewSchnorrEOTSSigFromModNScalar(sig)
 	res, err := bc.sendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err
@@ -707,17 +707,11 @@ func (bc *BabylonController) SubmitInvalidFinalitySignature(
 	privateRand *eots.PrivateRand,
 	pubRand *bbntypes.SchnorrPubRand,
 	proof *cmtcrypto.Proof,
+	signingCtx string,
 	heightToVote uint64,
 ) (*types.TxResponse, error) {
-	invalidAppHash := datagen.GenRandomByteArray(r, 32)
-	invalidMsgToSign := append(sdk.Uint64ToBigEndian(heightToVote), invalidAppHash...)
-	invalidSig, err := eots.Sign(fpSK, privateRand, invalidMsgToSign)
-	if err != nil {
-		return nil, err
-	}
-	invalidEotsSig := bbntypes.NewSchnorrEOTSSigFromModNScalar(invalidSig)
-
 	signerAddr := bc.MustGetTxSigner()
+	invalidAppHash := datagen.GenRandomByteArray(r, 32)
 
 	msgAddFinalitySig := &finalitytypes.MsgAddFinalitySig{
 		Signer:       signerAddr,
@@ -726,8 +720,16 @@ func (bc *BabylonController) SubmitInvalidFinalitySignature(
 		PubRand:      pubRand,
 		Proof:        proof,
 		BlockAppHash: invalidAppHash,
-		FinalitySig:  invalidEotsSig,
+		FinalitySig:  nil,
 	}
+
+	invalidMsgToSign := msgAddFinalitySig.MsgToSign(signingCtx)
+	invalidSig, err := eots.Sign(fpSK, privateRand, invalidMsgToSign)
+	if err != nil {
+		return nil, err
+	}
+
+	msgAddFinalitySig.FinalitySig = bbntypes.NewSchnorrEOTSSigFromModNScalar(invalidSig)
 	res, err := bc.sendMsg(msgAddFinalitySig, emptyErrs, emptyErrs)
 	if err != nil {
 		return nil, err

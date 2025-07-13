@@ -98,6 +98,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibctypes "github.com/cosmos/ibc-go/v10/modules/core/types"
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	ibctesting "github.com/cosmos/ibc-go/v10/testing"
 	"github.com/spf13/cast"
@@ -209,6 +210,13 @@ func NewConsumerApp(
 	txConfig := encCfg.TxConfig
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
+
+	// Register IBC types in the interface registry
+	// This is required for IBC v10 compatibility
+	ibctypes.RegisterInterfaces(interfaceRegistry)
+
+	// Register additional IBC light client types
+	ibctm.RegisterInterfaces(interfaceRegistry)
 
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, crisistypes.StoreKey,
@@ -384,6 +392,12 @@ func NewConsumerApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	// Create IBC Tendermint Light Client Stack
+	// This is required for IBC v10 compatibility
+	clientKeeper := app.IBCKeeper.ClientKeeper
+	tmLightClientModule := ibctm.NewLightClientModule(appCodec, clientKeeper.GetStoreProvider())
+	clientKeeper.AddRoute(ibctm.ModuleName, &tmLightClientModule)
+
 	// Register the proposal types
 	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
 	// by granting the governance module the right to execute the message.
@@ -411,7 +425,7 @@ func NewConsumerApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -615,6 +629,7 @@ func NewConsumerApp(
 		// additional non simd modules
 		ibctransfertypes.ModuleName,
 		ibcexported.ModuleName,
+		ibctm.ModuleName,
 		wasmtypes.ModuleName,
 		bbntypes.ModuleName,
 	}
