@@ -7,15 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetKeyAddress returns the account address representation for the currently configured key.
-func (cc *CosmosProvider) GetKeyAddress(key string) (sdk.AccAddress, error) {
-	info, err := cc.Keybase.Key(key)
-	if err != nil {
-		return nil, err
-	}
-	return info.GetAddress()
-}
-
 // EncodeBech32AccAddr returns the string bech32 representation for the specified account address.
 // It returns an empty sting if the byte slice is 0-length.
 // It returns an error if the bech32 conversion fails or the prefix is empty.

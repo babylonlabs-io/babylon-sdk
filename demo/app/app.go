@@ -214,7 +214,6 @@ func NewConsumerApp(
 	// Register IBC types in the interface registry
 	// This is required for IBC v10 compatibility
 	ibctypes.RegisterInterfaces(interfaceRegistry)
-	ibctm.RegisterInterfaces(interfaceRegistry)
 
 	// Register additional IBC light client types
 	ibctm.RegisterInterfaces(interfaceRegistry)
@@ -426,7 +425,7 @@ func NewConsumerApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 

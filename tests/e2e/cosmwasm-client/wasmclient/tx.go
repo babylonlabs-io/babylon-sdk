@@ -649,13 +649,16 @@ func (cc *CosmosProvider) AdjustEstimatedGas(gasUsed uint64) (uint64, error) {
 	if gasUsed == 0 {
 		return gasUsed, nil
 	}
-	if cc.PCfg.MaxGasAmount > 0 && gasUsed > cc.PCfg.MaxGasAmount {
-		return 0, fmt.Errorf("estimated gas %d is higher than max gas %d", gasUsed, cc.PCfg.MaxGasAmount)
-	}
+
 	gas := cc.PCfg.GasAdjustment * float64(gasUsed)
 	if math.IsInf(gas, 1) {
 		return 0, fmt.Errorf("infinite gas used")
 	}
+
+	if cc.PCfg.MaxGasAmount > 0 && uint64(gas) > cc.PCfg.MaxGasAmount {
+		return 0, fmt.Errorf("adjusted gas %d is higher than max gas %d", uint64(gas), cc.PCfg.MaxGasAmount)
+	}
+
 	return uint64(gas), nil
 }
 

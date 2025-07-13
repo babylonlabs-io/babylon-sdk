@@ -45,12 +45,9 @@ func (cc *CosmosProvider) Invoke(ctx context.Context, method string, req, reply 
 
 	// Case 1. Broadcasting a Tx.
 	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
-		if !ok {
-			return sdkerrors.Wrapf(legacyerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxRequest)(nil), req)
-		}
 		resProto, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
-			return sdkerrors.Wrapf(legacyerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
+			return sdkerrors.Wrapf(legacyerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), reply)
 		}
 
 		broadcastRes, err := cc.TxServiceBroadcast(ctx, reqProto)
@@ -58,7 +55,7 @@ func (cc *CosmosProvider) Invoke(ctx context.Context, method string, req, reply 
 			return err
 		}
 		*resProto = *broadcastRes
-		return err
+		return nil
 	}
 
 	// Case 2. Querying state.
