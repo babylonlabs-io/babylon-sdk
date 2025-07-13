@@ -44,3 +44,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [#116](https://github.com/babylonlabs-io/babylon-sdk/pull/116) add docs for
   the x/babylon module
 - [#143](https://github.com/babylonlabs-io/babylon-sdk/pull/143) Re-enable e2e tests
+- [#161](https://github.com/babylonlabs-io/babylon-sdk/pull/161) Bump wasmd to v0.60.1
