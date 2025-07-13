@@ -5,7 +5,7 @@ go 1.23.6
 toolchain go1.23.8
 
 require (
-	github.com/CosmWasm/wasmd v0.55.1
+	github.com/CosmWasm/wasmd v0.60.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.3
 	github.com/cosmos/gogogateway v1.2.0 // indirect
