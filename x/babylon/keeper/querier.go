@@ -26,3 +26,12 @@ func (q querier) Params(ctx context.Context, req *types.QueryParamsRequest) (*ty
 	params := q.k.GetParams(sdk.UnwrapSDKContext(ctx))
 	return &types.QueryParamsResponse{Params: params}, nil
 }
+
+// BSNContracts implements the gRPC service handler for querying the babylon contract addresses.
+func (q querier) BSNContracts(ctx context.Context, req *types.QueryBSNContractsRequest) (*types.QueryBSNContractsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	contracts := q.k.GetBSNContracts(sdkCtx)
+	return &types.QueryBSNContractsResponse{
+		BsnContracts: contracts,
+	}, nil
+}

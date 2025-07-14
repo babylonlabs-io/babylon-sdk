@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -9,7 +11,6 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
 	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -101,8 +102,6 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	consumerApp := Setup(t)
 	ctx := consumerApp.NewContext(false)
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
-	babylonKeeper := consumerApp.BabylonKeeper
-	babylonMsgServer := babylonkeeper.NewMsgServer(babylonKeeper)
 	wasmKeeper := consumerApp.WasmKeeper
 	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
 
@@ -133,51 +132,99 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	btcFinalityContractCodeID := resp.CodeID
 	require.NoError(t, err)
 
-	initMsg, err := cli.ParseInstantiateArgs(
-		[]string{
-			fmt.Sprintf("%d", babylonContractCodeID),
-			fmt.Sprintf("%d", btcLightClientContractCodeID),
-			fmt.Sprintf("%d", btcStakingContractCodeID),
-			fmt.Sprintf("%d", btcFinalityContractCodeID),
-			"regtest",
-			"01020304",
-			"1",
-			"2",
-			"false",
-			fmt.Sprintf(`{"admin":"%s"}`, babylonKeeper.GetAuthority()),
-			fmt.Sprintf(`{"admin":"%s"}`, babylonKeeper.GetAuthority()),
-			"test-consumer",
-			"test-consumer-description",
-		},
-		"",
-		babylonKeeper.GetAuthority(),
-		babylonKeeper.GetAuthority(),
-	)
+	network := "regtest"
+	btcConfirmationDepth := 1
+	btcFinalizationTimeout := 2
+	babylonAdmin := consumerApp.BabylonKeeper.GetAuthority()
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`, network, btcConfirmationDepth, btcFinalizationTimeout)
+	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
+	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
+
+	// Base64 encode the init messages as required by the contract schemas
+	btcLightClientInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcLightClientInitMsg))
+	btcFinalityInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcFinalityInitMsg))
+	btcStakingInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcStakingInitMsg))
+
+	babylonInitMsg := map[string]interface{}{
+		"network":                         network,
+		"babylon_tag":                     "01020304",
+		"btc_confirmation_depth":          btcConfirmationDepth,
+		"checkpoint_finalization_timeout": btcFinalizationTimeout,
+		"notify_cosmos_zone":              false,
+		"btc_light_client_code_id":        btcLightClientContractCodeID,
+		"btc_light_client_msg":            btcLightClientInitMsgBz,
+		"btc_staking_code_id":             btcStakingContractCodeID,
+		"btc_staking_msg":                 btcStakingInitMsgBz,
+		"btc_finality_code_id":            btcFinalityContractCodeID,
+		"btc_finality_msg":                btcFinalityInitMsgBz,
+		"consumer_name":                   "test-consumer",
+		"consumer_description":            "test-consumer-description",
+	}
+	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
 	require.NoError(t, err)
 
-	// instantiate Babylon contract
-	msgResp, err := babylonMsgServer.InstantiateBabylonContracts(ctx, initMsg)
+	instResp, err := wasmMsgServer.InstantiateContract(ctx, &wasmtypes.MsgInstantiateContract{
+		Sender: babylonAdmin,
+		Admin:  babylonAdmin,
+		CodeID: babylonContractCodeID,
+		Label:  "test-contract",
+		Msg:    babylonInitMsgBz,
+		Funds:  nil,
+	})
 	require.NoError(t, err)
-	require.NotNil(t, msgResp)
+	require.NotEmpty(t, instResp.Address)
+	// Debug: print the contract address
+	babylonAddr := string(instResp.Address)
+	t.Logf("Instantiated Babylon contract address (string): %s", babylonAddr)
+	t.Logf("Instantiated Babylon contract address (bytes): %x", instResp.Address)
 
-	// Verify that the contracts were instantiated successfully
-	params := babylonKeeper.GetParams(ctx)
-	babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
+	babylonAccAddr, err := sdk.AccAddressFromBech32(babylonAddr)
 	require.NoError(t, err)
-	require.NotEmpty(t, babylonAddr)
-	require.NotEmpty(t, btcLightClientAddr)
-	require.NotEmpty(t, btcStakingAddr)
-	require.NotEmpty(t, btcFinalityAddr)
 
-	// Verify that the contract code IDs are set correctly
-	require.Equal(t, babylonContractCodeID, params.BabylonContractCodeId)
-	require.Equal(t, btcLightClientContractCodeID, params.BtcLightClientContractCodeId)
-	require.Equal(t, btcStakingContractCodeID, params.BtcStakingContractCodeId)
-	require.Equal(t, btcFinalityContractCodeID, params.BtcFinalityContractCodeId)
+	// Check if the contract info exists in the keeper before querying
+	if !wasmKeeper.HasContractInfo(ctx, babylonAccAddr) {
+		t.Fatalf("Wasm keeper does not have contract info for address: %s", babylonAddr)
+	}
+
+	// get contract addresses
+	configQuery := []byte(`{"config":{}}`)
+	res, err := wasmKeeper.QuerySmart(ctx, babylonAccAddr, configQuery)
+	require.NoError(t, err)
+	var config types.BabylonContractConfig
+	err = json.Unmarshal(res, &config)
+
+	// Set all contract addresses atomically using the new governance message
+	contracts := &types.BSNContracts{
+		BabylonContract:        babylonAddr,
+		BtcLightClientContract: config.BTCLightClient,
+		BtcStakingContract:     config.BTCStaking,
+		BtcFinalityContract:    config.BTCFinality,
+	}
+	setMsg := &types.MsgSetBSNContracts{
+		Authority: consumerApp.BabylonKeeper.GetAuthority(),
+		Contracts: contracts,
+	}
+	babylonMsgServer := babylonkeeper.NewMsgServer(consumerApp.BabylonKeeper)
+	_, err = babylonMsgServer.SetBSNContracts(ctx, setMsg)
+	require.NoError(t, err)
+
+	// Verify that the contracts are set and retrievable via the new unified object
+	bsnContracts := consumerApp.BabylonKeeper.GetBSNContracts(ctx)
+	require.NotNil(t, bsnContracts)
+	require.Equal(t, babylonAddr, bsnContracts.BabylonContract)
+	require.Equal(t, config.BTCLightClient, bsnContracts.BtcLightClientContract)
+	require.Equal(t, config.BTCStaking, bsnContracts.BtcStakingContract)
+	require.Equal(t, config.BTCFinality, bsnContracts.BtcFinalityContract)
 
 	// Verify that the contracts are instantiated
-	require.True(t, wasmKeeper.HasContractInfo(ctx, babylonAddr))
-	require.True(t, wasmKeeper.HasContractInfo(ctx, btcLightClientAddr))
-	require.True(t, wasmKeeper.HasContractInfo(ctx, btcStakingAddr))
-	require.True(t, wasmKeeper.HasContractInfo(ctx, btcFinalityAddr))
+	require.True(t, wasmKeeper.HasContractInfo(ctx, babylonAccAddr))
+	btcLightClientAccAddress, err := sdk.AccAddressFromBech32(config.BTCLightClient)
+	require.NoError(t, err)
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcLightClientAccAddress))
+	btcStakingAccAddress, err := sdk.AccAddressFromBech32(config.BTCStaking)
+	require.NoError(t, err)
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcStakingAccAddress))
+	btcFinalityAccAddress, err := sdk.AccAddressFromBech32(config.BTCFinality)
+	require.NoError(t, err)
+	require.True(t, wasmKeeper.HasContractInfo(ctx, btcFinalityAccAddress))
 }

@@ -20,58 +20,22 @@ func NewMsgServer(k *Keeper) *msgServer {
 	return &msgServer{k: k}
 }
 
-func (ms msgServer) InstantiateBabylonContracts(goCtx context.Context, req *types.MsgInstantiateBabylonContracts) (*types.MsgInstantiateBabylonContractsResponse, error) {
+func (ms msgServer) SetBSNContracts(goCtx context.Context, req *types.MsgSetBSNContracts) (*types.MsgSetBSNContractsResponse, error) {
+	if err := req.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	if authority := ms.k.GetAuthority(); authority != req.Authority {
+		return nil, govtypes.ErrInvalidSigner.Wrapf("invalid authority; expected %s, got %s", authority, req.Authority)
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	params := ms.k.GetParams(ctx)
-
-	// only the authority can override the instantiated contracts
-	if params.IsContractInstantiated() && req.Signer != ms.k.authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "only authority can override instantiated contracts; expected %s, got %s", ms.k.authority, req.Signer)
-	}
-
-	// construct the init message
-	initMsg, err := types.NewInitMsg(
-		req.Network,
-		req.BabylonTag,
-		req.BtcConfirmationDepth,
-		req.CheckpointFinalizationTimeout,
-		req.NotifyCosmosZone,
-		req.IbcTransferChannelId,
-		req.BtcLightClientContractCodeId,
-		req.BtcLightClientMsg,
-		req.BtcStakingContractCodeId,
-		req.BtcStakingMsg,
-		req.BtcFinalityContractCodeId,
-		req.BtcFinalityMsg,
-		req.ConsumerName,
-		req.ConsumerDescription,
-		req.Admin,
-	)
-	if err != nil {
+	if err := ms.k.SetBSNContracts(ctx, req.Contracts); err != nil {
 		return nil, err
 	}
 
-	// instantiate the contracts
-	babylonContractAddr, btcLightClientAddr, btcStakingContractAddr, btcFinalityContractAddr, err := ms.k.InstantiateBabylonContracts(ctx, req.BabylonContractCodeId, initMsg)
-	if err != nil {
-		return nil, err
-	}
-
-	// update params
-	params.BabylonContractCodeId = req.BabylonContractCodeId
-	params.BtcLightClientContractCodeId = req.BtcLightClientContractCodeId
-	params.BtcStakingContractCodeId = req.BtcStakingContractCodeId
-	params.BtcFinalityContractCodeId = req.BtcFinalityContractCodeId
-	params.BabylonContractAddress = babylonContractAddr
-	params.BtcLightClientContractAddress = btcLightClientAddr
-	params.BtcStakingContractAddress = btcStakingContractAddr
-	params.BtcFinalityContractAddress = btcFinalityContractAddr
-	if err := ms.k.SetParams(ctx, params); err != nil {
-		panic(err)
-	}
-
-	return &types.MsgInstantiateBabylonContractsResponse{}, nil
+	return &types.MsgSetBSNContractsResponse{}, nil
 }
 
 // UpdateParams updates the params.

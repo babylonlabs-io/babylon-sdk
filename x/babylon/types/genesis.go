@@ -1,18 +1,27 @@
 package types
 
+// ValidateGenesis does basic validation on genesis state
+func ValidateGenesis(gs *GenesisState) error {
+	if err := gs.Params.ValidateBasic(); err != nil {
+		return err
+	}
+	if gs.BsnContracts != nil && gs.BsnContracts.IsSet() {
+		if err := gs.BsnContracts.ValidateBasic(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // NewGenesisState constructor
-func NewGenesisState(params Params) *GenesisState {
+func NewGenesisState(params Params, bsnContracts *BSNContracts) *GenesisState {
 	return &GenesisState{
-		Params: params,
+		Params:       params,
+		BsnContracts: bsnContracts,
 	}
 }
 
 // DefaultGenesisState default genesis state
 func DefaultGenesisState(denom string) *GenesisState {
-	return NewGenesisState(DefaultParams(denom))
-}
-
-// ValidateGenesis does basic validation on genesis state
-func ValidateGenesis(gs *GenesisState) error {
-	return gs.Params.ValidateBasic()
+	return NewGenesisState(DefaultParams(denom), &BSNContracts{})
 }

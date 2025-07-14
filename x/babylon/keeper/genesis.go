@@ -10,9 +10,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	if err := k.SetParams(ctx, data.Params); err != nil {
 		panic(err)
 	}
+	// Set BSN contracts if provided
+	if data.BsnContracts != nil && data.BsnContracts.IsSet() {
+		if err := k.SetBSNContracts(ctx, data.BsnContracts); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params := k.GetParams(ctx)
-	return types.NewGenesisState(params)
+	contracts := k.GetBSNContracts(ctx)
+	return types.NewGenesisState(params, contracts)
 }

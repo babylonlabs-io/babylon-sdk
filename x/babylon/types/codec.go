@@ -10,7 +10,7 @@ import (
 
 // RegisterLegacyAminoCodec register types with legacy amino
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgInstantiateBabylonContracts{}, "babylon/MsgInstantiateBabylonContracts", nil)
+	cdc.RegisterConcrete(&MsgSetBSNContracts{}, "babylon/MsgSetBSNContracts", nil)
 	cdc.RegisterConcrete(&MsgUpdateParams{}, "babylon/MsgUpdateParams", nil)
 }
 
@@ -18,7 +18,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgInstantiateBabylonContracts{},
+		&MsgSetBSNContracts{},
 		&MsgUpdateParams{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

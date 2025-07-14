@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -403,6 +404,17 @@ func GenesisStateWithValSet(
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
-	println(string(genesisState[banktypes.ModuleName]))
+
+	// Inject a valid BsnContracts field for the Babylon module
+	babylonGenesis := map[string]interface{}{
+		"params": map[string]interface{}{}, // use default params if needed
+		"bsn_contracts": map[string]interface{}{}, // use default params if needed
+	}
+	bz, err := json.Marshal(babylonGenesis)
+	if err != nil {
+		return nil, err
+	}
+	genesisState[bbntypes.ModuleName] = bz
+
 	return genesisState, nil
 }

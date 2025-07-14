@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -12,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/client/cli"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
@@ -100,48 +101,110 @@ func (p *TestConsumerClient) GetSender() sdk.AccAddress {
 	return p.Chain.SenderAccount.GetAddress()
 }
 
-// TODO(babylon): deploy Babylon contracts
 func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
+	// Upload contract code and instantiate contracts
 	babylonContractWasmId := p.Chain.StoreCodeFile("../testdata/babylon_contract.wasm").CodeID
 	btcLightClientContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_light_client.wasm").CodeID
 	btcStakingContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_staking.wasm").CodeID
 	btcFinalityContractWasmId := p.Chain.StoreCodeFile("../testdata/btc_finality.wasm").CodeID
 
-	// Instantiate the contract
-	// instantiate Babylon contract using cli.Parse approach
-	msgInit, err := cli.ParseInstantiateArgs(
-		[]string{
-			fmt.Sprintf("%d", babylonContractWasmId),
-			fmt.Sprintf("%d", btcLightClientContractWasmId),
-			fmt.Sprintf("%d", btcStakingContractWasmId),
-			fmt.Sprintf("%d", btcFinalityContractWasmId),
-			"regtest",
-			"01020304",
-			"1",
-			"2",
-			"false",
-			fmt.Sprintf(`{"admin":"%s"}`, p.GetSender().String()),
-			fmt.Sprintf(`{"admin":"%s"}`, p.GetSender().String()),
-			"test-consumer",
-			"test-consumer-description",
-		},
-		"",
-		p.GetSender().String(),
-		p.GetSender().String(),
-	)
-	if err != nil {
-		return nil, err
+	network := "regtest"
+	btcConfirmationDepth := 1
+	btcFinalizationTimeout := 2
+	babylonAdmin := p.GetSender().String()
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`,
+		network, btcConfirmationDepth, btcFinalizationTimeout)
+	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
+	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
+
+	// Base64 encode the init messages as required by the contract schemas
+	btcLightClientInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcLightClientInitMsg))
+	btcFinalityInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcFinalityInitMsg))
+	btcStakingInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcStakingInitMsg))
+
+	babylonInitMsg := map[string]interface{}{
+		"network":                         network,
+		"babylon_tag":                     "01020304",
+		"btc_confirmation_depth":          btcConfirmationDepth,
+		"checkpoint_finalization_timeout": btcFinalizationTimeout,
+		"notify_cosmos_zone":              false,
+		"btc_light_client_code_id":        btcLightClientContractWasmId,
+		"btc_light_client_msg":            btcLightClientInitMsgBz,
+		"btc_staking_code_id":             btcStakingContractWasmId,
+		"btc_staking_msg":                 btcStakingInitMsgBz,
+		"btc_finality_code_id":            btcFinalityContractWasmId,
+		"btc_finality_msg":                btcFinalityInitMsgBz,
+		"consumer_name":                   "test-consumer",
+		"consumer_description":            "test-consumer-description",
 	}
-	_, err = p.Chain.SendMsgs(msgInit)
+	babylonInitMsgBz, _ := json.Marshal(babylonInitMsg)
+
+	// Instantiate Babylon contract with full init message
+	msg := &wasmtypes.MsgInstantiateContract{
+		Sender: p.GetSender().String(),
+		Admin:  p.GetSender().String(),
+		CodeID: babylonContractWasmId,
+		Label:  "test-contract",
+		Msg:    babylonInitMsgBz,
+		Funds:  nil,
+	}
+	// Use SendMsgs to instantiate the contract and parse events for the address
+	abciResp, err := p.Chain.SendMsgs(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	params := p.App.BabylonKeeper.GetParams(p.Chain.GetContext())
-	babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr, err := params.GetContractAddresses()
-	if err != nil {
-		return nil, err
+	// Iterate through the events to find all contract addresses
+	var babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr sdk.AccAddress
+	for _, event := range abciResp.Events {
+		if event.Type == "instantiate" {
+			var addr sdk.AccAddress
+			var codeID string
+			for _, attr := range event.Attributes {
+				if attr.Key == "_contract_address" || attr.Key == "contract_address" {
+					addr, err = sdk.AccAddressFromBech32(attr.Value)
+					if err != nil {
+						fmt.Printf("[WARN] Could not decode contract address: %s\n", err)
+						continue
+					}
+				}
+				if attr.Key == "code_id" {
+					codeID = attr.Value
+				}
+			}
+			// Map by code ID
+			switch codeID {
+			case fmt.Sprintf("%d", babylonContractWasmId):
+				babylonAddr = addr
+				fmt.Printf("[INFO] Babylon contract address: %s\n", addr.String())
+			case fmt.Sprintf("%d", btcLightClientContractWasmId):
+				btcLightClientAddr = addr
+				fmt.Printf("[INFO] BTC Light Client contract address: %s\n", addr.String())
+			case fmt.Sprintf("%d", btcStakingContractWasmId):
+				btcStakingAddr = addr
+				fmt.Printf("[INFO] BTC Staking contract address: %s\n", addr.String())
+			case fmt.Sprintf("%d", btcFinalityContractWasmId):
+				btcFinalityAddr = addr
+				fmt.Printf("[INFO] BTC Finality contract address: %s\n", addr.String())
+			}
+		}
 	}
+	if babylonAddr == nil || btcLightClientAddr == nil || btcStakingAddr == nil || btcFinalityAddr == nil {
+		return nil, fmt.Errorf("Not all contract addresses found in instantiate events")
+	}
+
+	// Submit MsgSetBSNContracts via governance with the actual addresses
+	msgSet := &bbntypes.MsgSetBSNContracts{
+		Authority: p.App.GovKeeper.GetAuthority(),
+		Contracts: &bbntypes.BSNContracts{
+			BabylonContract:        babylonAddr.String(),
+			BtcLightClientContract: btcLightClientAddr.String(),
+			BtcStakingContract:     btcStakingAddr.String(),
+			BtcFinalityContract:    btcFinalityAddr.String(),
+		},
+	}
+	proposalID := submitGovProposal(p.t, p.Chain, msgSet)
+	voteAndPassGovProposal(p.t, p.Chain, proposalID)
 
 	r := ConsumerContract{
 		Babylon:        babylonAddr,
@@ -165,12 +228,6 @@ func (p *TestConsumerClient) Exec(contract sdk.AccAddress, payload []byte, funds
 
 func (p *TestConsumerClient) Query(contractAddr sdk.AccAddress, query Query) (QueryResponse, error) {
 	return Querier(p.t, p.Chain)(contractAddr.String(), query)
-}
-
-// MustExecGovProposal submit and vote yes on proposal
-func (p *TestConsumerClient) MustExecGovProposal(msg *bbntypes.MsgUpdateParams) {
-	proposalID := submitGovProposal(p.t, p.Chain, msg)
-	voteAndPassGovProposal(p.t, p.Chain, proposalID)
 }
 
 func submitGovProposal(t *testing.T, chain *ibctesting.WasmTestChain, msgs ...sdk.Msg) uint64 {

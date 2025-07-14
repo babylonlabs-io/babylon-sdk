@@ -1,7 +1,5 @@
 package types
 
-import "encoding/json"
-
 // Config represents the configuration for the Babylon contract
 type BabylonContractConfig struct {
 	Network                       string `json:"network"`
@@ -22,50 +20,4 @@ type BabylonContractConfig struct {
 	ConsumerName string `json:"consumer_name,omitempty"`
 	// ConsumerDescription represents the description of the Consumer
 	ConsumerDescription string `json:"consumer_description,omitempty"`
-}
-
-// NewInitMsg creates the init message for the Babylon contract
-func NewInitMsg(
-	network string,
-	babylonTag string,
-	btcConfirmationDepth uint32,
-	checkpointFinalizationTimeout uint32,
-	notifyCosmosZone bool,
-	ibcTransferChannelId string,
-	btcLightClientCodeId uint64,
-	btcLightClientInitMsgBytes []byte,
-	btcStakingCodeId uint64,
-	btcStakingInitMsgBytes []byte,
-	btcFinalityCodeId uint64,
-	btcFinalityInitMsgBytes []byte,
-	consumerName string,
-	consumerDescription string,
-	admin string,
-) ([]byte, error) {
-	initMsg := map[string]interface{}{
-		"network":                         network,
-		"babylon_tag":                     babylonTag,
-		"btc_confirmation_depth":          btcConfirmationDepth,
-		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
-		"notify_cosmos_zone":              notifyCosmosZone,
-		"btc_light_client_code_id":        btcLightClientCodeId,
-		"btc_light_client_msg":            btcLightClientInitMsgBytes,
-		"btc_staking_code_id":             btcStakingCodeId,
-		"btc_staking_msg":                 btcStakingInitMsgBytes,
-		"btc_finality_code_id":            btcFinalityCodeId,
-		"btc_finality_msg":                btcFinalityInitMsgBytes,
-		"consumer_name":                   consumerName,
-		"consumer_description":            consumerDescription,
-	}
-	if len(ibcTransferChannelId) > 0 {
-		initMsg["ics20_channel_id"] = ibcTransferChannelId
-	}
-	if len(admin) > 0 {
-		initMsg["admin"] = admin
-	}
-	initMsgBytes, err := json.Marshal(initMsg)
-	if err != nil {
-		return nil, err
-	}
-	return initMsgBytes, nil
 }

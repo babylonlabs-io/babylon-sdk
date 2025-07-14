@@ -9,18 +9,20 @@ import (
 )
 
 func TestValidateGenesis(t *testing.T) {
+	validAddr := "cosmos10ak4gg0cy6puxjed9sj58pwek7rms0cqmdma2w"
+	invalidAddr := "test-invalid-addr"
 	specs := map[string]struct {
 		state  types.GenesisState
 		expErr bool
 	}{
 		"default params": {
-			state:  *types.DefaultGenesisState(sdk.DefaultBondDenom),
-			expErr: false,
-		},
-		"custom param, should pass": {
 			state: types.GenesisState{
-				Params: types.Params{
-					MaxGasBeginBlocker: 600_000,
+				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        validAddr,
+					BtcLightClientContract: validAddr,
+					BtcStakingContract:     validAddr,
+					BtcFinalityContract:    validAddr,
 				},
 			},
 			expErr: false,
@@ -33,23 +35,55 @@ func TestValidateGenesis(t *testing.T) {
 			},
 			expErr: false,
 		},
-		"invalid max gas length, should fail": {
+		"invalid babylon contract address, should fail": {
 			state: types.GenesisState{
-				Params: types.Params{
-					MaxGasBeginBlocker: 0,
+				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        invalidAddr,
+					BtcLightClientContract: validAddr,
+					BtcStakingContract:     validAddr,
+					BtcFinalityContract:    validAddr,
+				},
+			},
+			expErr: true,
+		},
+		"invalid btc light client contract address, should fail": {
+			state: types.GenesisState{
+				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        validAddr,
+					BtcLightClientContract: invalidAddr,
+					BtcStakingContract:     validAddr,
+					BtcFinalityContract:    validAddr,
+				},
+			},
+			expErr: true,
+		},
+		"invalid btc staking contract address, should fail": {
+			state: types.GenesisState{
+				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        validAddr,
+					BtcLightClientContract: validAddr,
+					BtcStakingContract:     invalidAddr,
+					BtcFinalityContract:    validAddr,
+				},
+			},
+			expErr: true,
+		},
+		"invalid btc finality contract address, should fail": {
+			state: types.GenesisState{
+				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        validAddr,
+					BtcLightClientContract: validAddr,
+					BtcStakingContract:     validAddr,
+					BtcFinalityContract:    invalidAddr,
 				},
 			},
 			expErr: true,
 		},
 		"invalid max cap coin denom, should fail": {
-			state: types.GenesisState{
-				Params: types.Params{
-					MaxGasBeginBlocker: 0,
-				},
-			},
-			expErr: true,
-		},
-		"invalid max cap coin amount, should fail": {
 			state: types.GenesisState{
 				Params: types.Params{
 					MaxGasBeginBlocker: 0,

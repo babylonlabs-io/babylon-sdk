@@ -5,20 +5,23 @@
 ## Table of Contents
 
 - [babylonlabs/babylon/v1beta1/babylon.proto](#babylonlabs/babylon/v1beta1/babylon.proto)
+    - [BSNContracts](#babylonlabs.babylon.v1beta1.BSNContracts)
     - [Params](#babylonlabs.babylon.v1beta1.Params)
   
 - [babylonlabs/babylon/v1beta1/genesis.proto](#babylonlabs/babylon/v1beta1/genesis.proto)
     - [GenesisState](#babylonlabs.babylon.v1beta1.GenesisState)
   
 - [babylonlabs/babylon/v1beta1/query.proto](#babylonlabs/babylon/v1beta1/query.proto)
+    - [QueryBSNContractsRequest](#babylonlabs.babylon.v1beta1.QueryBSNContractsRequest)
+    - [QueryBSNContractsResponse](#babylonlabs.babylon.v1beta1.QueryBSNContractsResponse)
     - [QueryParamsRequest](#babylonlabs.babylon.v1beta1.QueryParamsRequest)
     - [QueryParamsResponse](#babylonlabs.babylon.v1beta1.QueryParamsResponse)
   
     - [Query](#babylonlabs.babylon.v1beta1.Query)
   
 - [babylonlabs/babylon/v1beta1/tx.proto](#babylonlabs/babylon/v1beta1/tx.proto)
-    - [MsgInstantiateBabylonContracts](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts)
-    - [MsgInstantiateBabylonContractsResponse](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse)
+    - [MsgSetBSNContracts](#babylonlabs.babylon.v1beta1.MsgSetBSNContracts)
+    - [MsgSetBSNContractsResponse](#babylonlabs.babylon.v1beta1.MsgSetBSNContractsResponse)
     - [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams)
     - [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse)
   
@@ -35,6 +38,24 @@
 
 
 
+<a name="babylonlabs.babylon.v1beta1.BSNContracts"></a>
+
+### BSNContracts
+BSNContracts holds all four contract addresses for the Babylon module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `babylon_contract` | [string](#string) |  |  |
+| `btc_light_client_contract` | [string](#string) |  |  |
+| `btc_staking_contract` | [string](#string) |  |  |
+| `btc_finality_contract` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="babylonlabs.babylon.v1beta1.Params"></a>
 
 ### Params
@@ -43,14 +64,6 @@ Params defines the parameters for the x/babylon module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID of the Babylon contract |
-| `btc_light_client_contract_code_id` | [uint64](#uint64) |  | btc_light_client_contract_code_id is the code ID of the BTC light client contract |
-| `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID of the BTC staking contract |
-| `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID of the BTC finality contract |
-| `babylon_contract_address` | [string](#string) |  | babylon_contract_address is the address of the Babylon contract |
-| `btc_light_client_contract_address` | [string](#string) |  | btc_light_client_contract_address is the address of the BTC light client contract |
-| `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
-| `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
 | `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
 
 
@@ -83,6 +96,7 @@ GenesisState defines babylon module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `params` | [Params](#babylonlabs.babylon.v1beta1.Params) |  |  |
+| `bsn_contracts` | [BSNContracts](#babylonlabs.babylon.v1beta1.BSNContracts) |  |  |
 
 
 
@@ -102,6 +116,33 @@ GenesisState defines babylon module's genesis state.
 <p align="right"><a href="#top">Top</a></p>
 
 ## babylonlabs/babylon/v1beta1/query.proto
+
+
+
+<a name="babylonlabs.babylon.v1beta1.QueryBSNContractsRequest"></a>
+
+### QueryBSNContractsRequest
+QueryBSNContractsRequest is the request type for the
+Query/BSNContracts RPC method
+
+
+
+
+
+
+<a name="babylonlabs.babylon.v1beta1.QueryBSNContractsResponse"></a>
+
+### QueryBSNContractsResponse
+QueryBSNContractsResponse is the response type for the
+Query/BSNContracts RPC method
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `bsn_contracts` | [BSNContracts](#babylonlabs.babylon.v1beta1.BSNContracts) |  |  |
+
+
+
 
 
 
@@ -146,6 +187,7 @@ Query provides defines the gRPC querier service
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#babylonlabs.babylon.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#babylonlabs.babylon.v1beta1.QueryParamsResponse) | Params queries the parameters of x/babylon module. | GET|/babylonlabs/babylon/v1beta1/params|
+| `BSNContracts` | [QueryBSNContractsRequest](#babylonlabs.babylon.v1beta1.QueryBSNContractsRequest) | [QueryBSNContractsResponse](#babylonlabs.babylon.v1beta1.QueryBSNContractsResponse) | BSNContracts queries the contract addresses of x/babylon module. | GET|/babylonlabs/babylon/v1beta1/bsn-contracts|
 
  <!-- end services -->
 
@@ -158,42 +200,27 @@ Query provides defines the gRPC querier service
 
 
 
-<a name="babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts"></a>
+<a name="babylonlabs.babylon.v1beta1.MsgSetBSNContracts"></a>
 
-### MsgInstantiateBabylonContracts
-MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
+### MsgSetBSNContracts
+MsgSetBSNContracts is the Msg/SetBSNContracts request
 type.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `signer` | [string](#string) |  | signer is the address who submits the message. |
-| `babylon_contract_code_id` | [uint64](#uint64) |  | babylon_contract_code_id is the code ID for the Babylon contract. |
-| `btc_light_client_contract_code_id` | [uint64](#uint64) |  | btc_light_client_contract_code_id is the code ID for the BTC light client contract. |
-| `btc_staking_contract_code_id` | [uint64](#uint64) |  | btc_staking_contract_code_id is the code ID for the BTC staking contract. |
-| `btc_finality_contract_code_id` | [uint64](#uint64) |  | btc_finality_contract_code_id is the code ID for the BTC finality contract. |
-| `network` | [string](#string) |  | network is the Bitcoin network to connect to (e.g. "regtest", "testnet", "mainnet") |
-| `babylon_tag` | [string](#string) |  | babylon_tag is a unique identifier for this Babylon instance |
-| `btc_confirmation_depth` | [uint32](#uint32) |  | btc_confirmation_depth is the number of confirmations required for Bitcoin transactions |
-| `checkpoint_finalization_timeout` | [uint32](#uint32) |  | checkpoint_finalization_timeout is the timeout in blocks for checkpoint finalization |
-| `notify_cosmos_zone` | [bool](#bool) |  | notify_cosmos_zone indicates whether to notify the Cosmos zone of events |
-| `ibc_transfer_channel_id` | [string](#string) |  | ibc_transfer_channel_id is the IBC channel ID for the IBC transfer contract. If empty then the reward distribution will be done at the consumer side. |
-| `btc_light_client_msg` | [bytes](#bytes) |  | btc_light_client_msg is the initialization message for the BTC light client contract |
-| `btc_staking_msg` | [bytes](#bytes) |  | btc_staking_msg is the initialization message for the BTC staking contract |
-| `btc_finality_msg` | [bytes](#bytes) |  | btc_finality_msg is the initialization message for the BTC finality contract |
-| `consumer_name` | [string](#string) |  | consumer_name is the name of this consumer chain |
-| `consumer_description` | [string](#string) |  | consumer_description is a description of this consumer chain |
-| `admin` | [string](#string) |  | admin is the address that controls the Babylon module |
+| `authority` | [string](#string) |  | authority is the address that controls the module (defaults to x/gov unless overwritten). |
+| `contracts` | [BSNContracts](#babylonlabs.babylon.v1beta1.BSNContracts) |  | contracts holds all four contract addresses. |
 
 
 
 
 
 
-<a name="babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse"></a>
+<a name="babylonlabs.babylon.v1beta1.MsgSetBSNContractsResponse"></a>
 
-### MsgInstantiateBabylonContractsResponse
-MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
+### MsgSetBSNContractsResponse
+MsgSetBSNContractsResponse is the Msg/SetBSNContracts
 response type.
 
 
@@ -243,7 +270,7 @@ Msg defines the wasm Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `InstantiateBabylonContracts` | [MsgInstantiateBabylonContracts](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContracts) | [MsgInstantiateBabylonContractsResponse](#babylonlabs.babylon.v1beta1.MsgInstantiateBabylonContractsResponse) | InstantiateBabylonContracts defines an operation for instantiating the Babylon contracts. | |
+| `SetBSNContracts` | [MsgSetBSNContracts](#babylonlabs.babylon.v1beta1.MsgSetBSNContracts) | [MsgSetBSNContractsResponse](#babylonlabs.babylon.v1beta1.MsgSetBSNContractsResponse) | SetBSNContracts defines an operation for instantiating the Cosmos BSN contracts. | |
 | `UpdateParams` | [MsgUpdateParams](#babylonlabs.babylon.v1beta1.MsgUpdateParams) | [MsgUpdateParamsResponse](#babylonlabs.babylon.v1beta1.MsgUpdateParamsResponse) | UpdateParams defines a (governance) operation for updating the x/auth module parameters. The authority defaults to the x/gov module account. | |
 
  <!-- end services -->

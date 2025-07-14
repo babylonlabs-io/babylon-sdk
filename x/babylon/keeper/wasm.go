@@ -7,128 +7,9 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
-	types "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-func (k Keeper) InstantiateBabylonContracts(
-	ctx sdk.Context,
-	babylonContractCodeId uint64,
-	initMsg []byte,
-) (string, string, string, string, error) {
-	contractKeeper := wasmkeeper.NewGovPermissionKeeper(k.wasm)
-
-	// gov address
-	govAddr, err := sdk.AccAddressFromBech32(k.authority)
-	if err != nil {
-		panic(err)
-	}
-
-	// instantiate Babylon contract
-	babylonContractAddr, _, err := contractKeeper.Instantiate(ctx, babylonContractCodeId, govAddr, govAddr, initMsg, "Babylon contract", nil)
-	if err != nil {
-		return "", "", "", "", err
-	}
-
-	// get contract addresses
-	configQuery := []byte(`{"config":{}}`)
-	res, err := k.wasm.QuerySmart(ctx, babylonContractAddr, configQuery)
-	if err != nil {
-		return "", "", "", "", err
-	}
-	var config types.BabylonContractConfig
-	err = json.Unmarshal(res, &config)
-	if err != nil {
-		return "", "", "", "", err
-	}
-	if len(config.BTCLightClient) == 0 {
-		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC light client contract")
-	}
-	if len(config.BTCStaking) == 0 {
-		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC staking contract")
-	}
-	if len(config.BTCFinality) == 0 {
-		return "", "", "", "", errorsmod.Wrap(types.ErrInvalid, "failed to instantiate BTC finality contract")
-	}
-
-	return babylonContractAddr.String(), config.BTCLightClient, config.BTCStaking, config.BTCFinality, nil
-}
-
-func (k Keeper) getBTCLightClientContractAddr(ctx sdk.Context) sdk.AccAddress {
-	// get address of the BTC light client contract
-	addrStr := k.GetParams(ctx).BtcLightClientContractAddress
-	if len(addrStr) == 0 {
-		// the BTC light client contract address is not set yet, skip sending BeginBlockMsg
-		return nil
-	}
-	addr, err := sdk.AccAddressFromBech32(addrStr)
-	if err != nil {
-		// Although this is a programming error so we should panic, we emit
-		// a warning message to minimise the impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC light client contract address is malformed", "contract", addrStr, "error", err)
-		return nil
-	}
-	if !k.wasm.HasContractInfo(ctx, addr) {
-		// NOTE: it's possible that the default contract address does not correspond to
-		// any contract. We emit a warning message rather than panic to minimise the
-		// impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC light client contract address is not on-chain", "contract", addrStr)
-		return nil
-	}
-	return addr
-}
-
-func (k Keeper) getBTCStakingContractAddr(ctx sdk.Context) sdk.AccAddress {
-	// get address of the BTC staking contract
-	addrStr := k.GetParams(ctx).BtcStakingContractAddress
-	if len(addrStr) == 0 {
-		// the BTC staking contract address is not set yet, skip sending BeginBlockMsg
-		return nil
-	}
-	addr, err := sdk.AccAddressFromBech32(addrStr)
-	if err != nil {
-		// Although this is a programming error so we should panic, we emit
-		// a warning message to minimise the impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC staking contract address is malformed", "contract", addrStr, "error", err)
-		return nil
-	}
-	if !k.wasm.HasContractInfo(ctx, addr) {
-		// NOTE: it's possible that the default contract address does not correspond to
-		// any contract. We emit a warning message rather than panic to minimise the
-		// impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC staking contract address is not on-chain", "contract", addrStr)
-		return nil
-	}
-
-	return addr
-}
-
-func (k Keeper) getBTCFinalityContractAddr(ctx sdk.Context) sdk.AccAddress {
-	// get address of the BTC finality contract
-	addrStr := k.GetParams(ctx).BtcFinalityContractAddress
-	if len(addrStr) == 0 {
-		// the BTC finality contract address is not set yet, skip sending BeginBlockMsg
-		return nil
-	}
-	addr, err := sdk.AccAddressFromBech32(addrStr)
-	if err != nil {
-		// Although this is a programming error so we should panic, we emit
-		// a warning message to minimise the impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC finality contract address is malformed", "contract", addrStr, "error", err)
-		return nil
-	}
-	if !k.wasm.HasContractInfo(ctx, addr) {
-		// NOTE: it's possible that the default contract address does not correspond to
-		// any contract. We emit a warning message rather than panic to minimise the
-		// impact on the consumer chain's operation
-		k.Logger(ctx).Warn("the BTC finality contract address is not on-chain", "contract", addrStr)
-		return nil
-	}
-
-	return addr
-}
 
 // SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo.
 // NOTE: This is a design decision to be made by consumer chains - in this reference implementation,
@@ -138,11 +19,19 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	ctx := sdk.UnwrapSDKContext(c)
 	headerInfo := ctx.HeaderInfo()
 
-	stakingAddr := k.getBTCStakingContractAddr(ctx)
-	finalityAddr := k.getBTCFinalityContractAddr(ctx)
-	if stakingAddr == nil || finalityAddr == nil {
+	contracts := k.GetBSNContracts(ctx)
+	if contracts == nil || !contracts.IsSet() {
 		k.Logger(ctx).Info("Skipping begin block processing: contract addresses are missing")
 		return nil
+	}
+
+	stakingAddr, err := sdk.AccAddressFromBech32(contracts.BtcStakingContract)
+	if err != nil {
+		return err
+	}
+	finalityAddr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)
+	if err != nil {
+		return err
 	}
 
 	// Send the sudo call to the BTC staking contract
@@ -174,10 +63,15 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 func (k Keeper) SendEndBlockMsg(c context.Context) error {
 	ctx := sdk.UnwrapSDKContext(c)
 
-	// try to get and parse BTC finality contract
-	addr := k.getBTCFinalityContractAddr(ctx)
-	if addr == nil {
+	contracts := k.GetBSNContracts(ctx)
+	if contracts == nil || !contracts.IsSet() {
+		k.Logger(ctx).Info("Skipping end block processing: contract addresses are missing")
 		return nil
+	}
+
+	finalityAddr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)
+	if err != nil {
+		return err
 	}
 
 	// construct the sudo message
@@ -190,7 +84,7 @@ func (k Keeper) SendEndBlockMsg(c context.Context) error {
 	}
 
 	// send the sudo call
-	return k.doSudoCall(ctx, addr, msg)
+	return k.doSudoCall(ctx, finalityAddr, msg)
 }
 
 // caller must ensure gas limits are set proper and handle panics
