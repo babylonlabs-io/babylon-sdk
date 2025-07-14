@@ -4,13 +4,22 @@ import (
 	"context"
 	"time"
 
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	// handle coins in the fee collector account, including
+	// - send a portion of coins in the fee collector account to the incentive module account
+	// - accumulate BTC staking gauge at the current height
+	if sdk.UnwrapSDKContext(ctx).HeaderInfo().Height > 0 {
+		k.HandleCoinsInFeeCollector(ctx)
+	}
 
 	return k.SendBeginBlockMsg(ctx)
 }

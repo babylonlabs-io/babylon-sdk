@@ -2,9 +2,10 @@ package keeper
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // MintBlockRewards mints new tokens and sends them to the finality contract for distribution.
@@ -37,16 +38,16 @@ func (k Keeper) MintBlockRewards(pCtx sdk.Context, recipient sdk.AccAddress, amt
 
 	// Mint rewards tokens
 	coins := sdk.NewCoins(amt)
-	err = k.bank.MintCoins(cacheCtx, types.ModuleName, coins)
+	err = k.bankKeeper.MintCoins(cacheCtx, types.ModuleName, coins)
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}
 
 	// FIXME: Confirm we want this supply offset enabled for rewards, i.e.
 	// as virtual coins that do not count to the total supply
-	//k.bank.AddSupplyOffset(cacheCtx, bondDenom, amt.Amount.Neg())
+	// k.bankKeeper.AddSupplyOffset(cacheCtx, bondDenom, amt.Amount.Neg())
 
-	err = k.bank.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, recipient, coins)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(cacheCtx, types.ModuleName, recipient, coins)
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}

@@ -4,9 +4,10 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var _ types.MsgServer = msgServer{}
@@ -79,7 +80,7 @@ func (ms msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdatePara
 	if ms.k.authority != req.Authority {
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", ms.k.authority, req.Authority)
 	}
-	if err := req.Params.ValidateBasic(); err != nil {
+	if err := req.Params.Validate(); err != nil {
 		return nil, govtypes.ErrInvalidProposalMsg.Wrapf("invalid parameter: %v", err)
 	}
 
