@@ -14,5 +14,5 @@ func DefaultGenesisState(denom string) *GenesisState {
 
 // ValidateGenesis does basic validation on genesis state
 func ValidateGenesis(gs *GenesisState) error {
-	return gs.Params.ValidateBasic()
+	return gs.Params.Validate()
 }

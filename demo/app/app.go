@@ -321,11 +321,12 @@ func NewConsumerApp(
 
 	app.BabylonKeeper = bbnkeeper.NewKeeper(
 		app.appCodec,
-		keys[bbntypes.StoreKey],
-		memKeys[bbntypes.MemStoreKey],
+		runtime.NewKVStoreService(keys[bbntypes.StoreKey]),
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		&app.WasmKeeper, // ensure this is a pointer as we instantiate the keeper a bit later
+		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

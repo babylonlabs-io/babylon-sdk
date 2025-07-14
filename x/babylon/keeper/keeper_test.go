@@ -285,11 +285,12 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 
 	babylonKeeper := keeper.NewKeeper(
 		appCodec,
-		keys[types.StoreKey],
-		memKeys[types.MemStoreKey],
+		runtime.NewKVStoreService(storetypes.NewKVStoreKey(types.StoreKey)),
+		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		&wasmKeeper,
+		authtypes.FeeCollectorName,
 		authority,
 		opts...,
 	)

@@ -52,6 +52,7 @@ Params defines the parameters for the x/babylon module.
 | `btc_staking_contract_address` | [string](#string) |  | btc_staking_contract_address is the address of the BTC staking contract |
 | `btc_finality_contract_address` | [string](#string) |  | btc_finality_contract_address is the address of the BTC finality contract |
 | `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
+| `btc_staking_portion` | [string](#string) |  | btc_staking_portion is the portion of rewards that goes to Finality Providers/delegations NOTE: the portion of each Finality Provider/delegation is calculated by using its voting power and finality provider's commission |
 
 
 
