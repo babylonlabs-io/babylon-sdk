@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	corestoretypes "cosmossdk.io/core/store"
@@ -11,6 +12,11 @@ import (
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
+
+// Option is an extension point to instantiate keeper with non default values
+type Option interface {
+	apply(*Keeper)
+}
 
 type Keeper struct {
 	cdc           codec.Codec
@@ -36,6 +42,7 @@ func NewKeeper(
 	wasm *wasmkeeper.Keeper,
 	feeCollectorName string,
 	authority string,
+	opts ...Option,
 ) *Keeper {
 	k := &Keeper{
 		cdc:              cdc,
@@ -48,6 +55,10 @@ func NewKeeper(
 		authority:        authority,
 	}
 
+	for _, o := range opts {
+		o.apply(k)
+	}
+
 	return k
 }
 
@@ -56,6 +67,11 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k Keeper) Logger(goCtx context.Context) log.Logger {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetTest(ctx sdk.Context, actor sdk.AccAddress) string {
+	return "placeholder"
 }

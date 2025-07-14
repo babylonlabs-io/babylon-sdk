@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -18,6 +19,11 @@ func (p Params) Validate() error {
 	if p.MaxGasBeginBlocker == 0 {
 		return ErrInvalid.Wrap("empty max gas end-blocker setting")
 	}
+
+	if p.BtcStakingPortion.IsNil() {
+		return fmt.Errorf("BtcStakingPortion should not be nil")
+	}
+
 	return nil
 }
 
