@@ -38,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+### State Breaking
+
+- [#165](https://github.com/babylonlabs-io/babylon-sdk/pull/165) refactor: improve contracts storage & remove init
+
 ### Improvements
 
 - [#108](https://github.com/babylonlabs-io/babylon-sdk/pull/108) chore: Upgrade wasmd to 0.55
