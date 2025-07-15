@@ -98,6 +98,20 @@ func GetGZippedContractCodes() ([]byte, []byte, []byte, []byte) {
 	return babylonContractCode, btcLightClientContractCode, btcStakingContractCode, btcFinalityContractCode
 }
 
+// Config represents the configuration for the Babylon contract
+type babylonContractConfig struct {
+	Network                       string `json:"network"`
+	BabylonTag                    []byte `json:"babylon_tag"`
+	BTCConfirmationDepth          uint32 `json:"btc_confirmation_depth"`
+	CheckpointFinalizationTimeout uint32 `json:"checkpoint_finalization_timeout"`
+	NotifyCosmosZone              bool   `json:"notify_cosmos_zone"`
+	BTCLightClient                string `json:"btc_light_client,omitempty"`
+	BTCStaking                    string `json:"btc_staking,omitempty"`
+	BTCFinality                   string `json:"btc_finality,omitempty"`
+	ConsumerName                  string `json:"consumer_name,omitempty"`
+	ConsumerDescription           string `json:"consumer_description,omitempty"`
+}
+
 func TestInstantiateBabylonContracts(t *testing.T) {
 	consumerApp := Setup(t)
 	ctx := consumerApp.NewContext(false)
@@ -190,7 +204,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	configQuery := []byte(`{"config":{}}`)
 	res, err := wasmKeeper.QuerySmart(ctx, babylonAccAddr, configQuery)
 	require.NoError(t, err)
-	var config types.BabylonContractConfig
+	var config babylonContractConfig
 	err = json.Unmarshal(res, &config)
 
 	// Set all contract addresses atomically using the new governance message

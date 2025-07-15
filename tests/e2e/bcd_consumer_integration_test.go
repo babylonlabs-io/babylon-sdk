@@ -4,7 +4,9 @@
 package e2e
 
 import (
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -48,6 +50,8 @@ import (
 
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 var (
@@ -156,6 +160,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 // 3. Validates the consumer registration details in Babylon
 // Then, it waits until the IBC channel between babylon<->bcd is established
 func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
+	s.bootstrapContracts()
+
 	// register and verify consumer
 	s.registerVerifyConsumer()
 
@@ -1707,4 +1713,106 @@ func ParseRespBTCDelToBTCDel(resp *bstypes.BTCDelegationResponse) (btcDel *bstyp
 	}
 
 	return btcDel, nil
+}
+
+func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
+	// 1. Upload contract codes
+	wasmDir := filepath.Join("..", "..", "tests", "testdata")
+	contractFiles := []string{
+		"babylon_contract.wasm",
+		"btc_light_client.wasm",
+		"btc_staking.wasm",
+		"btc_finality.wasm",
+	}
+	codeIDs := make([]uint64, 4)
+	for i, file := range contractFiles {
+		fullPath := filepath.Join(wasmDir, file)
+		err := s.cosmwasmController.StoreWasmCode(fullPath)
+		s.Require().NoError(err, "Failed to upload wasm code: %s", file)
+		codeID, err := s.cosmwasmController.GetLatestCodeId()
+		s.Require().NoError(err, "Failed to get code ID for: %s", file)
+		codeIDs[i] = codeID
+	}
+
+	// 2. Prepare init messages
+	network := "regtest"
+	btcConfirmationDepth := 1
+	btcFinalizationTimeout := 2
+	admin := s.cosmwasmController.MustGetValidatorAddress()
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`,
+		network, btcConfirmationDepth, btcFinalizationTimeout)
+	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
+	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
+	btcLightClientInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcLightClientInitMsg))
+	btcFinalityInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcFinalityInitMsg))
+	btcStakingInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcStakingInitMsg))
+
+	babylonInitMsg := map[string]interface{}{
+		"network":                         network,
+		"babylon_tag":                     "01020304",
+		"btc_confirmation_depth":          btcConfirmationDepth,
+		"checkpoint_finalization_timeout": btcFinalizationTimeout,
+		"notify_cosmos_zone":              false,
+		"btc_light_client_code_id":        codeIDs[1],
+		"btc_light_client_msg":            btcLightClientInitMsgBz,
+		"btc_staking_code_id":             codeIDs[2],
+		"btc_staking_msg":                 btcStakingInitMsgBz,
+		"btc_finality_code_id":            codeIDs[3],
+		"btc_finality_msg":                btcFinalityInitMsgBz,
+		"consumer_name":                   "test-consumer",
+		"consumer_description":            "test-consumer-description",
+	}
+	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
+	s.Require().NoError(err, "Failed to marshal Babylon init msg")
+
+	// 3. Instantiate Babylon contract
+	err = s.cosmwasmController.InstantiateContract(codeIDs[0], babylonInitMsgBz)
+	s.Require().NoError(err, "Failed to instantiate Babylon contract")
+
+	// 4. Get contract addresses from query
+	contracts := s.cosmwasmController.MustQueryBabylonContracts()
+	s.Require().NotEmpty(contracts.BabylonContract)
+	s.Require().NotEmpty(contracts.BtcLightClientContract)
+	s.Require().NotEmpty(contracts.BtcStakingContract)
+	s.Require().NotEmpty(contracts.BtcFinalityContract)
+
+	// 5. Submit MsgSetBSNContracts via governance
+	msgSet := &bbntypes.MsgSetBSNContracts{
+		Authority: admin,
+		Contracts: &bbntypes.BSNContracts{
+			BabylonContract:        contracts.BabylonContract,
+			BtcLightClientContract: contracts.BtcLightClientContract,
+			BtcStakingContract:     contracts.BtcStakingContract,
+			BtcFinalityContract:    contracts.BtcFinalityContract,
+		},
+	}
+
+	// For now, let's use a simpler approach - submit the proposal and vote
+	// We'll need to add governance helper methods to the controller
+	s.submitAndVoteGovernanceProposal(msgSet)
+
+	// Verify the contracts are set
+	finalContracts := s.cosmwasmController.MustQueryBabylonContracts()
+	s.Require().Equal(contracts.BabylonContract, finalContracts.BabylonContract)
+	s.Require().Equal(contracts.BtcLightClientContract, finalContracts.BtcLightClientContract)
+	s.Require().Equal(contracts.BtcStakingContract, finalContracts.BtcStakingContract)
+	s.Require().Equal(contracts.BtcFinalityContract, finalContracts.BtcFinalityContract)
+}
+
+// Helper method to submit and vote on a governance proposal
+func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
+	// 1. Submit the proposal
+	proposalID, err := s.cosmwasmController.SubmitGovernanceProposal([]sdk.Msg{msg}, "Set BSN Contracts", "Set contract addresses for Babylon system")
+	s.Require().NoError(err, "Failed to submit governance proposal")
+
+	// 2. Vote YES
+	err = s.cosmwasmController.VoteOnProposal(proposalID, govv1.OptionYes)
+	s.Require().NoError(err, "Failed to vote on proposal")
+
+	// 3. Wait for proposal to pass using require.Eventually
+	s.Require().Eventually(func() bool {
+		status, err := s.cosmwasmController.QueryProposalStatus(proposalID)
+		s.Require().NoError(err)
+		return status == govv1.ProposalStatus_PROPOSAL_STATUS_PASSED
+	}, 2*time.Minute, 2*time.Second, "proposal did not pass in time")
 }

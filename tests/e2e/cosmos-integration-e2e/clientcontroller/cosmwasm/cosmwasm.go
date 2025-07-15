@@ -42,6 +42,9 @@ import (
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"go.uber.org/zap"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type CosmwasmConsumerController struct {
@@ -1037,6 +1040,89 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 		return nil, err
 	}
 	return grpcConn, nil
+}
+
+// SendMsg is a public wrapper around sendMsg for external use
+func (cc *CosmwasmConsumerController) SendMsg(msg sdk.Msg) (*wasmclient.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+	return cc.sendMsg(msg, emptyErrs, emptyErrs)
+}
+
+// SubmitGovernanceProposal submits a real governance proposal and returns the proposal ID
+func (cc *CosmwasmConsumerController) SubmitGovernanceProposal(msgs []sdk.Msg, title, summary string) (uint64, error) {
+	// Query gov params for min deposit
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer grpcConn.Close()
+	govClient := govtypes.NewQueryClient(grpcConn)
+	paramsResp, err := govClient.Params(context.Background(), &govtypes.QueryParamsRequest{ParamsType: "deposit"})
+	if err != nil {
+		return 0, err
+	}
+	minDeposit := paramsResp.Params.MinDeposit
+
+	// Construct MsgSubmitProposal
+	proposer := cc.MustGetValidatorAddress()
+	govMsg, err := govtypes.NewMsgSubmitProposal(msgs, minDeposit, proposer, "", title, summary, false)
+	if err != nil {
+		return 0, err
+	}
+
+	// Submit proposal
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(govMsg, emptyErrs, emptyErrs)
+	if err != nil {
+		return 0, err
+	}
+
+	// Query for the latest proposal ID
+	proposalsResp, err := govClient.Proposals(context.Background(), &govtypes.QueryProposalsRequest{
+		Depositor: proposer,
+	})
+	if err != nil {
+		return 0, err
+	}
+	if len(proposalsResp.Proposals) == 0 {
+		return 0, fmt.Errorf("no proposals found after submission")
+	}
+	// Return the highest proposal ID
+	maxID := proposalsResp.Proposals[0].Id
+	for _, p := range proposalsResp.Proposals {
+		if p.Id > maxID {
+			maxID = p.Id
+		}
+	}
+	return maxID, nil
+}
+
+// VoteOnProposal votes on a governance proposal
+func (cc *CosmwasmConsumerController) VoteOnProposal(proposalID uint64, option govv1.VoteOption) error {
+	voter := cc.MustGetValidatorAddress()
+	voterAddr, err := sdk.AccAddressFromBech32(voter)
+	if err != nil {
+		return err
+	}
+	voteMsg := govv1.NewMsgVote(voterAddr, proposalID, option, "")
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(voteMsg, emptyErrs, emptyErrs)
+	return err
+}
+
+// QueryProposalStatus queries the status of a proposal by ID
+func (cc *CosmwasmConsumerController) QueryProposalStatus(proposalID uint64) (govv1.ProposalStatus, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return govv1.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+	}
+	defer grpcConn.Close()
+	govClient := govv1.NewQueryClient(grpcConn)
+	resp, err := govClient.Proposal(context.Background(), &govv1.QueryProposalRequest{ProposalId: proposalID})
+	if err != nil {
+		return govv1.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+	}
+	return resp.Proposal.Status, nil
 }
 
 func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
