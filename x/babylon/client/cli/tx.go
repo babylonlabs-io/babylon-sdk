@@ -33,7 +33,7 @@ func GetTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [consumer-name] [consumer-description]
+// [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [initial-header] [consumer-name] [consumer-description]
 func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender string, admin string) (*types.MsgInstantiateBabylonContracts, error) {
 	// get the id of the code to instantiate
 	babylonContractCodeID, err := strconv.ParseUint(args[0], 10, 64)
@@ -69,8 +69,9 @@ func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender str
 	}
 	btcStakingMsg := args[9]
 	btcFinalityMsg := args[10]
-	consumerName := args[11]
-	consumerDescription := args[12]
+	initialHeader := args[11]
+	consumerName := args[12]
+	consumerDescription := args[13]
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgInstantiateBabylonContracts{
@@ -86,6 +87,7 @@ func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender str
 		NotifyCosmosZone:              notifyCosmosZone,
 		BtcStakingMsg:                 []byte(btcStakingMsg),
 		BtcFinalityMsg:                []byte(btcFinalityMsg),
+		InitialHeader:                 initialHeader,
 		ConsumerName:                  consumerName,
 		ConsumerDescription:           consumerDescription,
 	}
@@ -97,15 +99,15 @@ func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender str
 	}
 
 	// BTC light client contract message
-	btclcMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`, msg.Network, msg.BtcConfirmationDepth, msg.CheckpointFinalizationTimeout)
-	msg.BtcLightClientMsg = []byte(btclcMsg)
+	btclcMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d,"initial_header":%s}`, msg.Network, msg.BtcConfirmationDepth, msg.CheckpointFinalizationTimeout, msg.InitialHeader)
+	msg.BtcLightClientMsg = []byte(btclcMsg)	
 
 	return &msg, nil
 }
 
 func NewInstantiateBabylonContractsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [consumer-name] [consumer-description]",
+		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [btc-light-client-msg] [consumer-name] [consumer-description]",
 		Short:   "Instantiate Babylon contracts",
 		Long:    "Instantiate Babylon contracts",
 		Aliases: []string{"i"},
