@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -49,12 +46,13 @@ import (
 	"go.uber.org/zap"
 
 	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
-	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
+	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var (
@@ -1777,8 +1775,19 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 		Msg:    babylonInitMsgBz,
 		Funds:  nil,
 	}
+
+	// Check current balance
+	currentBalance, err := s.cosmwasmController.QueryBalance(admin, "stake")
+	s.Require().NoError(err, "Failed to query account balance")
+	s.T().Logf("Account %s current balance before initiating contracts: %s", admin, currentBalance.String())
+
 	instantiateResp, err := s.cosmwasmController.SendMsg(msg)
 	s.Require().NoError(err, "Failed to instantiate Babylon contract")
+
+	// Check current balance
+	currentBalance, err = s.cosmwasmController.QueryBalance(admin, "stake")
+	s.Require().NoError(err, "Failed to query account balance")
+	s.T().Logf("Account %s current balance after initiating contracts: %s", admin, currentBalance.String())
 
 	var babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr string
 	for _, event := range instantiateResp.Events {
@@ -1829,6 +1838,11 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 
 // Helper method to submit and vote on a governance proposal
 func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
+	admin := s.cosmwasmController.MustGetValidatorAddress()
+	currentBalance, err := s.cosmwasmController.QueryBalance(admin, "stake")
+	s.Require().NoError(err, "Failed to query account balance")
+	s.T().Logf("Account %s current balance before sending gov prop: %s", admin, currentBalance.String())
+
 	// 1. Submit the proposal
 	proposalID, err := s.cosmwasmController.SubmitGovernanceProposal([]sdk.Msg{msg}, "Set BSN Contracts", "Set contract addresses for Babylon system")
 	s.Require().NoError(err, "Failed to submit governance proposal")

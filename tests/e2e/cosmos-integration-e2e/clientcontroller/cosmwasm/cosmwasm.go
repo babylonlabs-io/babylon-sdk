@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -1145,4 +1146,43 @@ func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*Consumer
 	}
 
 	return &resp, nil
+}
+
+// DelegateTokens delegates tokens to a validator to give the account voting power
+func (cc *CosmwasmConsumerController) DelegateTokens(validatorAddr string, amount sdk.Coin) error {
+	delegatorAddr := cc.cwClient.MustGetAddr()
+	delAddr, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+	valAddr, err := sdk.ValAddressFromBech32(validatorAddr)
+	if err != nil {
+		return err
+	}
+
+	delegateMsg := stakingtypes.NewMsgDelegate(delAddr.String(), valAddr.String(), amount)
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(delegateMsg, emptyErrs, emptyErrs)
+	return err
+}
+
+// QueryValidators queries all validators
+func (cc *CosmwasmConsumerController) QueryValidators() (*stakingtypes.QueryValidatorsResponse, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer grpcConn.Close()
+
+	stakingClient := stakingtypes.NewQueryClient(grpcConn)
+	resp, err := stakingClient.Validators(context.Background(), &stakingtypes.QueryValidatorsRequest{
+		Status: stakingtypes.BondStatusBonded,
+		Pagination: &sdkquerytypes.PageRequest{
+			Limit: 100,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
