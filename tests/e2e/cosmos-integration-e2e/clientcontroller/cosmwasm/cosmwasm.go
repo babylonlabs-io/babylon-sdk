@@ -927,12 +927,6 @@ func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, paginat
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
-// MustGetValidatorAddress gets the validator address of the consumer chain
-// NOTE: this function is only meant to be used in tests.
-func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
-	return cc.cwClient.MustGetAddr()
-}
-
 // GetCometNodeStatus gets the tendermint node status of the consumer chain
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) GetCometNodeStatus() (*coretypes.ResultStatus, error) {
@@ -1063,7 +1057,7 @@ func (cc *CosmwasmConsumerController) SubmitGovernanceProposal(msgs []sdk.Msg, t
 	minDeposit := paramsResp.Params.MinDeposit
 
 	// Construct MsgSubmitProposal
-	proposer := cc.MustGetValidatorAddress()
+	proposer := cc.cwClient.MustGetAddr()
 	govMsg, err := govtypes.NewMsgSubmitProposal(msgs, minDeposit, proposer, "", title, summary, false)
 	if err != nil {
 		return 0, err
@@ -1098,7 +1092,7 @@ func (cc *CosmwasmConsumerController) SubmitGovernanceProposal(msgs []sdk.Msg, t
 
 // VoteOnProposal votes on a governance proposal
 func (cc *CosmwasmConsumerController) VoteOnProposal(proposalID uint64, option govtypes.VoteOption) error {
-	voter := cc.MustGetValidatorAddress()
+	voter := cc.cwClient.MustGetAddr()
 	voterAddr, err := sdk.AccAddressFromBech32(voter)
 	if err != nil {
 		return err
