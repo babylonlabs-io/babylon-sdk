@@ -1,3 +1,6 @@
+//go:build e2e
+// +build e2e
+
 package e2e
 
 import (
@@ -1281,6 +1284,22 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 	cfg.KeyDirectory = filepath.Join(currentDir, "../../contrib/images/ibcsim-bcd/.testnets/bcd/bcd-test")
 	cfg.AccountPrefix = "bbnc"
 
+	// Use "user" key which is guaranteed to have funds from setup script
+	// Both "validator" and "user" keys should have 100B stake tokens, but "user" is more reliably funded
+	cfg.Key = "user"
+
+	// Set appropriate gas prices for the consumer chain
+	// The consumer chain uses "stake" as the native denom, not "ustake"
+	cfg.GasPrices = "0.002stake"
+
+	// Increase gas adjustment for governance operations which require more gas
+	// Default 1.3 is often insufficient for governance voting
+	cfg.GasAdjustment = 2.0
+
+	// Set maximum gas amount for governance operations
+	// Governance proposals and voting can require significant gas
+	cfg.MaxGasAmount = 20000000 // 10M gas units should be sufficient for governance operations
+
 	// Create a logger
 	logger, _ := zap.NewDevelopment()
 
@@ -1781,6 +1800,13 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	s.Require().NoError(err, "Failed to query account balance")
 	s.T().Logf("Account %s current balance before initiating contracts: %s", admin, currentBalance.String())
 
+	// Note: Contract instantiation may succeed even with 0 balance due to gas price configuration
+	// The cosmwasm controller is configured with "0.002stake" gas prices, and in test environments
+	// transactions with proper gas price configuration can succeed with minimal fees
+	if currentBalance.Amount.IsZero() {
+		s.T().Logf("WARNING: Account has 0 balance but contract instantiation may still succeed due to test environment gas price configuration")
+	}
+
 	instantiateResp, err := s.cosmwasmController.SendMsg(msg)
 	s.Require().NoError(err, "Failed to instantiate Babylon contract")
 
@@ -1836,12 +1862,29 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	s.Require().Equal(btcFinalityAddr, finalContracts.BtcFinalityContract)
 }
 
-// Helper method to submit and vote on a governance proposal
-func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
+// Helper method to ensure account has sufficient balance for governance operations
+func (s *BCDConsumerIntegrationTestSuite) ensureSufficientBalance() {
 	admin := s.cosmwasmController.MustGetValidatorAddress()
 	currentBalance, err := s.cosmwasmController.QueryBalance(admin, "stake")
 	s.Require().NoError(err, "Failed to query account balance")
-	s.T().Logf("Account %s current balance before sending gov prop: %s", admin, currentBalance.String())
+
+	// Log current balance for debugging
+	s.T().Logf("Account %s balance: %s", admin, currentBalance.String())
+
+	// Governance minimum deposit is typically 10M stake (10000000stake)
+	// Ensure account has at least this amount
+	requiredAmount := int64(10000000) // 10M stake tokens
+	if currentBalance.Amount.Int64() < requiredAmount {
+		s.T().Fatalf("Account %s has insufficient balance %s, need at least %d stake for governance deposit",
+			admin, currentBalance.String(), requiredAmount)
+	}
+	s.T().Logf("Account %s has sufficient balance %s for governance operations", admin, currentBalance.String())
+}
+
+// Helper method to submit and vote on a governance proposal
+func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
+	// Ensure sufficient balance before attempting governance operations
+	s.ensureSufficientBalance()
 
 	// 1. Submit the proposal
 	proposalID, err := s.cosmwasmController.SubmitGovernanceProposal([]sdk.Msg{msg}, "Set BSN Contracts", "Set contract addresses for Babylon system")

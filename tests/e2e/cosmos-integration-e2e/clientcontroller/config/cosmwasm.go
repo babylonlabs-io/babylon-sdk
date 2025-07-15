@@ -17,6 +17,8 @@ type CosmwasmConfig struct {
 	KeyringBackend string        `long:"keyring-type" description:"type of keyring to use"`
 	GasAdjustment  float64       `long:"gas-adjustment" description:"adjustment factor when using gas estimation"`
 	GasPrices      string        `long:"gas-prices" description:"comma separated minimum gas prices to accept for transactions"`
+	MinGasAmount   uint64        `long:"min-gas-amount" description:"minimum gas amount for transactions"`
+	MaxGasAmount   uint64        `long:"max-gas-amount" description:"maximum gas amount for transactions"`
 	KeyDirectory   string        `long:"key-dir" description:"directory to store keys in"`
 	Debug          bool          `long:"debug" description:"flag to print debug output"`
 	Timeout        time.Duration `long:"timeout" description:"client timeout when doing queries"`
@@ -73,6 +75,8 @@ func (cfg *CosmwasmConfig) ToQueryClientConfig() *config.CosmwasmConfig {
 		KeyringBackend:   cfg.KeyringBackend,
 		GasAdjustment:    cfg.GasAdjustment,
 		GasPrices:        cfg.GasPrices,
+		MinGasAmount:     cfg.MinGasAmount,
+		MaxGasAmount:     cfg.MaxGasAmount,
 		KeyDirectory:     cfg.KeyDirectory,
 		Debug:            cfg.Debug,
 		Timeout:          cfg.Timeout,
