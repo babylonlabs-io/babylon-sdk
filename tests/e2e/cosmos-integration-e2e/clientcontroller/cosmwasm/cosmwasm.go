@@ -927,6 +927,12 @@ func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, paginat
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
+// ustGetValidatorAddress gets the validator address of the consumer chain
+// NOTE: this function is only meant to be used in tests.
+func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
+	return cc.cwClient.MustGetAddr()
+}
+
 // GetCometNodeStatus gets the tendermint node status of the consumer chain
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) GetCometNodeStatus() (*coretypes.ResultStatus, error) {
