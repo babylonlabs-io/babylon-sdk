@@ -44,7 +44,6 @@ import (
 	"go.uber.org/zap"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type CosmwasmConsumerController struct {
@@ -1098,29 +1097,29 @@ func (cc *CosmwasmConsumerController) SubmitGovernanceProposal(msgs []sdk.Msg, t
 }
 
 // VoteOnProposal votes on a governance proposal
-func (cc *CosmwasmConsumerController) VoteOnProposal(proposalID uint64, option govv1.VoteOption) error {
+func (cc *CosmwasmConsumerController) VoteOnProposal(proposalID uint64, option govtypes.VoteOption) error {
 	voter := cc.MustGetValidatorAddress()
 	voterAddr, err := sdk.AccAddressFromBech32(voter)
 	if err != nil {
 		return err
 	}
-	voteMsg := govv1.NewMsgVote(voterAddr, proposalID, option, "")
+	voteMsg := govtypes.NewMsgVote(voterAddr, proposalID, option, "")
 	emptyErrs := []*sdkErr.Error{}
 	_, err = cc.sendMsg(voteMsg, emptyErrs, emptyErrs)
 	return err
 }
 
 // QueryProposalStatus queries the status of a proposal by ID
-func (cc *CosmwasmConsumerController) QueryProposalStatus(proposalID uint64) (govv1.ProposalStatus, error) {
+func (cc *CosmwasmConsumerController) QueryProposalStatus(proposalID uint64) (govtypes.ProposalStatus, error) {
 	grpcConn, err := cc.createGrpcConnection()
 	if err != nil {
-		return govv1.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+		return govtypes.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
 	}
 	defer grpcConn.Close()
-	govClient := govv1.NewQueryClient(grpcConn)
-	resp, err := govClient.Proposal(context.Background(), &govv1.QueryProposalRequest{ProposalId: proposalID})
+	govClient := govtypes.NewQueryClient(grpcConn)
+	resp, err := govClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: proposalID})
 	if err != nil {
-		return govv1.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+		return govtypes.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
 	}
 	return resp.Proposal.Status, nil
 }

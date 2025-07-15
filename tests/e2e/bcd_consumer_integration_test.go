@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -53,7 +50,8 @@ import (
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 var (
@@ -1805,7 +1803,7 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	s.Require().NotEmpty(btcFinalityAddr)
 
 	// 4. Submit MsgSetBSNContracts via governance
-	authority := authtypes.NewModuleAddress(govv1.ModuleName).String()
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	msgSet := &bbntypes.MsgSetBSNContracts{
 		Authority: authority,
 		Contracts: &bbntypes.BSNContracts{
@@ -1833,13 +1831,13 @@ func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sd
 	s.Require().NoError(err, "Failed to submit governance proposal")
 
 	// 2. Vote YES
-	err = s.cosmwasmController.VoteOnProposal(proposalID, govv1.OptionYes)
+	err = s.cosmwasmController.VoteOnProposal(proposalID, govv1types.OptionYes)
 	s.Require().NoError(err, "Failed to vote on proposal")
 
 	// 3. Wait for proposal to pass using require.Eventually
 	s.Require().Eventually(func() bool {
 		status, err := s.cosmwasmController.QueryProposalStatus(proposalID)
 		s.Require().NoError(err)
-		return status == govv1.ProposalStatus_PROPOSAL_STATUS_PASSED
+		return status == govv1types.ProposalStatus_PROPOSAL_STATUS_PASSED
 	}, 2*time.Minute, 2*time.Second, "proposal did not pass in time")
 }
