@@ -75,6 +75,8 @@ type MsgInstantiateBabylonContracts struct {
 	ConsumerDescription string `protobuf:"bytes,16,opt,name=consumer_description,json=consumerDescription,proto3" json:"consumer_description,omitempty"`
 	// admin is the address that controls the Babylon module
 	Admin string `protobuf:"bytes,17,opt,name=admin,proto3" json:"admin,omitempty"`
+	// initial_header is the initial BTC header for the light client
+	InitialHeader string `protobuf:"bytes,18,opt,name=initial_header,json=initialHeader,proto3" json:"initial_header,omitempty"`
 }
 
 func (m *MsgInstantiateBabylonContracts) Reset()         { *m = MsgInstantiateBabylonContracts{} }
