@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -48,6 +45,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
+	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
@@ -1765,38 +1763,62 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
 	s.Require().NoError(err, "Failed to marshal Babylon init msg")
 
-	// 3. Instantiate Babylon contract
-	err = s.cosmwasmController.InstantiateContract(codeIDs[0], babylonInitMsgBz)
+	// 3. Instantiate Babylon contract and extract contract addresses from events
+	msg := &wasmdtypes.MsgInstantiateContract{
+		Sender: s.cosmwasmController.MustGetValidatorAddress(),
+		Admin:  s.cosmwasmController.MustGetValidatorAddress(),
+		CodeID: codeIDs[0],
+		Label:  "cw",
+		Msg:    babylonInitMsgBz,
+		Funds:  nil,
+	}
+	instantiateResp, err := s.cosmwasmController.SendMsg(msg)
 	s.Require().NoError(err, "Failed to instantiate Babylon contract")
 
-	// 4. Get contract addresses from query
-	contracts := s.cosmwasmController.MustQueryBabylonContracts()
-	s.Require().NotEmpty(contracts.BabylonContract)
-	s.Require().NotEmpty(contracts.BtcLightClientContract)
-	s.Require().NotEmpty(contracts.BtcStakingContract)
-	s.Require().NotEmpty(contracts.BtcFinalityContract)
+	var babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr string
+	for _, event := range instantiateResp.Events {
+		if event.EventType == "instantiate" {
+			addr := event.Attributes["_contract_address"]
+			if addr == "" {
+				addr = event.Attributes["contract_address"]
+			}
+			codeID := event.Attributes["code_id"]
+			switch codeID {
+			case fmt.Sprintf("%d", codeIDs[0]):
+				babylonAddr = addr
+			case fmt.Sprintf("%d", codeIDs[1]):
+				btcLightClientAddr = addr
+			case fmt.Sprintf("%d", codeIDs[2]):
+				btcStakingAddr = addr
+			case fmt.Sprintf("%d", codeIDs[3]):
+				btcFinalityAddr = addr
+			}
+		}
+	}
+	s.Require().NotEmpty(babylonAddr)
+	s.Require().NotEmpty(btcLightClientAddr)
+	s.Require().NotEmpty(btcStakingAddr)
+	s.Require().NotEmpty(btcFinalityAddr)
 
-	// 5. Submit MsgSetBSNContracts via governance
+	// 4. Submit MsgSetBSNContracts via governance
 	msgSet := &bbntypes.MsgSetBSNContracts{
 		Authority: admin,
 		Contracts: &bbntypes.BSNContracts{
-			BabylonContract:        contracts.BabylonContract,
-			BtcLightClientContract: contracts.BtcLightClientContract,
-			BtcStakingContract:     contracts.BtcStakingContract,
-			BtcFinalityContract:    contracts.BtcFinalityContract,
+			BabylonContract:        babylonAddr,
+			BtcLightClientContract: btcLightClientAddr,
+			BtcStakingContract:     btcStakingAddr,
+			BtcFinalityContract:    btcFinalityAddr,
 		},
 	}
 
-	// For now, let's use a simpler approach - submit the proposal and vote
-	// We'll need to add governance helper methods to the controller
 	s.submitAndVoteGovernanceProposal(msgSet)
 
-	// Verify the contracts are set
+	// 5. Verify the contracts are set in chain state
 	finalContracts := s.cosmwasmController.MustQueryBabylonContracts()
-	s.Require().Equal(contracts.BabylonContract, finalContracts.BabylonContract)
-	s.Require().Equal(contracts.BtcLightClientContract, finalContracts.BtcLightClientContract)
-	s.Require().Equal(contracts.BtcStakingContract, finalContracts.BtcStakingContract)
-	s.Require().Equal(contracts.BtcFinalityContract, finalContracts.BtcFinalityContract)
+	s.Require().Equal(babylonAddr, finalContracts.BabylonContract)
+	s.Require().Equal(btcLightClientAddr, finalContracts.BtcLightClientContract)
+	s.Require().Equal(btcStakingAddr, finalContracts.BtcStakingContract)
+	s.Require().Equal(btcFinalityAddr, finalContracts.BtcFinalityContract)
 }
 
 // Helper method to submit and vote on a governance proposal
