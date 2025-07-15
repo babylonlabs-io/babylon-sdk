@@ -52,6 +52,7 @@ import (
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -1804,8 +1805,9 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	s.Require().NotEmpty(btcFinalityAddr)
 
 	// 4. Submit MsgSetBSNContracts via governance
+	authority := authtypes.NewModuleAddress(govv1.ModuleName).String()
 	msgSet := &bbntypes.MsgSetBSNContracts{
-		Authority: admin,
+		Authority: authority,
 		Contracts: &bbntypes.BSNContracts{
 			BabylonContract:        babylonAddr,
 			BtcLightClientContract: btcLightClientAddr,
