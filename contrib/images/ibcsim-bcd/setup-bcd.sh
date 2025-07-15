@@ -139,7 +139,7 @@ $BINARY --home $CHAINDIR/$CHAINID tx babylon instantiate-babylon-contracts \
 	1 2 false \
 	"$STAKING_MSG" \
 	"$FINALITY_MSG" \
-	'{"header": {"version": 536870912, "prev_blockhash": "000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d", "merkle_root": "e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee", "time": 1599332844, "bits": 503394215, "nonce": 9108535}, "height": 2016, "total_work": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU="}}' \
+	'{"header": {"version": 536870912, "prev_blockhash": "000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d", "merkle_root": "e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee", "time": 1599332844, "bits": 503394215, "nonce": 9108535}, "height": 2016, "total_work": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU="}' \
 	test-consumer \
 	test-consumer-description \
 	--admin=$ADMIN \
