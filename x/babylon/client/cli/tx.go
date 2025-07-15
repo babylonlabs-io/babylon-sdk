@@ -111,7 +111,7 @@ func NewInstantiateBabylonContractsCmd() *cobra.Command {
 		Short:   "Instantiate Babylon contracts",
 		Long:    "Instantiate Babylon contracts",
 		Aliases: []string{"i"},
-		Args:    cobra.ExactArgs(13),
+		Args:    cobra.ExactArgs(14),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
