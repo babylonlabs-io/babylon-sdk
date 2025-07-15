@@ -107,7 +107,7 @@ func ParseInstantiateArgs(args []string, ibcTransferChannelId string, sender str
 
 func NewInstantiateBabylonContractsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [btc-light-client-msg] [consumer-name] [consumer-description]",
+		Use:     "instantiate-babylon-contracts [babylon-contract-code-id] [btc-light-client-contract-code-id] [btc-staking-contract-code-id] [btc-finality-contract-code-id] [btc-network] [babylon-tag] [btc-confirmation-depth] [checkpoint-finalization-timeout] [notify-cosmos-zone] [btc-staking-msg] [btc-finality-msg] [initial-header] [consumer-name] [consumer-description]",
 		Short:   "Instantiate Babylon contracts",
 		Long:    "Instantiate Babylon contracts",
 		Aliases: []string{"i"},
