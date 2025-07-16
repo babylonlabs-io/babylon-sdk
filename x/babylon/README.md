@@ -16,7 +16,7 @@ enabling seamless integration to become a BSN (Bitcoin Supercharged Network).
 * [States](#states)
   * [Parameters](#parameters)
 * [Messages](#messages)
-  * [MsgInstantiateBabylonContracts](#msginstantiatebabyloncontracts)
+  * [MsgSetBSNContracts](#msgsetbsncontracts)
   * [MsgUpdateParams](#msgupdateparams)
 * [BeginBlocker](#beginblocker)
 * [EndBlocker](#endblocker)
@@ -81,82 +81,64 @@ The module parameters are defined in the `Params` protobuf message and include:
 
 ```protobuf
 message Params {
-  // Contract code IDs
-  uint64 babylon_contract_code_id = 1;
-  uint64 btc_light_client_contract_code_id = 2;
-  uint64 btc_staking_contract_code_id = 3;
-  uint64 btc_finality_contract_code_id = 4;
-  
-  // Contract addresses
-  string babylon_contract_address = 5;
-  string btc_light_client_contract_address = 6;
-  string btc_staking_contract_address = 7;
-  string btc_finality_contract_address = 8;
-  
   // Gas limits
-  uint32 max_gas_begin_blocker = 9;
+  uint32 max_gas_begin_blocker = 1;
 }
 ```
 
-The parameters are managed through the `x/babylon/keeper/params.go` file and
-include:
+The parameters are managed through the `x/babylon/keeper/params.go` file and include:
 
-* **Contract Code IDs**: The code IDs of all the Cosmos BSN smart contracts
-* **Contract Addresses**: The instantiated addresses of all the Cosmos BSN
-  smart contracts.
-  * These addresses are used for communication with the respective
-  contracts during block processing and other operations.
 * **Gas Limits**: Maximum gas allowed for contract sudo callbacks
+
+### Genesis State
+
+The module's genesis state includes the following fields for contract addresses:
+
+```protobuf
+message GenesisState {
+  Params params = 1;
+  BSNContracts bsn_contracts = 2;
+}
+
+message BSNContracts {
+  string babylon_contract = 1;
+  string btc_light_client_contract = 2;
+  string btc_staking_contract = 3;
+  string btc_finality_contract = 4;
+}
+```
+
+* **Contract Addresses**: All Cosmos BSN smart contract addresses are now grouped in a single `BSNContracts` object. These addresses are set at chain genesis and used for communication with the respective contracts during block processing and other operations.
+
+To set contract addresses at chain start, specify them in the genesis file under the `babylon` module's state as a `bsn_contracts` object. If not set, they can be set later via the `SetBSNContracts` message.
 
 ## Messages
 
 The `babylon` module handles the following messages:
 
-### MsgInstantiateBabylonContracts
+### MsgSetBSNContracts
 
-Instantiates all Cosmos BSN smart contracts with the specified configuration.
+Sets the addresses of the Cosmos BSN smart contracts in the module state. This message can be submitted by governance or another authorized entity to update the contract addresses after genesis.
 
 ```protobuf
-message MsgInstantiateBabylonContracts {
-  string signer = 1;
-  uint64 babylon_contract_code_id = 2;
-  uint64 btc_light_client_contract_code_id = 3;
-  uint64 btc_staking_contract_code_id = 4;
-  uint64 btc_finality_contract_code_id = 5;
-  string network = 6;
-  string babylon_tag = 7;
-  uint32 btc_confirmation_depth = 8;
-  uint32 checkpoint_finalization_timeout = 9;
-  bool notify_cosmos_zone = 10;
-  string ibc_transfer_channel_id = 11;
-  bytes btc_light_client_msg = 12;
-  bytes btc_staking_msg = 13;
-  bytes btc_finality_msg = 14;
-  string consumer_name = 15;
-  string consumer_description = 16;
-  string admin = 17;
+message MsgSetBSNContracts {
+  string authority = 1;
+  BSNContracts contracts = 2;
+}
+
+message BSNContracts {
+  string babylon_contract = 1;
+  string btc_light_client_contract = 2;
+  string btc_staking_contract = 3;
+  string btc_finality_contract = 4;
 }
 ```
 
 **Parameters:**
-- `signer`: Address submitting the message
-- `babylon_contract_code_id`: Code ID for the main orchestrator contract
-- `btc_light_client_contract_code_id`: Code ID for the BTC light client
-  contract
-- `btc_staking_contract_code_id`: Code ID for the BTC staking contract
-- `btc_finality_contract_code_id`: Code ID for the BTC finality contract
-- `network`: Bitcoin network (regtest, testnet, signet, mainnet)
-- `babylon_tag`: Unique identifier for the Babylon contract instance
-- `btc_confirmation_depth`: Required Bitcoin transaction confirmations
-- `checkpoint_finalization_timeout`: Timeout for checkpoint finalization
-- `notify_cosmos_zone`: Whether to notify Cosmos zone of events
-- `ibc_transfer_channel_id`: IBC channel for transfers (optional)
-- `btc_light_client_msg`: Initialization message for BTC light client
-- `btc_staking_msg`: Initialization message for BTC staking
-- `btc_finality_msg`: Initialization message for BTC finality
-- `consumer_name`: Name of the consumer chain
-- `consumer_description`: Description of the consumer chain
-- `admin`: Admin address for contract control
+- `authority`: Address with authority to set contract addresses (usually x/gov)
+- `contracts`: A `BSNContracts` object containing all contract addresses
+
+All contract addresses must be valid Bech32 addresses. The module validates the entire `BSNContracts` object atomically.
 
 ### MsgUpdateParams
 
@@ -214,6 +196,23 @@ message QueryParamsResponse {
 **Usage:**
 ```bash
 babylond query babylon params
+```
+
+### QueryBSNContracts
+
+Retrieves all BSN contract addresses as a single object.
+
+```protobuf
+message QueryBSNContractsRequest {}
+
+message QueryBSNContractsResponse {
+  BSNContracts bsn_contracts = 1;
+}
+```
+
+**Usage:**
+```bash
+babylond query babylon bsn-contracts
 ```
 
 ## Contract Integration

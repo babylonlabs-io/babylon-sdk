@@ -20,4 +20,7 @@ const (
 var (
 	// ParamsKey is the prefix for the module parameters
 	ParamsKey = []byte{0x1}
+
+	// BSNContractsKey is the key for storing all contract addresses together
+	BSNContractsKey = []byte{0x2}
 )

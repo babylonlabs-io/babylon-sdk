@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
+
+	sdkmath "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
@@ -22,8 +23,11 @@ type AuthSource interface {
 }
 
 // abstract keeper
+// Update the interface to use GetBSNContracts instead of GetBTCFinalityContract
+// and update all usages accordingly.
 type babylonKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
+	GetBSNContracts(ctx sdk.Context) *types.BSNContracts
 	MintBlockRewards(ctx sdk.Context, recipient sdk.AccAddress, amount sdk.Coin) (sdkmath.Int, error)
 }
 
@@ -75,9 +79,16 @@ func (h CustomMsgHandler) handleMintRewardsMsg(ctx sdk.Context, actor sdk.AccAdd
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	params := h.k.GetParams(ctx)
 	// Validate actor
-	if actor.String() != params.BtcFinalityContractAddress {
+	contracts := h.k.GetBSNContracts(ctx)
+	if contracts == nil || !contracts.IsSet() {
+		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("BTC finality contract not found")
+	}
+	addr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)
+    if err != nil {
+		return nil, nil, nil, err
+    }
+	if !actor.Equals(addr) {
 		return nil, nil, nil, sdkerrors.ErrUnauthorized.Wrapf("minter must be the finality contract")
 	}
 

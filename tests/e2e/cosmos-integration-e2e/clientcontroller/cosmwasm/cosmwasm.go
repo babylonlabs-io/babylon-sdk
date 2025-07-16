@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -42,6 +43,8 @@ import (
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"go.uber.org/zap"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 type CosmwasmConsumerController struct {
@@ -279,7 +282,7 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 
 		execMsg := &wasmdtypes.MsgExecuteContract{
 			Sender:   cc.cwClient.MustGetAddr(),
-			Contract: cc.MustQueryBabylonParams().BtcFinalityContractAddress,
+			Contract: cc.MustQueryBabylonContracts().BtcFinalityContract,
 			Msg:      msgBytes,
 		}
 		msgs = append(msgs, execMsg)
@@ -310,7 +313,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 	if err != nil {
 		return false, fmt.Errorf("failed to marshal query message: %v", err)
 	}
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return false, err
 	}
@@ -345,7 +348,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderInfo(
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +372,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvidersByPower() (*Consumer
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +431,7 @@ func (cc *CosmwasmConsumerController) QueryLastPublicRandCommit(fpPk *btcec.Publ
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -463,7 +466,7 @@ func (cc *CosmwasmConsumerController) QueryBtcHeaders(limit *uint32) (*BtcHeader
 		return nil, fmt.Errorf("failed to marshal query message: %w", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcLightClientContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcLightClientContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -499,7 +502,7 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return 0, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -540,7 +543,7 @@ func (cc *CosmwasmConsumerController) QueryFinalitySignature(fpBtcPkHex string, 
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +567,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviders() (*ConsumerFpsResp
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -590,7 +593,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProvider(btcPkHex string) (*S
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -614,7 +617,7 @@ func (cc *CosmwasmConsumerController) QueryDelegations() (*ConsumerDelegationsRe
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -641,7 +644,7 @@ func (cc *CosmwasmConsumerController) QueryPendingRewards(stakerAddress, fpPubke
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -669,7 +672,7 @@ func (cc *CosmwasmConsumerController) QueryAllPendingRewards(stakerAddress strin
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcStakingContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -708,15 +711,15 @@ func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex
 }
 
 func (cc *CosmwasmConsumerController) QueryBabylonContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonContracts().BtcStakingContract)
 }
 
 func (cc *CosmwasmConsumerController) QueryFinalityContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcFinalityContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonContracts().BtcFinalityContract)
 }
 
 func (cc *CosmwasmConsumerController) QueryStakingContractBalances() (sdk.Coins, error) {
-	return cc.QueryBalances(cc.MustQueryBabylonParams().BtcStakingContractAddress)
+	return cc.QueryBalances(cc.MustQueryBabylonContracts().BtcStakingContract)
 }
 
 func (cc *CosmwasmConsumerController) QueryBalance(address string, denom string) (*sdk.Coin, error) {
@@ -777,7 +780,7 @@ func (cc *CosmwasmConsumerController) queryLatestBlocks(startAfter *uint64, limi
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -866,7 +869,7 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
-		Contract: cc.MustQueryBabylonParams().BtcStakingContractAddress,
+		Contract: cc.MustQueryBabylonContracts().BtcStakingContract,
 		Msg:      msgBytes,
 	}
 
@@ -883,7 +886,7 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 
 	execMsg := &wasmdtypes.MsgExecuteContract{
 		Sender:   cc.cwClient.MustGetAddr(),
-		Contract: cc.MustQueryBabylonParams().BtcFinalityContractAddress,
+		Contract: cc.MustQueryBabylonContracts().BtcFinalityContract,
 		Msg:      msgBytes,
 	}
 
@@ -925,7 +928,7 @@ func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, paginat
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
-// MustGetValidatorAddress gets the validator address of the consumer chain
+// ustGetValidatorAddress gets the validator address of the consumer chain
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
 	return cc.cwClient.MustGetAddr()
@@ -958,7 +961,7 @@ func (cc *CosmwasmConsumerController) QueryIndexedBlock(height uint64) (*Indexed
 	}
 
 	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BtcFinalityContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -1039,6 +1042,104 @@ func (cc *CosmwasmConsumerController) createGrpcConnection() (*grpc.ClientConn, 
 	return grpcConn, nil
 }
 
+// SendMsg is a public wrapper around sendMsg for external use
+func (cc *CosmwasmConsumerController) SendMsg(msg sdk.Msg) (*wasmclient.RelayerTxResponse, error) {
+	emptyErrs := []*sdkErr.Error{}
+	return cc.sendMsg(msg, emptyErrs, emptyErrs)
+}
+
+// SubmitGovernanceProposal submits a real governance proposal and returns the proposal ID
+func (cc *CosmwasmConsumerController) SubmitGovernanceProposal(msgs []sdk.Msg, title, summary string) (uint64, error) {
+	// Query gov params for min deposit
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return 0, err
+	}
+	defer grpcConn.Close()
+	govClient := govtypes.NewQueryClient(grpcConn)
+	paramsResp, err := govClient.Params(context.Background(), &govtypes.QueryParamsRequest{ParamsType: "deposit"})
+	if err != nil {
+		return 0, err
+	}
+	minDeposit := paramsResp.Params.MinDeposit
+
+	// Construct MsgSubmitProposal
+	proposer := cc.cwClient.MustGetAddr()
+	govMsg, err := govtypes.NewMsgSubmitProposal(msgs, minDeposit, proposer, "", title, summary, false)
+	if err != nil {
+		return 0, err
+	}
+
+	// Submit proposal
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(govMsg, emptyErrs, emptyErrs)
+	if err != nil {
+		return 0, err
+	}
+
+	// Query for the latest proposal ID
+	proposalsResp, err := govClient.Proposals(context.Background(), &govtypes.QueryProposalsRequest{
+		Depositor: proposer,
+	})
+	if err != nil {
+		return 0, err
+	}
+	if len(proposalsResp.Proposals) == 0 {
+		return 0, fmt.Errorf("no proposals found after submission")
+	}
+	// Return the highest proposal ID
+	maxID := proposalsResp.Proposals[0].Id
+	for _, p := range proposalsResp.Proposals {
+		if p.Id > maxID {
+			maxID = p.Id
+		}
+	}
+	return maxID, nil
+}
+
+// VoteOnProposal votes on a governance proposal
+func (cc *CosmwasmConsumerController) VoteOnProposal(proposalID uint64, option govtypes.VoteOption) error {
+	voter := cc.cwClient.MustGetAddr()
+	voterAddr, err := sdk.AccAddressFromBech32(voter)
+	if err != nil {
+		return err
+	}
+	voteMsg := govtypes.NewMsgVote(voterAddr, proposalID, option, "")
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(voteMsg, emptyErrs, emptyErrs)
+	return err
+}
+
+// QueryProposalStatus queries the status of a proposal by ID
+func (cc *CosmwasmConsumerController) QueryProposalStatus(proposalID uint64) (govtypes.ProposalStatus, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return govtypes.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+	}
+	defer grpcConn.Close()
+	govClient := govtypes.NewQueryClient(grpcConn)
+	resp, err := govClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: proposalID})
+	if err != nil {
+		return govtypes.ProposalStatus_PROPOSAL_STATUS_UNSPECIFIED, err
+	}
+	return resp.Proposal.Status, nil
+}
+
+// QueryProposalDetails queries detailed information about a proposal
+func (cc *CosmwasmConsumerController) QueryProposalDetails(proposalID uint64) (*govtypes.Proposal, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer grpcConn.Close()
+	govClient := govtypes.NewQueryClient(grpcConn)
+	resp, err := govClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: proposalID})
+	if err != nil {
+		return nil, err
+	}
+	return resp.Proposal, nil
+}
+
 func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
 	queryMsgStruct := QueryMsgLastConsumerHeader{
 		LastConsumerHeader: struct{}{},
@@ -1048,7 +1149,7 @@ func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*Consumer
 		return nil, fmt.Errorf("failed to marshal query message: %v", err)
 	}
 
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonParams().BabylonContractAddress, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BabylonContract, string(queryMsgBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
@@ -1060,4 +1161,43 @@ func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*Consumer
 	}
 
 	return &resp, nil
+}
+
+// DelegateTokens delegates tokens to a validator to give the account voting power
+func (cc *CosmwasmConsumerController) DelegateTokens(validatorAddr string, amount sdk.Coin) error {
+	delegatorAddr := cc.cwClient.MustGetAddr()
+	delAddr, err := sdk.AccAddressFromBech32(delegatorAddr)
+	if err != nil {
+		return err
+	}
+	valAddr, err := sdk.ValAddressFromBech32(validatorAddr)
+	if err != nil {
+		return err
+	}
+
+	delegateMsg := stakingtypes.NewMsgDelegate(delAddr.String(), valAddr.String(), amount)
+	emptyErrs := []*sdkErr.Error{}
+	_, err = cc.sendMsg(delegateMsg, emptyErrs, emptyErrs)
+	return err
+}
+
+// QueryValidators queries all validators
+func (cc *CosmwasmConsumerController) QueryValidators() (*stakingtypes.QueryValidatorsResponse, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer grpcConn.Close()
+
+	stakingClient := stakingtypes.NewQueryClient(grpcConn)
+	resp, err := stakingClient.Validators(context.Background(), &stakingtypes.QueryValidatorsRequest{
+		Status: stakingtypes.BondStatusBonded,
+		Pagination: &sdkquerytypes.PageRequest{
+			Limit: 100,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

@@ -19,6 +19,8 @@ type CosmwasmConfig struct {
 	KeyringBackend   string        `mapstructure:"keyring-backend"`
 	GasAdjustment    float64       `mapstructure:"gas-adjustment"`
 	GasPrices        string        `mapstructure:"gas-prices"`
+	MinGasAmount     uint64        `mapstructure:"min-gas-amount"`
+	MaxGasAmount     uint64        `mapstructure:"max-gas-amount"`
 	KeyDirectory     string        `mapstructure:"key-directory"`
 	Debug            bool          `mapstructure:"debug"`
 	Timeout          time.Duration `mapstructure:"timeout"`
@@ -53,6 +55,8 @@ func (cfg *CosmwasmConfig) ToCosmosProviderConfig() wasmclient.CosmosProviderCon
 		KeyringBackend: cfg.KeyringBackend,
 		GasAdjustment:  cfg.GasAdjustment,
 		GasPrices:      cfg.GasPrices,
+		MinGasAmount:   cfg.MinGasAmount,
+		MaxGasAmount:   cfg.MaxGasAmount,
 		KeyDirectory:   cfg.KeyDirectory,
 		Debug:          cfg.Debug,
 		Timeout:        cfg.Timeout.String(),

@@ -65,7 +65,7 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	// consumer client
 	consumerCli := types.NewConsumerClient(s.T(), s.ConsumerChain)
-	// setup contracts on consumer
+	// setup contracts on consumer (deploys and sets addresses via governance)
 	consumerContracts, err := consumerCli.BootstrapContracts()
 	s.NoError(err)
 	// provider client
@@ -82,12 +82,12 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	s.ConsumerCli = consumerCli
 	s.ConsumerContract = consumerContracts
 
-	// assert the contract addresses are updated
-	params := s.ConsumerApp.BabylonKeeper.GetParams(s.ConsumerChain.GetContext())
-	s.Equal(s.ConsumerContract.Babylon.String(), params.BabylonContractAddress)
-	s.Equal(s.ConsumerContract.BTCLightClient.String(), params.BtcLightClientContractAddress)
-	s.Equal(s.ConsumerContract.BTCStaking.String(), params.BtcStakingContractAddress)
-	s.Equal(s.ConsumerContract.BTCFinality.String(), params.BtcFinalityContractAddress)
+	// assert the contract addresses are updated in params
+	ctx := s.ConsumerChain.GetContext()
+	s.Equal(s.ConsumerContract.Babylon.String(), s.ConsumerApp.BabylonKeeper.GetBSNContracts(ctx).BabylonContract)
+	s.Equal(s.ConsumerContract.BTCLightClient.String(), s.ConsumerApp.BabylonKeeper.GetBSNContracts(ctx).BtcLightClientContract)
+	s.Equal(s.ConsumerContract.BTCStaking.String(), s.ConsumerApp.BabylonKeeper.GetBSNContracts(ctx).BtcStakingContract)
+	s.Equal(s.ConsumerContract.BTCFinality.String(), s.ConsumerApp.BabylonKeeper.GetBSNContracts(ctx).BtcFinalityContract)
 
 	// query admins
 	adminRespStaking, err := s.ConsumerCli.Query(s.ConsumerContract.BTCStaking, types.Query{"admin": {}})

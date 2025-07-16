@@ -16,6 +16,11 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/babylonlabs/babylon/v1beta1/params";
   }
+  // BSNContracts queries the contract addresses of x/babylon module.
+  rpc BSNContracts(QueryBSNContractsRequest)
+      returns (QueryBSNContractsResponse) {
+    option (google.api.http).get = "/babylonlabs/babylon/v1beta1/bsn-contracts";
+  }
 }
 
 // QueryParamsRequest is the request type for the
@@ -28,3 +33,11 @@ message QueryParamsResponse {
   Params params = 1
       [ (gogoproto.nullable) = false, (amino.dont_omitempty) = true ];
 }
+
+// QueryBSNContractsRequest is the request type for the
+// Query/BSNContracts RPC method
+message QueryBSNContractsRequest {}
+
+// QueryBSNContractsResponse is the response type for the
+// Query/BSNContracts RPC method
+message QueryBSNContractsResponse { BSNContracts bsn_contracts = 1; }

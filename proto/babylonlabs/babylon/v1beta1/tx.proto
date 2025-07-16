@@ -13,70 +13,31 @@ option (gogoproto.goproto_getters_all) = false;
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // InstantiateBabylonContracts defines an operation for instantiating the
-  // Babylon contracts.
-  rpc InstantiateBabylonContracts(MsgInstantiateBabylonContracts)
-      returns (MsgInstantiateBabylonContractsResponse);
+  // SetBSNContracts defines an operation for instantiating the
+  // Cosmos BSN contracts.
+  rpc SetBSNContracts(MsgSetBSNContracts) returns (MsgSetBSNContractsResponse);
 
   // UpdateParams defines a (governance) operation for updating the x/auth
   // module parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
-// MsgInstantiateBabylonContracts is the Msg/InstantiateBabylonContracts request
+// MsgSetBSNContracts is the Msg/SetBSNContracts request
 // type.
-message MsgInstantiateBabylonContracts {
-  option (cosmos.msg.v1.signer) = "signer";
+message MsgSetBSNContracts {
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // signer is the address who submits the message.
-  string signer = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // authority is the address that controls the module
+  // (defaults to x/gov unless overwritten).
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // babylon_contract_code_id is the code ID for the Babylon contract.
-  uint64 babylon_contract_code_id = 2;
-  // btc_light_client_contract_code_id is the code ID for the BTC light client
-  // contract.
-  uint64 btc_light_client_contract_code_id = 3;
-  // btc_staking_contract_code_id is the code ID for the BTC staking contract.
-  uint64 btc_staking_contract_code_id = 4;
-  // btc_finality_contract_code_id is the code ID for the BTC finality contract.
-  uint64 btc_finality_contract_code_id = 5;
-
-  // network is the Bitcoin network to connect to (e.g. "regtest", "testnet",
-  // "mainnet")
-  string network = 6;
-  // babylon_tag is a unique identifier for this Babylon instance
-  string babylon_tag = 7;
-  // btc_confirmation_depth is the number of confirmations required for Bitcoin
-  // transactions
-  uint32 btc_confirmation_depth = 8;
-  // checkpoint_finalization_timeout is the timeout in blocks for checkpoint
-  // finalization
-  uint32 checkpoint_finalization_timeout = 9;
-  // notify_cosmos_zone indicates whether to notify the Cosmos zone of events
-  bool notify_cosmos_zone = 10;
-  // ibc_transfer_channel_id is the IBC channel ID for the IBC transfer
-  // contract. If empty then the reward distribution will be done at the consumer
-  // side.
-  string ibc_transfer_channel_id = 11;
-  // btc_light_client_msg is the initialization message for the BTC light client
-  // contract
-  bytes btc_light_client_msg = 12;
-  // btc_staking_msg is the initialization message for the BTC staking contract
-  bytes btc_staking_msg = 13;
-  // btc_finality_msg is the initialization message for the BTC finality
-  // contract
-  bytes btc_finality_msg = 14;
-  // consumer_name is the name of this consumer chain
-  string consumer_name = 15;
-  // consumer_description is a description of this consumer chain
-  string consumer_description = 16;
-  // admin is the address that controls the Babylon module
-  string admin = 17 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // contracts holds all four contract addresses.
+  BSNContracts contracts = 2;
 }
 
-// MsgInstantiateBabylonContractsResponse is the Msg/InstantiateBabylonContracts
+// MsgSetBSNContractsResponse is the Msg/SetBSNContracts
 // response type.
-message MsgInstantiateBabylonContractsResponse {}
+message MsgSetBSNContractsResponse {}
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

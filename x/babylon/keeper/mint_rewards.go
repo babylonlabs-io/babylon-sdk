@@ -24,11 +24,17 @@ func (k Keeper) MintBlockRewards(pCtx sdk.Context, recipient sdk.AccAddress, amt
 	if amt.Denom != bondDenom {
 		return sdkmath.ZeroInt(), errors.ErrInvalidRequest.Wrapf("invalid coin denomination: got %s, expected %s", amt.Denom, bondDenom)
 	}
-	// FIXME? Remove this constraint for flexibility
-	params := k.GetParams(pCtx)
-	if recipient.String() != params.BtcFinalityContractAddress {
+	contracts := k.GetBSNContracts(pCtx)
+	if contracts == nil || !contracts.IsSet() {
+		return sdkmath.ZeroInt(), errors.ErrInvalidRequest.Wrap("finality contract not found")
+	}
+	addr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)
+    if err != nil {
+		return sdkmath.ZeroInt(), err
+    }
+	if !recipient.Equals(addr) {
 		return sdkmath.ZeroInt(), errors.ErrUnauthorized.Wrapf("invalid recipient: got %s, expected finality contract (%s)",
-			recipient, params.BtcFinalityContractAddress)
+			recipient, addr)
 	}
 
 	// TODO?: Ensure Babylon constraints

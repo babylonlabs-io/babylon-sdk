@@ -57,7 +57,7 @@ if ! mkdir -p $CHAINDIR/$CHAINID 2>/dev/null; then
 fi
 # Build genesis file incl account for passed address
 coins="100000000000$DENOM,100000000000$BASEDENOM"
-delegate="100000000000$DENOM"
+delegate="50000000000$DENOM"
 
 redirect $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID
 sleep 1
@@ -86,6 +86,16 @@ sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' $CHAINDIR/$CHAINID/co
 sed -i 's/index_all_keys = false/index_all_keys = true/g' $CHAINDIR/$CHAINID/config/config.toml
 sed -i 's#"tcp://0.0.0.0:1317"#"tcp://0.0.0.0:1318"#g' $CHAINDIR/$CHAINID/config/app.toml # ensure port is not conflicted with Babylon
 sed -i 's/"bond_denom": "stake"/"bond_denom": "'"$DENOM"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
+
+# Modify governance parameters for faster testing
+echo "Updating governance parameters for faster testing..."
+# Set voting period to 1 minute (60s)
+sed -i 's/"voting_period": "[^"]*"/"voting_period": "60s"/g' $CHAINDIR/$CHAINID/config/genesis.json
+# Set minimum deposit to 1000000stake (1M instead of 10M) 
+sed -i 's/"amount": "10000000"/"amount": "1000000"/g' $CHAINDIR/$CHAINID/config/genesis.json
+# Set max deposit period to 30 seconds for faster testing
+sed -i 's/"max_deposit_period": "[^"]*"/"max_deposit_period": "30s"/g' $CHAINDIR/$CHAINID/config/genesis.json
+
 # sed -i '' 's#index-events = \[\]#index-events = \["message.action","send_packet.packet_src_channel","send_packet.packet_sequence"\]#g' $CHAINDIR/$CHAINID/config/app.toml
 
 # Start
