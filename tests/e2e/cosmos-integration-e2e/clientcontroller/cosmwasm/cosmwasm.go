@@ -1125,6 +1125,21 @@ func (cc *CosmwasmConsumerController) QueryProposalStatus(proposalID uint64) (go
 	return resp.Proposal.Status, nil
 }
 
+// QueryProposalDetails queries detailed information about a proposal
+func (cc *CosmwasmConsumerController) QueryProposalDetails(proposalID uint64) (*govtypes.Proposal, error) {
+	grpcConn, err := cc.createGrpcConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer grpcConn.Close()
+	govClient := govtypes.NewQueryClient(grpcConn)
+	resp, err := govClient.Proposal(context.Background(), &govtypes.QueryProposalRequest{ProposalId: proposalID})
+	if err != nil {
+		return nil, err
+	}
+	return resp.Proposal, nil
+}
+
 func (cc *CosmwasmConsumerController) QueryLastBTCTimestampedHeader() (*ConsumerHeaderResponse, error) {
 	queryMsgStruct := QueryMsgLastConsumerHeader{
 		LastConsumerHeader: struct{}{},

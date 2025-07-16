@@ -164,6 +164,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 // 3. Validates the consumer registration details in Babylon
 // Then, it waits until the IBC channel between babylon<->bcd is established
 func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
+	// initiate and set contracts
 	s.bootstrapContracts()
 
 	// register and verify consumer
@@ -1286,7 +1287,7 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 
 	// Use "user" key which is guaranteed to have funds from setup script
 	// Both "validator" and "user" keys should have 100B stake tokens, but "user" is more reliably funded
-	cfg.Key = "user"
+	cfg.Key = "validator"
 
 	// Set appropriate gas prices for the consumer chain
 	// The consumer chain uses "stake" as the native denom, not "ustake"
@@ -1795,25 +1796,8 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 		Funds:  nil,
 	}
 
-	// Check current balance
-	currentBalance, err := s.cosmwasmController.QueryBalance(admin, "stake")
-	s.Require().NoError(err, "Failed to query account balance")
-	s.T().Logf("Account %s current balance before initiating contracts: %s", admin, currentBalance.String())
-
-	// Note: Contract instantiation may succeed even with 0 balance due to gas price configuration
-	// The cosmwasm controller is configured with "0.002stake" gas prices, and in test environments
-	// transactions with proper gas price configuration can succeed with minimal fees
-	if currentBalance.Amount.IsZero() {
-		s.T().Logf("WARNING: Account has 0 balance but contract instantiation may still succeed due to test environment gas price configuration")
-	}
-
 	instantiateResp, err := s.cosmwasmController.SendMsg(msg)
 	s.Require().NoError(err, "Failed to instantiate Babylon contract")
-
-	// Check current balance
-	currentBalance, err = s.cosmwasmController.QueryBalance(admin, "stake")
-	s.Require().NoError(err, "Failed to query account balance")
-	s.T().Logf("Account %s current balance after initiating contracts: %s", admin, currentBalance.String())
 
 	var babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr string
 	for _, event := range instantiateResp.Events {
@@ -1862,42 +1846,43 @@ func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
 	s.Require().Equal(btcFinalityAddr, finalContracts.BtcFinalityContract)
 }
 
-// Helper method to ensure account has sufficient balance for governance operations
-func (s *BCDConsumerIntegrationTestSuite) ensureSufficientBalance() {
-	admin := s.cosmwasmController.MustGetValidatorAddress()
-	currentBalance, err := s.cosmwasmController.QueryBalance(admin, "stake")
-	s.Require().NoError(err, "Failed to query account balance")
-
-	// Log current balance for debugging
-	s.T().Logf("Account %s balance: %s", admin, currentBalance.String())
-
-	// Governance minimum deposit is typically 10M stake (10000000stake)
-	// Ensure account has at least this amount
-	requiredAmount := int64(10000000) // 10M stake tokens
-	if currentBalance.Amount.Int64() < requiredAmount {
-		s.T().Fatalf("Account %s has insufficient balance %s, need at least %d stake for governance deposit",
-			admin, currentBalance.String(), requiredAmount)
-	}
-	s.T().Logf("Account %s has sufficient balance %s for governance operations", admin, currentBalance.String())
-}
-
 // Helper method to submit and vote on a governance proposal
 func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
-	// Ensure sufficient balance before attempting governance operations
-	s.ensureSufficientBalance()
-
 	// 1. Submit the proposal
 	proposalID, err := s.cosmwasmController.SubmitGovernanceProposal([]sdk.Msg{msg}, "Set BSN Contracts", "Set contract addresses for Babylon system")
 	s.Require().NoError(err, "Failed to submit governance proposal")
+	s.T().Logf("Submitted governance proposal with ID: %d", proposalID)
 
 	// 2. Vote YES
 	err = s.cosmwasmController.VoteOnProposal(proposalID, govv1types.OptionYes)
 	s.Require().NoError(err, "Failed to vote on proposal")
+	s.T().Logf("Successfully voted YES on proposal %d", proposalID)
 
-	// 3. Wait for proposal to pass using require.Eventually
+	// 3. Wait for proposal to pass and provide detailed debugging if it fails
 	s.Require().Eventually(func() bool {
 		status, err := s.cosmwasmController.QueryProposalStatus(proposalID)
-		s.Require().NoError(err)
+		if err != nil {
+			s.T().Logf("Error querying proposal status: %v", err)
+			return false
+		}
+
+		// If proposal failed, get detailed information
+		if status == govv1types.ProposalStatus_PROPOSAL_STATUS_FAILED ||
+			status == govv1types.ProposalStatus_PROPOSAL_STATUS_REJECTED {
+
+			// Query final proposal details
+			finalProposal, err := s.cosmwasmController.QueryProposalDetails(proposalID)
+			if err == nil {
+				s.T().Logf("=== Final Proposal Details ===")
+				s.T().Logf("Final Status: %s", finalProposal.Status.String())
+				s.T().Logf("Failed Reason: %s", finalProposal.FailedReason)
+			}
+
+			s.T().Fatalf("Proposal %d failed with status: %s", proposalID, status.String())
+		}
+
 		return status == govv1types.ProposalStatus_PROPOSAL_STATUS_PASSED
-	}, 2*time.Minute, 2*time.Second, "proposal did not pass in time")
+	}, 2*time.Minute, 5*time.Second, "proposal did not pass in time")
+
+	s.T().Logf("Proposal %d successfully passed!", proposalID)
 }
