@@ -10,7 +10,7 @@ CONSUMER_CHAIN_ID="bcd-test"
 # 1. Create a bcd testnet with Babylon contract
 ./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_light_client.wasm ./btc_staking.wasm ./btc_finality.wasm
 
-sleep 180
+sleep 5
 
 # TODO: query babylon module for getting the contract address
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
