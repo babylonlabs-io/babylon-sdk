@@ -49,3 +49,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   the x/babylon module
 - [#143](https://github.com/babylonlabs-io/babylon-sdk/pull/143) Re-enable e2e tests
 - [#162](https://github.com/babylonlabs-io/babylon-sdk/pull/162) Add standard modules cli in bcd
+- [#171](https://github.com/babylonlabs-io/babylon-sdk/pull/171) Upgrade contracts data v0.15.0
