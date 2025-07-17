@@ -21,7 +21,7 @@ redirect() {
 	fi
 }
 
-if [ "$#" -lt "9" ]; then
+if [ "$#" -lt "10" ]; then
 	display_usage
 	exit 1
 fi
