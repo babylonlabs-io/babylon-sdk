@@ -65,7 +65,7 @@ func (s *BabylonSDKTestSuite) SetupSuite() {
 func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	// consumer client
 	consumerCli := types.NewConsumerClient(s.T(), s.ConsumerChain)
-	// setup contracts on consumer (deploys and sets addresses via governance)
+	// setup contracts on consumer (now just fetches addresses)
 	consumerContracts, err := consumerCli.BootstrapContracts()
 	s.NoError(err)
 	// provider client
