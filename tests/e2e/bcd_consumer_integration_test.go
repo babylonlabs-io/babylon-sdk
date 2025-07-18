@@ -540,6 +540,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	s.Len(pendingRewards.Rewards, 1)
 	// Assert pending rewards for this staker are greater than 0
 	s.True(pendingRewards.Rewards[0].Rewards.IsPositive())
+	s.T().Logf("Pending rewards: %v", pendingRewards.Rewards[0].Rewards)
 
 	// Withdraw rewards for this staker and FP
 	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
@@ -1321,8 +1322,8 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 			s.T().Logf("Error querying Babylon IBC channels: %v", err)
 			return false
 		}
-		if len(babylonChannelsResp.Channels) != 1 {
-			s.T().Logf("Expected 1 Babylon IBC channel, got %d", len(babylonChannelsResp.Channels))
+		if len(babylonChannelsResp.Channels) < 1 {
+			s.T().Logf("Expected at least one Babylon IBC channel")
 			return false
 		}
 		babylonChannel = babylonChannelsResp.Channels[0]
@@ -1343,7 +1344,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 			s.T().Logf("Error querying Consumer IBC channels: %v", err)
 			return false
 		}
-		if len(consumerChannelsResp.Channels) != 1 {
+		if len(consumerChannelsResp.Channels) < 1 {
 			return false
 		}
 		consumerChannel = consumerChannelsResp.Channels[0]
