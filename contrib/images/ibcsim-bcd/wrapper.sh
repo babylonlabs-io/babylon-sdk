@@ -10,7 +10,7 @@ CONSUMER_CHAIN_ID="bcd-test"
 # 1. Create a bcd testnet with Babylon contract
 ./setup-bcd.sh $CONSUMER_CHAIN_ID $CONSUMER_CONF 26657 26656 6060 9090 ./babylon_contract.wasm ./btc_light_client.wasm ./btc_staking.wasm ./btc_finality.wasm
 
-sleep 5
+sleep 3
 
 # TODO: query babylon module for getting the contract address
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
@@ -80,7 +80,7 @@ echo "Inserting the babylond key"
 BABYLON_MEMO=$(cat $BABYLON_HOME/key_seed.json | jq .secret | tr -d '"')
 rly --home $RELAYER_CONF_DIR keys restore babylon $BABYLON_KEY "$BABYLON_MEMO"
 
-sleep 10
+sleep 5
 
 # 3. Start relayer
 echo "Creating IBC channel for zoneconcierge"
@@ -91,7 +91,7 @@ echo "Creating IBC channel for IBC transfer"
 rly --home $RELAYER_CONF_DIR tx channel bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1 --timeout 30s --max-retries 10
 [ $? -eq 0 ] && echo "Created IBC transfer channel successfully!" || echo "Error creating IBC transfer channel"
 
-sleep 10
+sleep 5
 
 echo "Start the IBC relayer"
 rly --home $RELAYER_CONF_DIR start bcd --debug-addr "" --flush-interval 10s

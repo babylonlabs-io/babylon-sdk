@@ -60,19 +60,12 @@ coins="100000000000$DENOM,100000000000$BASEDENOM"
 delegate="50000000000$DENOM"
 
 redirect $BINARY --home $CHAINDIR/$CHAINID --chain-id $CHAINID init $CHAINID
-sleep 1
 $BINARY --home $CHAINDIR/$CHAINID keys add validator $KEYRING --output json >$CHAINDIR/$CHAINID/validator_seed.json 2>&1
-sleep 1
 $BINARY --home $CHAINDIR/$CHAINID keys add user $KEYRING --output json >$CHAINDIR/$CHAINID/key_seed.json 2>&1
-sleep 1
 redirect $BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show user -a) $coins
-sleep 1
 redirect $BINARY --home $CHAINDIR/$CHAINID genesis add-genesis-account $($BINARY --home $CHAINDIR/$CHAINID keys $KEYRING show validator -a) $coins
-sleep 1
 redirect $BINARY --home $CHAINDIR/$CHAINID genesis gentx validator $delegate $KEYRING --chain-id $CHAINID
-sleep 1
 redirect $BINARY --home $CHAINDIR/$CHAINID genesis collect-gentxs
-sleep 1
 
 # Set proper defaults and change ports
 echo "Change settings in config.toml and genesis.json files..."
@@ -101,30 +94,30 @@ sed -i 's/"max_deposit_period": "[^"]*"/"max_deposit_period": "30s"/g' $CHAINDIR
 # Start
 echo "Starting $BINARY..."
 $BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' --log_no_color 2>&1 | tee $CHAINDIR/$CHAINID.log &
-sleep 20
+sleep 10
 
 # Upload contract code and capture code IDs
 echo "Storing Babylon contract code..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BABYLON_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 BABYLON_CODE_ID=$($BINARY --home $CHAINDIR/$CHAINID query wasm list-code --output json | jq -r '.code_infos[-1].code_id')
 echo "BABYLON_CODE_ID: $BABYLON_CODE_ID"
 
 echo "Storing BTC Light Client contract code..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTC_LC_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 BTC_LC_CODE_ID=$($BINARY --home $CHAINDIR/$CHAINID query wasm list-code --output json | jq -r '.code_infos[-1].code_id')
 echo "BTC_LC_CODE_ID: $BTC_LC_CODE_ID"
 
 echo "Storing BTC Staking contract code..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCSTAKING_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 BTCSTAKING_CODE_ID=$($BINARY --home $CHAINDIR/$CHAINID query wasm list-code --output json | jq -r '.code_infos[-1].code_id')
 echo "BTCSTAKING_CODE_ID: $BTCSTAKING_CODE_ID"
 
 echo "Storing BTC Finality contract code..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BTCFINALITY_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 BTCFINALITY_CODE_ID=$($BINARY --home $CHAINDIR/$CHAINID query wasm list-code --output json | jq -r '.code_infos[-1].code_id')
 echo "BTCFINALITY_CODE_ID: $BTCFINALITY_CODE_ID"
 
@@ -170,7 +163,7 @@ echo "Babylon contract instantiation message: $BABYLON_INIT_MSG"
 # Instantiate only the Babylon contract
 echo "Instantiating Babylon contract with Code ID $BABYLON_CODE_ID..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm instantiate $BABYLON_CODE_ID "$BABYLON_INIT_MSG" --admin $ADMIN --label "babylon" $KEYRING --from user --chain-id $CHAINID --gas 20000000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 # Get the Babylon contract address by querying contracts by code ID
 BABYLON_ADDR=$($BINARY --home $CHAINDIR/$CHAINID query wasm list-contract-by-code $BABYLON_CODE_ID --output json | jq -r '.contracts[-1]')
 echo "Babylon Address: $BABYLON_ADDR"
@@ -225,7 +218,7 @@ rm -f "$PROPOSAL_FILE"
 # Extract proposal ID
 PROPOSAL_TX_HASH=$(echo "$PROPOSAL_RESP" | jq -r '.txhash')
 echo "Proposal transaction hash: $PROPOSAL_TX_HASH"
-sleep 5
+sleep 3
 PROPOSAL_TX_RESULT=$($BINARY --home $CHAINDIR/$CHAINID query tx $PROPOSAL_TX_HASH --node http://localhost:$RPCPORT --output json)
 echo "Proposal transaction result: $(echo $PROPOSAL_TX_RESULT | jq -r '.')"
 
@@ -242,7 +235,7 @@ fi
 # Vote on the proposal
 echo "Voting on proposal $PROPOSAL_ID..."
 $BINARY --home $CHAINDIR/$CHAINID tx gov vote "$PROPOSAL_ID" yes $KEYRING --from validator --chain-id $CHAINID --gas 200000 --gas-prices 0.01ustake --node http://localhost:$RPCPORT -y
-sleep 5
+sleep 3
 
 # Wait for proposal to pass
 echo "Waiting for proposal to pass..."
@@ -265,7 +258,7 @@ while true; do
             ;;
         *)
             echo "  → Proposal status: $PROPOSAL_STATUS, waiting..."
-            sleep 10
+            sleep 5
             ;;
     esac
 done
