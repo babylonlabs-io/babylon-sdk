@@ -136,7 +136,7 @@ CHECKPOINT_FINALIZATION_TIMEOUT=2
 BABYLON_TAG="01020304"
 CONSUMER_NAME="test-consumer"
 CONSUMER_DESCRIPTION="test-consumer-description"
-IBC_TRANSFER_CHANNEL_ID="channel-1"
+ICS20_CHANNEL_ID="channel-1"
 
 BTC_LC_INIT_MSG=$(jq -n --arg network "$NETWORK" --argjson btc_confirmation_depth $BTC_CONFIRMATION_DEPTH --argjson checkpoint_finalization_timeout $CHECKPOINT_FINALIZATION_TIMEOUT '{network: $network, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout}')
 BTCSTAKING_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
@@ -162,9 +162,9 @@ BABYLON_INIT_MSG=$(jq -n \
   --arg btc_finality_msg "$BTCFINALITY_INIT_MSG_B64" \
   --arg consumer_name "$CONSUMER_NAME" \
   --arg consumer_description "$CONSUMER_DESCRIPTION" \
-  --arg ibc_transfer_channel_id "$IBC_TRANSFER_CHANNEL_ID" \
+  --arg ics20_channel_id "$ICS20_CHANNEL_ID" \
   --arg admin "$ADMIN" \
-  '{network: $network, babylon_tag: $babylon_tag, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, notify_cosmos_zone: $notify_cosmos_zone, btc_light_client_code_id: $btc_light_client_code_id, btc_light_client_msg: $btc_light_client_msg, btc_staking_code_id: $btc_staking_code_id, btc_staking_msg: $btc_staking_msg, btc_finality_code_id: $btc_finality_code_id, btc_finality_msg: $btc_finality_msg, consumer_name: $consumer_name, consumer_description: $consumer_description, ibc_transfer_channel_id: $ibc_transfer_channel_id, admin: $admin}')
+  '{network: $network, babylon_tag: $babylon_tag, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, notify_cosmos_zone: $notify_cosmos_zone, btc_light_client_code_id: $btc_light_client_code_id, btc_light_client_msg: $btc_light_client_msg, btc_staking_code_id: $btc_staking_code_id, btc_staking_msg: $btc_staking_msg, btc_finality_code_id: $btc_finality_code_id, btc_finality_msg: $btc_finality_msg, consumer_name: $consumer_name, consumer_description: $consumer_description, ics20_channel_id: $ics20_channel_id, admin: $admin}')
 echo "Babylon contract instantiation message: $BABYLON_INIT_MSG"
 
 # Instantiate only the Babylon contract
