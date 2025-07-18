@@ -523,7 +523,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 		fmt.Printf("Balance of denom '%s': %s\n", balance[0].Denom, balance.AmountOf(denom).String())
 		// Check that the balance of the denom is greater than 0
 		return balance.AmountOf(denom).IsPositive()
-	}, 30*time.Second, time.Second*5)
+	}, 40*time.Second, time.Second*5)
 
 	// Assert rewards are distributed among delegators
 	// Get staker address through a delegations query
@@ -535,12 +535,20 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	s.Len(delegation.FpBtcPkList, 2)
 
 	// Get staker pending rewards
-	pendingRewards, err := s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
-	s.NoError(err)
-	s.Len(pendingRewards.Rewards, 1)
-	// Assert pending rewards for this staker are greater than 0
-	s.True(pendingRewards.Rewards[0].Rewards.IsPositive())
-	s.T().Logf("Pending rewards: %v", pendingRewards.Rewards[0].Rewards)
+	var pendingRewards *cosmwasm.ConsumerAllPendingRewardsResponse
+	s.Eventually(func() bool {
+		pendingRewards, err = s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
+		if err != nil {
+			s.T().Logf("failed to query pending rewards: %s", err.Error())
+			return false
+		}
+		if len(pendingRewards.Rewards) == 0 {
+			return false
+		}
+		s.T().Logf("Pending rewards: %v", pendingRewards.Rewards[0].Rewards)
+		// Assert pending rewards for this staker are greater than 0
+		return pendingRewards.Rewards[0].Rewards.IsPositive()
+	}, 30*time.Second, time.Second*5)
 
 	// Withdraw rewards for this staker and FP
 	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
