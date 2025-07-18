@@ -11,6 +11,7 @@ import (
 
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/datagen"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 )
 
@@ -68,6 +69,7 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	// setup contracts on consumer (deploys and sets addresses via governance)
 	consumerContracts, err := consumerCli.BootstrapContracts()
 	s.NoError(err)
+	s.NotNil(consumerContracts)
 	// provider client
 	providerCli := types.NewProviderClient(s.T(), s.ProviderChain)
 
@@ -99,8 +101,12 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 }
 
 func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
+	// the initial header must be the header during instantiation
+	initialHeader := datagen.MustGetInitialHeader()
+	initialHeaderInfo, err := initialHeader.ToHeaderInfo()
+	s.NoError(err)
 	// generate headers
-	headers, headersMsg := types.GenBTCHeadersMsg(nil)
+	headers, headersMsg := types.GenBTCHeadersMsg(initialHeaderInfo)
 	headersMsgBytes, err := json.Marshal(headersMsg)
 	s.NoError(err)
 	// send headers to the BTCLightClient contract. This is to ensure that the contract is
