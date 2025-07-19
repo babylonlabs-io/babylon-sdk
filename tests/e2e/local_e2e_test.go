@@ -174,24 +174,41 @@ func (s *BabylonSDKTestSuite) Test4EndBlock() {
 func (s *BabylonSDKTestSuite) Test5NextBlock() {
 	// get current height
 	height := s.ConsumerChain.GetContext().BlockHeight()
-	// ensure the current block is not indexed yet
-	_, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
-		"block": {
-			"height": uint64(height),
-		},
-	})
-	s.Error(err)
 
-	// this triggers BeginBlock and EndBlock
-	s.ConsumerChain.NextBlock()
-
-	// ensure the current block is indexed
-	_, err = s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
+	// check the current block indexing status
+	resp, err := s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
 		"block": {
 			"height": uint64(height),
 		},
 	})
 	s.NoError(err)
+
+	// Check that the block exists but may not be fully indexed (app_hash is empty)
+	s.NotNil(resp)
+	s.Equal(float64(height), resp["height"])
+	appHash, ok := resp["app_hash"].([]interface{})
+	s.True(ok, "app_hash should be present")
+	s.Empty(appHash, "app_hash should be empty before NextBlock")
+
+	// this triggers BeginBlock and EndBlock
+	s.ConsumerChain.NextBlock()
+
+	// ensure the current block is fully indexed (app_hash should be populated)
+	resp, err = s.ConsumerCli.Query(s.ConsumerContract.BTCFinality, types.Query{
+		"block": {
+			"height": uint64(height),
+		},
+	})
+	s.NoError(err)
+
+	// Verify the block is fully indexed with app_hash populated
+	s.NotNil(resp)
+	s.Equal(float64(height), resp["height"])
+
+	// Check that app_hash is populated (indicating full indexing)
+	appHash, ok = resp["app_hash"].([]interface{})
+	s.True(ok, "app_hash should be present")
+	s.NotEmpty(appHash, "app_hash should be populated after NextBlock")
 }
 
 // TearDownSuite runs once after all the suite's tests have been run
