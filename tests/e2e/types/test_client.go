@@ -1,10 +1,15 @@
 package types
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	ibctesting "github.com/CosmWasm/wasmd/tests/wasmibctesting"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	babylontypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // Query is a query type used in tests only
@@ -102,7 +108,8 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	// Query the Babylon module for contract addresses
 	contracts := p.App.BabylonKeeper.GetBSNContracts(p.Chain.GetContext())
 	if contracts == nil || !contracts.IsSet() {
-		return nil, fmt.Errorf("BSN contracts not set in chain state")
+		// If contracts are not set, deploy them
+		return p.deployContracts()
 	}
 
 	babylonAddr, err := sdk.AccAddressFromBech32(contracts.BabylonContract)
@@ -132,6 +139,189 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	return &r, nil
 }
 
+func (p *TestConsumerClient) deployContracts() (*ConsumerContract, error) {
+	ctx := p.Chain.GetContext()
+	wasmKeeper := p.App.WasmKeeper
+	wasmMsgServer := wasmkeeper.NewMsgServerImpl(&wasmKeeper)
+
+	// Load contract WASM files
+	testdataDir := "../testdata"
+	babylonWasm, err := os.ReadFile(filepath.Join(testdataDir, "babylon_contract.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read babylon contract: %w", err)
+	}
+	btcLightClientWasm, err := os.ReadFile(filepath.Join(testdataDir, "btc_light_client.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read btc light client contract: %w", err)
+	}
+	btcStakingWasm, err := os.ReadFile(filepath.Join(testdataDir, "btc_staking.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read btc staking contract: %w", err)
+	}
+	btcFinalityWasm, err := os.ReadFile(filepath.Join(testdataDir, "btc_finality.wasm"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read btc finality contract: %w", err)
+	}
+
+	// Store contracts
+	babylonResp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       p.Chain.SenderAccount.GetAddress().String(),
+		WASMByteCode: babylonWasm,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to store babylon contract: %w", err)
+	}
+	babylonCodeID := babylonResp.CodeID
+
+	btcLightClientResp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       p.Chain.SenderAccount.GetAddress().String(),
+		WASMByteCode: btcLightClientWasm,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to store btc light client contract: %w", err)
+	}
+	btcLightClientCodeID := btcLightClientResp.CodeID
+
+	btcStakingResp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       p.Chain.SenderAccount.GetAddress().String(),
+		WASMByteCode: btcStakingWasm,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to store btc staking contract: %w", err)
+	}
+	btcStakingCodeID := btcStakingResp.CodeID
+
+	btcFinalityResp, err := wasmMsgServer.StoreCode(ctx, &wasmtypes.MsgStoreCode{
+		Sender:       p.Chain.SenderAccount.GetAddress().String(),
+		WASMByteCode: btcFinalityWasm,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to store btc finality contract: %w", err)
+	}
+	btcFinalityCodeID := btcFinalityResp.CodeID
+
+	// Prepare init messages for the other contracts
+	admin := p.Chain.SenderAccount.GetAddress().String()
+	network := "regtest"
+	btcConfirmationDepth := 1
+	checkpointFinalizationTimeout := 2
+	babylonTag := "01020304"
+	consumerName := "test-consumer"
+	consumerDescription := "test-consumer-description"
+	ics20ChannelID := "channel-1"
+
+	// Create init messages for other contracts
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`, network, btcConfirmationDepth, checkpointFinalizationTimeout)
+	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
+	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
+
+	// Base64 encode the init messages as required by the Babylon contract
+	btcLightClientInitMsgB64 := base64.StdEncoding.EncodeToString([]byte(btcLightClientInitMsg))
+	btcStakingInitMsgB64 := base64.StdEncoding.EncodeToString([]byte(btcStakingInitMsg))
+	btcFinalityInitMsgB64 := base64.StdEncoding.EncodeToString([]byte(btcFinalityInitMsg))
+
+	// Build the Babylon contract instantiation message
+	babylonInitMsg := map[string]interface{}{
+		"network":                         network,
+		"babylon_tag":                     babylonTag,
+		"btc_confirmation_depth":          btcConfirmationDepth,
+		"checkpoint_finalization_timeout": checkpointFinalizationTimeout,
+		"notify_cosmos_zone":              false,
+		"btc_light_client_code_id":        btcLightClientCodeID,
+		"btc_light_client_msg":            btcLightClientInitMsgB64,
+		"btc_staking_code_id":             btcStakingCodeID,
+		"btc_staking_msg":                 btcStakingInitMsgB64,
+		"btc_finality_code_id":            btcFinalityCodeID,
+		"btc_finality_msg":                btcFinalityInitMsgB64,
+		"consumer_name":                   consumerName,
+		"consumer_description":            consumerDescription,
+		"ics20_channel_id":                ics20ChannelID,
+		"admin":                           admin,
+	}
+	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal babylon init msg: %w", err)
+	}
+
+	// Instantiate the Babylon contract
+	babylonInstResp, err := wasmMsgServer.InstantiateContract(ctx, &wasmtypes.MsgInstantiateContract{
+		Sender: admin,
+		Admin:  admin,
+		CodeID: babylonCodeID,
+		Label:  "babylon",
+		Msg:    babylonInitMsgBz,
+		Funds:  nil,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to instantiate babylon contract: %w", err)
+	}
+	babylonAddr := babylonInstResp.Address
+
+	// Query the Babylon contract's Config {} to get all contract addresses
+	// The Babylon contract needs time to instantiate the other contracts internally
+	configQuery := []byte(`{"config":{}}`)
+	babylonAccAddr, err := sdk.AccAddressFromBech32(babylonAddr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid babylon address: %w", err)
+	}
+
+	// Query the Babylon contract's Config {} to get all contract addresses
+	var configRes []byte
+	configRes, err = wasmKeeper.QuerySmart(ctx, babylonAccAddr, configQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query babylon contract config: %w", err)
+	}
+
+	var config struct {
+		BTCLightClient string `json:"btc_light_client"`
+		BTCStaking     string `json:"btc_staking"`
+		BTCFinality    string `json:"btc_finality"`
+	}
+	err = json.Unmarshal(configRes, &config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal config response: %w", err)
+	}
+
+	// Set BSN contracts in the Babylon module
+	contracts := &babylontypes.BSNContracts{
+		BabylonContract:        babylonAddr,
+		BtcLightClientContract: config.BTCLightClient,
+		BtcStakingContract:     config.BTCStaking,
+		BtcFinalityContract:    config.BTCFinality,
+	}
+
+	err = p.App.BabylonKeeper.SetBSNContracts(ctx, contracts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set BSN contracts: %w", err)
+	}
+
+	// Verify that the contracts exist in the wasm keeper
+	btcLightClientAccAddr, err := sdk.AccAddressFromBech32(config.BTCLightClient)
+	if err != nil {
+		return nil, fmt.Errorf("invalid btc light client address: %w", err)
+	}
+	btcStakingAccAddr, err := sdk.AccAddressFromBech32(config.BTCStaking)
+	if err != nil {
+		return nil, fmt.Errorf("invalid btc staking address: %w", err)
+	}
+	btcFinalityAccAddr, err := sdk.AccAddressFromBech32(config.BTCFinality)
+	if err != nil {
+		return nil, fmt.Errorf("invalid btc finality address: %w", err)
+	}
+
+	// Convert addresses to AccAddress
+	// All addresses are already defined above
+
+	r := ConsumerContract{
+		Babylon:        babylonAccAddr,
+		BTCLightClient: btcLightClientAccAddr,
+		BTCStaking:     btcStakingAccAddr,
+		BTCFinality:    btcFinalityAccAddr,
+	}
+	p.Contracts = r
+	return &r, nil
+}
+
 func (p *TestConsumerClient) Exec(contract sdk.AccAddress, payload []byte, funds ...sdk.Coin) (*abci.ExecTxResult, error) {
 	rsp, err := p.Chain.SendMsgs(&wasmtypes.MsgExecuteContract{
 		Sender:   p.GetSender().String(),
@@ -143,7 +333,28 @@ func (p *TestConsumerClient) Exec(contract sdk.AccAddress, payload []byte, funds
 }
 
 func (p *TestConsumerClient) Query(contractAddr sdk.AccAddress, query Query) (QueryResponse, error) {
-	return Querier(p.t, p.Chain)(contractAddr.String(), query)
+	// Use the wasm keeper directly instead of the test chain's SmartQuery
+	// This ensures we're using the same context and query mechanism
+	ctx := p.Chain.GetContext()
+	wasmKeeper := p.App.WasmKeeper
+
+	queryBytes, err := json.Marshal(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query: %w", err)
+	}
+
+	response, err := wasmKeeper.QuerySmart(ctx, contractAddr, queryBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query contract: %w", err)
+	}
+
+	var result QueryResponse
+	err = json.Unmarshal(response, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return result, nil
 }
 
 func submitGovProposal(t *testing.T, chain *ibctesting.WasmTestChain, msgs ...sdk.Msg) uint64 {
