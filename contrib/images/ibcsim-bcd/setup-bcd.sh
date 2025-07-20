@@ -184,26 +184,32 @@ echo "Governance authority: $GOV_AUTHORITY"
 # Create proposal JSON file with correct message type
 echo "Creating governance proposal JSON..."
 PROPOSAL_FILE="$CHAINDIR/$CHAINID/bsn_contracts_proposal.json"
-cat <<EOF >$PROPOSAL_FILE
-{
-  "messages": [
-    {
-      "@type": "/babylonlabs.babylon.v1beta1.MsgSetBSNContracts",
-      "authority": "$GOV_AUTHORITY",
-      "contracts": {
-        "babylon_contract": "$BABYLON_ADDR",
-        "btc_light_client_contract": "$BTC_LC_ADDR",
-        "btc_staking_contract": "$BTC_STAKING_ADDR",
-        "btc_finality_contract": "$BTC_FINALITY_ADDR"
+DEPOSIT_AMOUNT="1000000$DENOM"
+jq -n \
+  --arg gov_authority "$GOV_AUTHORITY" \
+  --arg babylon_addr "$BABYLON_ADDR" \
+  --arg btc_lc_addr "$BTC_LC_ADDR" \
+  --arg btc_staking_addr "$BTC_STAKING_ADDR" \
+  --arg btc_finality_addr "$BTC_FINALITY_ADDR" \
+  --arg deposit_amount "$DEPOSIT_AMOUNT" \
+  '{
+    "messages": [
+      {
+        "@type": "/babylonlabs.babylon.v1beta1.MsgSetBSNContracts",
+        "authority": $gov_authority,
+        "contracts": {
+          "babylon_contract": $babylon_addr,
+          "btc_light_client_contract": $btc_lc_addr,
+          "btc_staking_contract": $btc_staking_addr,
+          "btc_finality_contract": $btc_finality_addr
+        }
       }
-    }
-  ],
-  "metadata": "Set BSN Contracts",
-  "title": "Set BSN Contracts",
-  "summary": "Set contract addresses for Babylon system",
-  "deposit": "1000000$DENOM"
-}
-EOF
+    ],
+    "metadata": "Set BSN Contracts",
+    "title": "Set BSN Contracts",
+    "summary": "Set contract addresses for Babylon system",
+    "deposit": $deposit_amount
+  }' > "$PROPOSAL_FILE"
 
 echo "Created proposal file: $PROPOSAL_FILE"
 echo -n "Proposal content: "
