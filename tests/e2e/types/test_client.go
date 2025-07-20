@@ -233,6 +233,7 @@ func (p *TestConsumerClient) deployContracts() (*ConsumerContract, error) {
 		"btc_staking_msg":                 btcStakingInitMsgB64,
 		"btc_finality_code_id":            btcFinalityCodeID,
 		"btc_finality_msg":                btcFinalityInitMsgB64,
+		"btc_light_client_initial_header": "{\"header\": {\"version\": 536870912, \"prev_blockhash\": \"000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d\", \"merkle_root\": \"e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee\", \"time\": 1599332844, \"bits\": 503394215, \"nonce\": 9108535}, \"height\": 2016, \"total_work\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU=\"}",
 		"consumer_name":                   consumerName,
 		"consumer_description":            consumerDescription,
 		"ics20_channel_id":                ics20ChannelID,
