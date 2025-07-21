@@ -273,9 +273,6 @@ func (p *TestConsumerClient) deployContracts() (*ConsumerContract, error) {
 		return nil, fmt.Errorf("failed to query babylon contract config: %w", err)
 	}
 
-	// Debug: print the config response
-	fmt.Printf("Config response: %s\n", string(configRes))
-
 	var config struct {
 		BTCLightClient []string `json:"btc_light_client"`
 		BTCStaking     string   `json:"btc_staking"`
@@ -314,8 +311,6 @@ func (p *TestConsumerClient) deployContracts() (*ConsumerContract, error) {
 	}
 
 	// Convert addresses to AccAddress
-	// All addresses are already defined above
-
 	r := ConsumerContract{
 		Babylon:        babylonAccAddr,
 		BTCLightClient: btcLightClientAccAddr,
