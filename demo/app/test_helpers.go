@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
@@ -80,6 +81,9 @@ func setup(t testing.TB, chainID string, withGenesis bool, invCheckPeriod uint, 
 func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *ConsumerApp {
 	t.Helper()
 
+	// Ensure address prefixes are set before any test operations
+	appparams.SetAddressPrefixes()
+
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
@@ -126,6 +130,9 @@ func NewAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions)
 // Setup initializes a new ConsumerApp. A Nop logger is set in ConsumerApp.
 func Setup(t *testing.T, opts ...wasmkeeper.Option) *ConsumerApp {
 	t.Helper()
+
+	// Ensure address prefixes are set before any test operations
+	appparams.SetAddressPrefixes()
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
@@ -407,7 +414,7 @@ func GenesisStateWithValSet(
 
 	// Inject a valid BsnContracts field for the Babylon module
 	babylonGenesis := map[string]interface{}{
-		"params": map[string]interface{}{}, // use default params if needed
+		"params":        map[string]interface{}{}, // use default params if needed
 		"bsn_contracts": map[string]interface{}{}, // use default params if needed
 	}
 	bz, err := json.Marshal(babylonGenesis)

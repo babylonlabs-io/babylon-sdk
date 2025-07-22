@@ -11,10 +11,11 @@ import (
 
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
 	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/datagen"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 )
 
-var testMsg types.ExecuteMessage
+var testMsg datagen.ExecuteMessage
 
 // In the Test function, we create and run the suite
 func TestBabylonSDKTestSuite(t *testing.T) {
@@ -68,6 +69,7 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 	// setup contracts on consumer (deploys and sets addresses via governance)
 	consumerContracts, err := consumerCli.BootstrapContracts()
 	s.NoError(err)
+	s.NotNil(consumerContracts)
 	// provider client
 	providerCli := types.NewProviderClient(s.T(), s.ProviderChain)
 
@@ -99,8 +101,12 @@ func (s *BabylonSDKTestSuite) Test1ContractDeployment() {
 }
 
 func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
+	// the initial header must be the header during instantiation
+	initialHeader := datagen.MustGetInitialHeader()
+	initialHeaderInfo, err := initialHeader.ToHeaderInfo()
+	s.NoError(err)
 	// generate headers
-	headers, headersMsg := types.GenBTCHeadersMsg(nil)
+	headers, headersMsg := datagen.GenBTCHeadersMsg(initialHeaderInfo)
 	headersMsgBytes, err := json.Marshal(headersMsg)
 	s.NoError(err)
 	// send headers to the BTCLightClient contract. This is to ensure that the contract is
@@ -121,7 +127,7 @@ func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 	s.T().Logf("tipHeader: %v", tipHeader)
 
 	// insert more headers
-	_, headersMsg2 := types.GenBTCHeadersMsg(headers[len(headers)-1])
+	_, headersMsg2 := datagen.GenBTCHeadersMsg(headers[len(headers)-1])
 	headersMsgBytes2, err := json.Marshal(headersMsg2)
 	s.NoError(err)
 	res, err = s.ConsumerCli.Exec(s.ConsumerContract.BTCLightClient, headersMsgBytes2)
@@ -135,7 +141,7 @@ func (s *BabylonSDKTestSuite) Test2InsertBTCHeaders() {
 }
 
 func (s *BabylonSDKTestSuite) Test3MockConsumerFpDelegation() {
-	testMsg = types.GenExecMessage()
+	testMsg = datagen.GenExecMessage()
 	msgBytes, err := json.Marshal(testMsg)
 	s.NoError(err)
 

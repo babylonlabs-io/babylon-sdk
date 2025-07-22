@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/demo/app"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/datagen"
 	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
@@ -112,8 +113,8 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 	btcConfirmationDepth := 1
 	btcFinalizationTimeout := 2
 	babylonAdmin := p.GetSender().String()
-	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`,
-		network, btcConfirmationDepth, btcFinalizationTimeout)
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d,"initial_header":%s}`,
+		network, btcConfirmationDepth, btcFinalizationTimeout, datagen.MustGetInitialHeaderInStr())
 	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 
@@ -134,7 +135,7 @@ func (p *TestConsumerClient) BootstrapContracts() (*ConsumerContract, error) {
 		"btc_staking_msg":                 btcStakingInitMsgBz,
 		"btc_finality_code_id":            btcFinalityContractWasmId,
 		"btc_finality_msg":                btcFinalityInitMsgBz,
-		"btc_light_client_initial_header": "{\"header\": {\"version\": 536870912, \"prev_blockhash\": \"000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d\", \"merkle_root\": \"e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee\", \"time\": 1599332844, \"bits\": 503394215, \"nonce\": 9108535}, \"height\": 2016, \"total_work\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU=\"}",
+		"btc_light_client_initial_header": datagen.MustGetInitialHeaderInHex(),
 		"consumer_name":                   "test-consumer",
 		"consumer_description":            "test-consumer-description",
 	}
