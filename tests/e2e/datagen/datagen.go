@@ -148,23 +148,24 @@ func MustGetInitialHeader() BtcHeaderInfo {
 
 func MustGetInitialHeaderInStr() string {
 	header := MustGetInitialHeader()
-	jsonBytes, err := json.Marshal(header)
-	if err != nil {
-		panic("failed to marshal header to json") // shouldn't happen
-	}
-
+	jsonBytes := marshalHeaderToJSON(header)
 	return string(jsonBytes)
 }
 
 // MustGetInitialHeaderInHex returns the initial BTC header encoded in json and hex-encoded form
 func MustGetInitialHeaderInHex() string {
 	header := MustGetInitialHeader()
+	jsonBytes := marshalHeaderToJSON(header)
+	return hex.EncodeToString(jsonBytes)
+}
+
+// marshalHeaderToJSON marshals a BtcHeaderInfo object into JSON bytes.
+func marshalHeaderToJSON(header BtcHeaderInfo) []byte {
 	jsonBytes, err := json.Marshal(header)
 	if err != nil {
 		panic("failed to marshal header to json") // shouldn't happen
 	}
-
-	return hex.EncodeToString(jsonBytes)
+	return jsonBytes
 }
 
 func GenExecMessage() ExecuteMessage {

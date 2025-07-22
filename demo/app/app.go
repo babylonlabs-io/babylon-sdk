@@ -205,6 +205,9 @@ func NewConsumerApp(
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *ConsumerApp {
+	// Ensure address prefixes are set before any module addresses are generated
+	appparams.SetAddressPrefixes()
+
 	encCfg := appparams.DefaultEncodingConfig()
 	interfaceRegistry := encCfg.InterfaceRegistry
 	appCodec := encCfg.Codec
@@ -427,7 +430,7 @@ func NewConsumerApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
