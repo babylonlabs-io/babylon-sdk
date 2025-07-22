@@ -18,6 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/datagen"
 	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
@@ -151,7 +152,8 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	btcConfirmationDepth := 1
 	btcFinalizationTimeout := 2
 	babylonAdmin := consumerApp.BabylonKeeper.GetAuthority()
-	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`, network, btcConfirmationDepth, btcFinalizationTimeout)
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d,"initial_header":%s}`,
+		network, btcConfirmationDepth, btcFinalizationTimeout, datagen.MustGetInitialHeaderInStr())
 	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 
@@ -173,7 +175,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 		"btc_finality_code_id":            btcFinalityContractCodeID,
 		"btc_finality_msg":                btcFinalityInitMsgBz,
 		"consumer_name":                   "test-consumer",
-		"btc_light_client_initial_header": "{\"header\": {\"version\": 536870912, \"prev_blockhash\": \"000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d\", \"merkle_root\": \"e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee\", \"time\": 1599332844, \"bits\": 503394215, \"nonce\": 9108535}, \"height\": 2016, \"total_work\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU=\"}",
+		"btc_light_client_initial_header": datagen.MustGetInitialHeaderInHex(),
 		"consumer_description":            "test-consumer-description",
 	}
 	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
