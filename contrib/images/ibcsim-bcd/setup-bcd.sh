@@ -271,12 +271,11 @@ BABYLON_INIT_MSG=$(jq -n \
   --arg btc_staking_msg "$BTCSTAKING_INIT_MSG_B64" \
   --argjson btc_finality_code_id $BTCFINALITY_CODE_ID \
   --arg btc_finality_msg "$BTCFINALITY_INIT_MSG_B64" \
-  --arg btc_light_client_initial_header '{"header": {"version": 536870912, "prev_blockhash": "000000c0a3841a6ae64c45864ae25314b40fd522bfb299a4b6bd5ef288cae74d", "merkle_root": "e666a9797b7a650597098ca6bf500bd0873a86ada05189f87073b6dfdbcaf4ee", "time": 1599332844, "bits": 503394215, "nonce": 9108535}, "height": 2016, "total_work": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAkY98OU="}' \
   --arg consumer_name "$CONSUMER_NAME" \
   --arg consumer_description "$CONSUMER_DESCRIPTION" \
   --arg ics20_channel_id "$ICS20_CHANNEL_ID" \
   --arg admin "$ADMIN" \
-  '{network: $network, babylon_tag: $babylon_tag, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, notify_cosmos_zone: $notify_cosmos_zone, btc_light_client_code_id: $btc_light_client_code_id, btc_light_client_msg: $btc_light_client_msg, btc_staking_code_id: $btc_staking_code_id, btc_staking_msg: $btc_staking_msg, btc_finality_code_id: $btc_finality_code_id, btc_finality_msg: $btc_finality_msg, btc_light_client_initial_header: $btc_light_client_initial_header, consumer_name: $consumer_name, consumer_description: $consumer_description, ics20_channel_id: $ics20_channel_id, admin: $admin}')
+  '{network: $network, babylon_tag: $babylon_tag, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, notify_cosmos_zone: $notify_cosmos_zone, btc_light_client_code_id: $btc_light_client_code_id, btc_light_client_msg: $btc_light_client_msg, btc_staking_code_id: $btc_staking_code_id, btc_staking_msg: $btc_staking_msg, btc_finality_code_id: $btc_finality_code_id, btc_finality_msg: $btc_finality_msg, consumer_name: $consumer_name, consumer_description: $consumer_description, ics20_channel_id: $ics20_channel_id, admin: $admin}')
 echo "Babylon contract instantiation message: $BABYLON_INIT_MSG"
 
 # Instantiate only the Babylon contract
