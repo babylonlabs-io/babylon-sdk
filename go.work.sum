@@ -427,6 +427,8 @@ github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd3
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible h1:Ppm0npCCsmuR9oQaBtRuZcmILVE74aXE+AmrJj8L2ns=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
 github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250407051200-a5d652116d6d/go.mod h1:LFP3RyYhoNS9sLHsxZlpEKkhuzAB5T9Z3Wd70rOTBZE=
+github.com/babylonlabs-io/babylon/v3 v3.0.0-snapshot.250717 h1:Kc1+Gg7727tYuVggyHlJd5IJuXow0IQO8DZmaKEWWLc=
+github.com/babylonlabs-io/babylon/v3 v3.0.0-snapshot.250717/go.mod h1:kZirEr92KRSK1amofhTL/mz4+KYn/oikr+F+4kFqWgQ=
 github.com/bazelbuild/rules_go v0.49.0 h1:5vCbuvy8Q11g41lseGJDc5vxhDjJtfxr6nM/IC4VmqM=
 github.com/bazelbuild/rules_go v0.49.0/go.mod h1:Dhcz716Kqg1RHNWos+N6MlXNkjNP2EwZQ0LukRKJfMs=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=
