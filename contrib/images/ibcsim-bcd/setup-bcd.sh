@@ -115,6 +115,107 @@ echo "Starting $BINARY..."
 $BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' --log_no_color 2>&1 | tee $CHAINDIR/$CHAINID.log &
 sleep 10
 
+# Set up relayer and create IBC channels BEFORE uploading contracts
+echo "Setting up relayer and creating IBC channels..."
+BABYLON_KEY="babylon-key"
+BABYLON_CHAIN_ID="chain-test"
+CONSUMER_KEY="bcd-key"
+RELAYER_CONF_DIR="/data/relayer"
+BABYLON_HOME="/data/node1/babylond"
+BABYLON_NODE_RPC="http://babylondnode1:26657"
+
+mkdir -p $RELAYER_CONF_DIR
+rly --home $RELAYER_CONF_DIR config init
+RELAYER_CONF=$RELAYER_CONF_DIR/config/config.yaml
+
+cat <<EOT >$RELAYER_CONF
+global:
+    api-listen-addr: :5183
+    max-retries: 20
+    timeout: 30s
+    memo: ""
+    light-cache-size: 10
+chains:
+    babylon:
+        type: cosmos
+        value:
+            key: $BABYLON_KEY
+            chain-id: $BABYLON_CHAIN_ID
+            rpc-addr: $BABYLON_NODE_RPC
+            account-prefix: bbn
+            keyring-backend: test
+            gas-adjustment: 1.5
+            gas-prices: 0.002ubbn
+            min-gas-amount: 1
+            debug: true
+            timeout: 30s
+            output-format: json
+            sign-mode: direct
+            extra-codecs: []
+    bcd:
+        type: cosmos
+        value:
+            key: $CONSUMER_KEY
+            chain-id: $CHAINID
+            rpc-addr: http://localhost:$RPCPORT
+            account-prefix: bbnc
+            keyring-backend: test
+            gas-adjustment: 1.5
+            gas-prices: 0.002ustake
+            min-gas-amount: 1
+            debug: true
+            timeout: 30s
+            output-format: json
+            sign-mode: direct
+            extra-codecs: []     
+paths:
+    bcd:
+        src:
+            chain-id: $BABYLON_CHAIN_ID
+        dst:
+            chain-id: $CHAINID
+EOT
+
+echo "Inserting relayer keys..."
+if [ ! -f "$CHAINDIR/$CHAINID/key_seed.json" ]; then
+    echo "ERROR: Consumer key file not found!"
+    exit 1
+fi
+
+CONSUMER_MEMO=$(cat $CHAINDIR/$CHAINID/key_seed.json | jq .mnemonic | tr -d '"')
+if ! rly --home $RELAYER_CONF_DIR keys list bcd 2>/dev/null | grep -q "$CONSUMER_KEY"; then
+    rly --home $RELAYER_CONF_DIR keys restore bcd $CONSUMER_KEY "$CONSUMER_MEMO"
+fi
+
+if [ ! -f "$BABYLON_HOME/key_seed.json" ]; then
+    echo "ERROR: Babylon key file not found!"
+    exit 1
+fi
+
+BABYLON_MEMO=$(cat $BABYLON_HOME/key_seed.json | jq .secret | tr -d '"')
+if ! rly --home $RELAYER_CONF_DIR keys list babylon 2>/dev/null | grep -q "$BABYLON_KEY"; then
+    rly --home $RELAYER_CONF_DIR keys restore babylon $BABYLON_KEY "$BABYLON_MEMO"
+fi
+
+sleep 5
+
+# Create IBC infrastructure
+echo "Creating IBC clients..."
+rly --home $RELAYER_CONF_DIR tx clients bcd --client-tp "07-tendermint"
+sleep 3
+
+echo "Creating IBC connection..."
+rly --home $RELAYER_CONF_DIR tx connection bcd
+sleep 5
+
+echo "Creating IBC transfer channel..."
+rly --home $RELAYER_CONF_DIR tx channel bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1
+sleep 3
+
+# Extract client ID for later use
+CLIENT_ID=$(rly --home $RELAYER_CONF_DIR q clients bcd | grep -o '07-tendermint-[0-9]*' | head -1)
+echo "IBC client ID: $CLIENT_ID"
+
 # Upload contract code and capture code IDs
 echo "Storing Babylon contract code..."
 $BINARY --home $CHAINDIR/$CHAINID tx wasm store "$BABYLON_CONTRACT_CODE_FILE" $KEYRING --from user --chain-id $CHAINID --gas 200000000 --gas-prices 0.01$BASEDENOM --node http://localhost:$RPCPORT -y
@@ -292,6 +393,7 @@ done
 
 # Verify the contracts are set
 echo "Verifying BSN contracts are set..."
-$BINARY --home $CHAINDIR/$CHAINID query babylon bsn-contracts --node http://localhost:$RPCPORT --output json | jq -r '.'
+$BINARY --home $RELAYER_CONF_DIR query babylon bsn-contracts --node http://localhost:$RPCPORT --output json | jq -r '.'
 
 echo "BSN contracts setup completed."
+echo "Note: Zoneconcierge IBC channel will be created after consumer registration."
