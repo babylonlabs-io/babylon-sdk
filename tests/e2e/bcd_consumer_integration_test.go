@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
@@ -162,6 +159,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 	// after the consumer is registered, wait till IBC connection/channel
 	// between babylon<->bcd is established
 	s.waitForIBCConnections()
+
+	s.waitForContractInstantiation()
 }
 
 // Test03BTCHeaderPropagation
@@ -1404,6 +1403,19 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 		s.T().Logf("IBC transfer channel established successfully")
 		return true
 	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
+}
+
+func (s *BCDConsumerIntegrationTestSuite) waitForContractInstantiation() {
+	s.Eventually(func() bool {
+		_, err := s.cosmwasmController.QueryBabylonContracts()
+		if err != nil {
+			s.T().Logf("Error querying Babylon contracts: %v", err)
+			return false
+		}
+
+		s.T().Logf("Babylon contract instantiated")
+		return true
+	}, time.Minute*2, time.Second*10, "Babylon contract instantiation failed")
 }
 
 func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.ConsumerRegister {
