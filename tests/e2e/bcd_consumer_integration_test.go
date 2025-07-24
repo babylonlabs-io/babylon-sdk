@@ -413,7 +413,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	s.Len(activeDels.Dels, 1)
 
 	activeDel := activeDels.Dels[0]
-	s.True(activeDel.HasCovenantQuorums(1))
+	s.True(activeDel.HasCovenantQuorums(1, 1))
 
 	// Query the staking contract for delegations on the consumer chain
 	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
@@ -988,7 +988,7 @@ func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bstypes
 		if len(activeDels.Dels) != 1 {
 			return false
 		}
-		if !activeDels.Dels[0].HasCovenantQuorums(1) {
+		if !activeDels.Dels[0].HasCovenantQuorums(1, 1) {
 			return false
 		}
 		return true
@@ -1427,6 +1427,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 		consumerID,
 		datagen.GenRandomHexStr(r, 5),
 		"Chain description: "+datagen.GenRandomHexStr(r, 15),
+		datagen.GenBabylonRewardsCommission(r),
 	)
 
 	// wait until the consumer is registered

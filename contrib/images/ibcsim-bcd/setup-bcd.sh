@@ -69,28 +69,47 @@ redirect $BINARY --home $CHAINDIR/$CHAINID genesis collect-gentxs
 
 # Set proper defaults and change ports
 echo "Change settings in config.toml and genesis.json files..."
-sed -i 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:'"$RPCPORT"'"#g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's#"tcp://0.0.0.0:26656"#"tcp://0.0.0.0:'"$P2PPORT"'"#g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's#"localhost:6060"#"localhost:'"$PROFPORT"'"#g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's/max_body_bytes = 1000000/max_body_bytes = 1000000000/g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's/minimum-gas-prices = ""/minimum-gas-prices = "0.00001'"$BASEDENOM"'"/g' $CHAINDIR/$CHAINID/config/app.toml
-sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's/index_all_keys = false/index_all_keys = true/g' $CHAINDIR/$CHAINID/config/config.toml
-sed -i 's#"tcp://0.0.0.0:1317"#"tcp://0.0.0.0:1318"#g' $CHAINDIR/$CHAINID/config/app.toml # ensure port is not conflicted with Babylon
-sed -i 's/"bond_denom": "stake"/"bond_denom": "'"$DENOM"'"/g' $CHAINDIR/$CHAINID/config/genesis.json
+# Use temporary files to avoid permission issues with mounted volumes
+cp $CHAINDIR/$CHAINID/config/config.toml /tmp/config.toml.tmp
+sed 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:'"$RPCPORT"'"#g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's#"tcp://0.0.0.0:26656"#"tcp://0.0.0.0:'"$P2PPORT"'"#g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's#"localhost:6060"#"localhost:'"$PROFPORT"'"#g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's/timeout_commit = "5s"/timeout_commit = "1s"/g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's/max_body_bytes = 1000000/max_body_bytes = 1000000000/g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's/timeout_propose = "3s"/timeout_propose = "1s"/g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+sed 's/index_all_keys = false/index_all_keys = true/g' /tmp/config.toml.tmp > /tmp/config1.tmp && mv /tmp/config1.tmp /tmp/config.toml.tmp
+cp /tmp/config.toml.tmp $CHAINDIR/$CHAINID/config/config.toml
 
-# Modify governance parameters for faster testing
-echo "Updating governance parameters for faster testing..."
-# Set voting period to 1 minute (60s)
-sed -i 's/"voting_period": "[^"]*"/"voting_period": "60s"/g' $CHAINDIR/$CHAINID/config/genesis.json
-# Set minimum deposit to 1000000$DENOM (1M instead of 10M)
-sed -i 's/"amount": "10000000"/"amount": "1000000"/g' $CHAINDIR/$CHAINID/config/genesis.json
-# Set max deposit period to 30 seconds for faster testing
-sed -i 's/"max_deposit_period": "[^"]*"/"max_deposit_period": "30s"/g' $CHAINDIR/$CHAINID/config/genesis.json
+cp $CHAINDIR/$CHAINID/config/app.toml /tmp/app.toml.tmp
+sed 's/minimum-gas-prices = ""/minimum-gas-prices = "0.00001ustake"/g' /tmp/app.toml.tmp > /tmp/app1.tmp && mv /tmp/app1.tmp /tmp/app.toml.tmp
+sed 's#"tcp://0.0.0.0:1317"#"tcp://0.0.0.0:1318"#g' /tmp/app.toml.tmp > /tmp/app1.tmp && mv /tmp/app1.tmp /tmp/app.toml.tmp # ensure port is not conflicted with Babylon
+cp /tmp/app.toml.tmp $CHAINDIR/$CHAINID/config/app.toml
+
+cp $CHAINDIR/$CHAINID/config/genesis.json /tmp/genesis.json.tmp
+sed 's/"bond_denom": "stake"/"bond_denom": "'"$DENOM"'"/g' /tmp/genesis.json.tmp > /tmp/genesis1.tmp && mv /tmp/genesis1.tmp /tmp/genesis.json.tmp
+cp /tmp/genesis.json.tmp $CHAINDIR/$CHAINID/config/genesis.json
+
+# Clean up temporary files
+rm -f /tmp/config.toml.tmp /tmp/config1.tmp /tmp/app.toml.tmp /tmp/app1.tmp /tmp/genesis.json.tmp /tmp/genesis1.tmp
 
 # sed -i '' 's#index-events = \[\]#index-events = \["message.action","send_packet.packet_src_channel","send_packet.packet_sequence"\]#g' $CHAINDIR/$CHAINID/config/app.toml
 
+# Modify governance parameters for faster testing
+echo "Updating governance parameters for faster testing..."
+
+# Use temporary files to avoid permission issues with mounted volumes
+GENESIS_TEMP="/tmp/genesis.json.tmp"
+GENESIS_WORK="/tmp/genesis_work.tmp"
+cp $CHAINDIR/$CHAINID/config/genesis.json "$GENESIS_TEMP"
+
+# Apply governance parameter modifications
+sed 's/"voting_period": "[^"]*"/"voting_period": "60s"/g' "$GENESIS_TEMP" > "$GENESIS_WORK" && mv "$GENESIS_WORK" "$GENESIS_TEMP"
+sed 's/"amount": "10000000"/"amount": "1000000"/g' "$GENESIS_TEMP" > "$GENESIS_WORK" && mv "$GENESIS_WORK" "$GENESIS_TEMP"
+sed 's/"max_deposit_period": "[^"]*"/"max_deposit_period": "30s"/g' "$GENESIS_TEMP" > "$GENESIS_WORK" && mv "$GENESIS_WORK" "$GENESIS_TEMP"
+
+# Copy the modified file back and clean up
+cp "$GENESIS_TEMP" $CHAINDIR/$CHAINID/config/genesis.json
+rm -f "$GENESIS_TEMP" "$GENESIS_WORK"
 # Start
 echo "Starting $BINARY..."
 $BINARY --home $CHAINDIR/$CHAINID start --pruning=nothing --grpc-web.enable=false --grpc.address="0.0.0.0:$GRPCPORT" --log_level trace --trace --log_format 'plain' --log_no_color 2>&1 | tee $CHAINDIR/$CHAINID.log &
@@ -135,6 +154,8 @@ BTC_LC_INIT_MSG=$(jq -n --arg network "$NETWORK" --argjson btc_confirmation_dept
 BTCSTAKING_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
 BTCFINALITY_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
 
+
+
 # Base64 encode the init messages as required by the Babylon contract
 BTC_LC_INIT_MSG_B64=$(echo -n "$BTC_LC_INIT_MSG" | base64 | tr -d '\n')
 BTCSTAKING_INIT_MSG_B64=$(echo -n "$BTCSTAKING_INIT_MSG" | base64 | tr -d '\n')
@@ -171,7 +192,7 @@ echo "Babylon Address: $BABYLON_ADDR"
 # Query the Babylon contract's Config {} to get all contract addresses
 CONFIG_QUERY='{"config":{}}'
 CONFIG_RES=$($BINARY --home $CHAINDIR/$CHAINID query wasm contract-state smart $BABYLON_ADDR "$CONFIG_QUERY" --node http://localhost:$RPCPORT --output json)
-BTC_LC_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_light_client')
+BTC_LC_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_light_client[0]')
 BTC_STAKING_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_staking')
 BTC_FINALITY_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_finality')
 
