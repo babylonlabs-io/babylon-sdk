@@ -1,8 +1,11 @@
-package types
+package datagen
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"math/big"
 	"math/rand"
 	"testing"
 	"time"
@@ -12,10 +15,52 @@ import (
 	bbn "github.com/babylonlabs-io/babylon/v3/types"
 	btclctypes "github.com/babylonlabs-io/babylon/v3/x/btclightclient/types"
 	bstypes "github.com/babylonlabs-io/babylon/v3/x/btcstaking/types"
+	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/stretchr/testify/require"
 )
+
+// BtcHeaderInfo represents the Bitcoin header information needed for contract instantiation
+type BtcHeaderInfo struct {
+	Header BtcHeader `json:"header"`
+	Work   []byte    `json:"total_work"`
+	Height int64     `json:"height"`
+}
+
+func (bhi *BtcHeaderInfo) ToHeaderInfo() (*btclctypes.BTCHeaderInfo, error) {
+	prevHash, err := chainhash.NewHashFromStr(bhi.Header.PrevBlockhash)
+	if err != nil {
+		return nil, err
+	}
+	merkleRoot, err := chainhash.NewHashFromStr(bhi.Header.MerkleRoot)
+	if err != nil {
+		return nil, err
+	}
+
+	header := bbn.NewBTCHeaderBytesFromBlockHeader(&wire.BlockHeader{
+		Version:    bhi.Header.Version,
+		PrevBlock:  *prevHash,
+		MerkleRoot: *merkleRoot,
+		Timestamp:  time.Unix(int64(bhi.Header.Time), 0),
+		Bits:       bhi.Header.Bits,
+		Nonce:      bhi.Header.Nonce,
+	})
+
+	var workInt big.Int
+	workInt.SetBytes(bhi.Work)
+
+	work := sdkmath.NewUintFromBigInt(&workInt)
+
+	return &btclctypes.BTCHeaderInfo{
+		Header: &header,
+		Hash:   header.Hash(),
+		Height: uint32(bhi.Height),
+		Work:   &work,
+	}, nil
+}
 
 func GenBTCHeadersMsg(parent *btclctypes.BTCHeaderInfo) ([]*btclctypes.BTCHeaderInfo, BabylonExecuteMsg) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
@@ -57,6 +102,70 @@ func GenBTCHeadersMsg(parent *btclctypes.BTCHeaderInfo) ([]*btclctypes.BTCHeader
 	}
 
 	return chain.GetChainInfo(), msg
+}
+
+// MustGetInitialHeader returns the initial BTC header for the babylon contract instantiation
+func MustGetInitialHeader() BtcHeaderInfo {
+	// Initial base header generated using GenBTCHeadersMsg
+	// https://github.com/babylonlabs-io/babylon-sdk/blob/a8ad676746c1ab75ea849572fc82a3d0b8900c7a/tests/e2e/types/datagen.go#L20
+	headerHex := "04000000f67ad7695d9b662a72ff3d8edbbb2de0bfa67b13974bb9910d116d5cbd863e683b48539be32ca95bd6e51615157ca70b6eff9993f11205780810022bfc0d0163cb088653ffff7f206fdbb6ed"
+
+	// the initial height must be at difficulty adjustment boundary
+	height := int64(2016)
+
+	// Decode the header
+	headerBytes, err := hex.DecodeString(headerHex)
+	if err != nil {
+		panic("static header hex is invalid") // shouldn't happen for hardcoded value
+	}
+
+	// Deserialize the header
+	var header wire.BlockHeader
+	err = header.Deserialize(bytes.NewReader(headerBytes))
+	if err != nil {
+		panic("static header bytes are invalid") // shouldn't happen for hardcoded value
+	}
+
+	// Calculate the work (difficulty in big-endian bytes)
+	work := blockchain.CalcWork(header.Bits)
+	// Convert work to 32-byte big-endian
+	workBytes := make([]byte, 32)
+	work.FillBytes(workBytes) // Pads with zeros if needed
+
+	return BtcHeaderInfo{
+		Header: BtcHeader{
+			Version:       header.Version,
+			PrevBlockhash: header.PrevBlock.String(),
+			MerkleRoot:    header.MerkleRoot.String(),
+			Time:          uint32(header.Timestamp.Unix()),
+			Bits:          header.Bits,
+			Nonce:         header.Nonce,
+		},
+		Height: height,
+		Work:   workBytes,
+	}
+}
+
+func MustGetInitialHeaderInStr() string {
+	header := MustGetInitialHeader()
+	jsonBytes := marshalHeaderToJSON(header)
+	return string(jsonBytes)
+}
+
+// MustGetInitialHeaderInHex returns the initial BTC header encoded in json and hex-encoded form
+func MustGetInitialHeaderInHex() string {
+	header := MustGetInitialHeader()
+	jsonBytes := marshalHeaderToJSON(header)
+	return hex.EncodeToString(jsonBytes)
+}
+
+// marshalHeaderToJSON marshals a BtcHeaderInfo object into JSON bytes.
+func marshalHeaderToJSON(header BtcHeaderInfo) []byte {
+	jsonBytes, err := json.Marshal(header)
+	if err != nil {
+		panic("failed to marshal header to json") // shouldn't happen
+	}
+	return jsonBytes
 }
 
 func GenExecMessage() ExecuteMessage {
