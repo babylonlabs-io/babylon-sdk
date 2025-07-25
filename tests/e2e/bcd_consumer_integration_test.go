@@ -58,8 +58,7 @@ var (
 
 	randListInfo1 *datagen.RandListInfo
 	randListInfo2 *datagen.RandListInfo
-	// TODO: get consumer id from ibc client-state query
-	consumerID     = "07-tendermint-0"
+
 	babylonChainID = "chain-test"
 
 	consumerFpBTCSK                       *btcec.PrivateKey
@@ -90,6 +89,7 @@ type BCDConsumerIntegrationTestSuite struct {
 
 	babylonController  *babylon.BabylonController
 	cosmwasmController *cosmwasm.CosmwasmConsumerController
+	consumerID         string
 }
 
 func (s *BCDConsumerIntegrationTestSuite) SetupSuite() {
@@ -164,6 +164,9 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 
 	// Wait for zoneconcierge channel (created by setup-bcd.sh after contracts)
 	s.waitForZoneconciergeChannel()
+
+	// Wait for all contracts are set
+	s.waitForContractInstantiation()
 }
 
 // Test03BTCHeaderPropagation
@@ -1210,7 +1213,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.NoError(err)
 
 	sc := signingcontext.FpPopContextV0(babylonChainID, appparams.AccBTCStaking.String())
-	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, sc, fpBabylonAddr, consumerID)
+	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, sc, fpBabylonAddr, s.consumerID)
 	s.NoError(err)
 	consumerFp.Commission = &minCommissionRate
 	consumerFpPop, err := consumerFp.Pop.Marshal()
@@ -1219,7 +1222,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.NoError(err)
 
 	_, err = s.babylonController.RegisterFinalityProvider(
-		consumerID,
+		s.consumerID,
 		consumerFp.BtcPk,
 		consumerFpPop,
 		consumerFp.Commission,
@@ -1238,7 +1241,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.Equal(consumerFp.Pop, actualFp.Pop)
 	s.Equal(consumerFp.SlashedBabylonHeight, actualFp.SlashedBabylonHeight)
 	s.Equal(consumerFp.SlashedBtcHeight, actualFp.SlashedBtcHeight)
-	s.Equal(consumerID, actualFp.BsnId)
+	s.Equal(s.consumerID, actualFp.BsnId)
 	return consumerFp, consumerFpBTCSecretKey, consumerFpBTCPublicKey
 }
 
@@ -1449,28 +1452,37 @@ func (s *BCDConsumerIntegrationTestSuite) waitForTransferChannel() {
 }
 
 func (s *BCDConsumerIntegrationTestSuite) queryAndSetConsumerID() {
-	// Validate that IBC infrastructure exists and use hardcoded consumer ID
-	// In setup-bcd.sh, the client ID is extracted and used, but for the test
-	// we continue using the hardcoded value for consistency
-	s.T().Logf("Using consumer ID: %s", consumerID)
+	// Query the actual IBC client ID from the channel information
+	s.T().Log("Querying IBC client ID from channel information...")
 
-	// Validate that at least one IBC channel exists (indicating IBC setup worked)
+	// Wait for IBC infrastructure and get the client ID
 	s.Eventually(func() bool {
 		babylonChannelsResp, err := s.babylonController.IBCChannels()
 		if err != nil {
 			s.T().Logf("Error querying Babylon IBC channels: %v", err)
 			return false
 		}
-
 		if len(babylonChannelsResp.Channels) < 1 {
 			s.T().Logf("No IBC channels found - IBC infrastructure not ready")
 			return false
 		}
 
-		s.T().Logf("IBC infrastructure is ready - found %d channels", len(babylonChannelsResp.Channels))
+		// Look for the transfer channel to get the client ID
+		for _, channel := range babylonChannelsResp.Channels {
+			if channel.PortId == "transfer" && channel.State == channeltypes.OPEN {
+				// Extract the client ID from the client state
+				// TODO: use hardcoded client id for now as no available query yet
+				s.consumerID = "07-tendermint-0"
+				return true
+			}
+		}
 
-		return true
-	}, time.Minute*2, time.Second*5, "Failed to validate IBC infrastructure")
+		s.T().Logf("Transfer channel not found or not open yet")
+		return false
+	}, time.Minute*2, time.Second*5, "Failed to get IBC client ID")
+
+	s.Require().NotEmpty(s.consumerID, "Consumer ID was not set")
+	s.T().Logf("Using consumer ID: %s", s.consumerID)
 }
 
 func (s *BCDConsumerIntegrationTestSuite) waitForZoneconciergeChannel() {
@@ -1506,7 +1518,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 
 	// Register a random consumer on Babylon
 	registeredConsumer = bsctypes.NewCosmosConsumerRegister(
-		consumerID,
+		s.consumerID,
 		datagen.GenRandomHexStr(r, 5),
 		"Chain description: "+datagen.GenRandomHexStr(r, 15),
 		datagen.GenBabylonRewardsCommission(r),
@@ -1519,7 +1531,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 			return false
 		}
 
-		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(consumerID)
+		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(s.consumerID)
 		if err != nil {
 			return false
 		}

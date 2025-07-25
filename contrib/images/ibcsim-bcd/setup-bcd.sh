@@ -167,7 +167,7 @@ chains:
             timeout: 30s
             output-format: json
             sign-mode: direct
-            extra-codecs: []     
+            extra-codecs: []
 paths:
     bcd:
         src:
@@ -201,8 +201,8 @@ sleep 5
 
 # Create IBC infrastructure
 echo "Creating IBC clients..."
-rly --home $RELAYER_CONF_DIR tx clients bcd --client-tp "07-tendermint"
-sleep 3
+rly --home $RELAYER_CONF_DIR tx clients bcd
+sleep 10
 
 echo "Creating IBC connection..."
 rly --home $RELAYER_CONF_DIR tx connection bcd
@@ -211,10 +211,6 @@ sleep 5
 echo "Creating IBC transfer channel..."
 rly --home $RELAYER_CONF_DIR tx channel bcd --src-port transfer --dst-port transfer --order unordered --version ics20-1
 sleep 3
-
-# Extract client ID for later use
-CLIENT_ID=$(rly --home $RELAYER_CONF_DIR q clients bcd | grep -o '07-tendermint-[0-9]*' | head -1)
-echo "IBC client ID: $CLIENT_ID"
 
 # Upload contract code and capture code IDs
 echo "Storing Babylon contract code..."
@@ -393,7 +389,6 @@ done
 
 # Verify the contracts are set
 echo "Verifying BSN contracts are set..."
-$BINARY --home $RELAYER_CONF_DIR query babylon bsn-contracts --node http://localhost:$RPCPORT --output json | jq -r '.'
+$BINARY query babylon bsn-contracts --node http://localhost:$RPCPORT --output json | jq -r '.'
 
 echo "BSN contracts setup completed."
-echo "Note: Zoneconcierge IBC channel will be created after consumer registration."

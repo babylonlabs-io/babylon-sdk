@@ -21,18 +21,14 @@ echo "Sleeping for 30 seconds to allow consumer registration by test..."
 sleep 30
 
 # Create zoneconcierge channel
-echo "Creating zoneconcierge IBC channel..."
 CONTRACT_ADDRESS=$(bcd query wasm list-contract-by-code 1 | grep bbnc | cut -d' ' -f2)
 CONTRACT_PORT="wasm.$CONTRACT_ADDRESS"
 echo "Contract port: $CONTRACT_PORT"
 
+echo "Creating zoneconcierge channel..."
 rly --home $RELAYER_CONF_DIR tx channel bcd --src-port zoneconcierge --dst-port $CONTRACT_PORT --order ordered --version zoneconcierge-1
-if [ $? -eq 0 ]; then
-    echo "Created zoneconcierge IBC channel successfully!"
-else
-    echo "Failed to create zoneconcierge IBC channel, but continuing with relayer..."
-fi
+[ $? -eq 0 ] && echo "  ✅ Created zoneconcierge IBC channel successfully!" || echo "  ❌ Error creating zoneconcierge IBC channel"
 
 # 3. Start the IBC relayer
 echo "Start the IBC relayer"
-rly --home $RELAYER_CONF_DIR start bcd --debug-addr "" --flush-interval 10s
+rly --home $RELAYER_CONF_DIR start bcd --debug-addr '' --flush-interval 30s > /data/relayer/relayer.log
