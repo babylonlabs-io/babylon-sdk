@@ -51,6 +51,9 @@ COPY --from=build-env /work/babylon-sdk/demo/build/bcd /usr/bin/bcd
 WORKDIR /ibcsim-bcd
 COPY contrib/images/ibcsim-bcd/wrapper.sh /ibcsim-bcd/wrapper.sh
 COPY contrib/images/ibcsim-bcd/setup-bcd.sh /ibcsim-bcd/setup-bcd.sh
+
+# Make all scripts executable
+RUN chmod +x /ibcsim-bcd/*.sh
 COPY --from=build-env /work/babylon-sdk/tests/testdata/babylon_contract.wasm /ibcsim-bcd/babylon_contract.wasm
 COPY --from=build-env /work/babylon-sdk/tests/testdata/btc_light_client.wasm /ibcsim-bcd/btc_light_client.wasm
 COPY --from=build-env /work/babylon-sdk/tests/testdata/btc_staking.wasm /ibcsim-bcd/btc_staking.wasm

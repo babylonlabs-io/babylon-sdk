@@ -4,7 +4,7 @@ command -v shellcheck >/dev/null && shellcheck "$0"
 
 OWNER="babylonlabs-io"
 REPO="babylon-contract"
-CONTRACTS="babylon_contract btc_staking btc_finality btc_light_client"
+CONTRACTS="babylon_contract btc_light_client btc_staking btc_finality"
 OUTPUT_FOLDER="$(dirname "$0")/../testdata"
 
 [ $# -ne 1 ] && echo "Usage: $0 <version>" && exit 1
