@@ -326,9 +326,11 @@ func NewConsumerApp(
 		app.appCodec,
 		keys[bbntypes.StoreKey],
 		memKeys[bbntypes.MemStoreKey],
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		&app.WasmKeeper, // ensure this is a pointer as we instantiate the keeper a bit later
+		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

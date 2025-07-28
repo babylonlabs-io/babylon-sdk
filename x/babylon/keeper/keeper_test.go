@@ -287,9 +287,11 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		appCodec,
 		keys[types.StoreKey],
 		memKeys[types.MemStoreKey],
+		accountKeeper,
 		bankKeeper,
 		stakingKeeper,
 		&wasmKeeper,
+		authtypes.FeeCollectorName,
 		authority,
 		opts...,
 	)
