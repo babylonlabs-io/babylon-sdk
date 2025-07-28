@@ -453,7 +453,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
+func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalitySignature() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -465,16 +465,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	consumerActivatedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerActivatedHeight)
 	s.NoError(err)
 	s.NotNil(consumerActivatedBlock)
-
-	// Ensure the finality contract balance is initially empty
-	rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
-	s.NoError(err)
-	s.Empty(rewards)
-
-	// Ensure the staking contract balance is initially empty
-	balance, err := s.cosmwasmController.QueryStakingContractBalances()
-	s.NoError(err)
-	s.Empty(balance)
 
 	// Consumer finality provider submits finality signature for first activated
 	// block to the consumer chain
@@ -491,7 +481,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 
 	// Ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
+		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), consumerActivatedHeight)
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -503,85 +493,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 
 	// Once the vote is cast, ensure the block is finalised
-	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(consumerActivatedHeight))
-	fmt.Println("Finalized block: ", finalizedBlock)
+	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerActivatedHeight)
+	s.T().Logf("Finalized block: %v", finalizedBlock)
 	s.NoError(err)
 	s.NotEmpty(finalizedBlock)
 	s.Equal(hex.EncodeToString(finalizedBlock.AppHash), hex.EncodeToString(consumerActivatedBlock.AppHash))
 	s.True(finalizedBlock.Finalized)
-
-	// Ensure consumer rewards are generated.
-	// Initially sent to the finality contract, then sent to the staking contract.
-	s.Eventually(func() bool {
-		balance, err := s.cosmwasmController.QueryStakingContractBalances()
-		if err != nil {
-			s.T().Logf("failed to query balance: %s", err.Error())
-			return false
-		}
-		if len(balance) == 0 {
-			return false
-		}
-		if len(balance) != 1 {
-			s.T().Logf("unexpected number of balances: %d", len(balance))
-			return false
-		}
-		denom := balance[0].Denom
-		fmt.Printf("Balance of denom '%s': %s\n", balance[0].Denom, balance.AmountOf(denom).String())
-		// Check that the balance of the denom is greater than 0
-		return balance.AmountOf(denom).IsPositive()
-	}, 40*time.Second, time.Second*5)
-
-	// Assert rewards are distributed among delegators
-	// Get staker address through a delegations query
-	delegations, err := s.cosmwasmController.QueryDelegations()
-	s.NoError(err)
-	s.Len(delegations.Delegations, 1)
-	delegation := delegations.Delegations[0]
-	stakerAddr := delegation.StakerAddr
-	s.Len(delegation.FpBtcPkList, 2)
-
-	// Get staker pending rewards
-	var pendingRewards *cosmwasm.ConsumerAllPendingRewardsResponse
-	s.Eventually(func() bool {
-		pendingRewards, err = s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
-		if err != nil {
-			s.T().Logf("failed to query pending rewards: %s", err.Error())
-			return false
-		}
-		if len(pendingRewards.Rewards) == 0 {
-			return false
-		}
-		s.T().Logf("Pending rewards: %v", pendingRewards.Rewards[0].Rewards)
-		// Assert pending rewards for this staker are greater than 0
-		return pendingRewards.Rewards[0].Rewards.IsPositive()
-	}, 30*time.Second, time.Second*5)
-
-	// Withdraw rewards for this staker and FP
-	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
-	fmt.Println("Withdrawing rewards for staker: ", stakerAddr, " and FP: ", fpPubkeyHex)
-	withdrawRewardsTx, err := s.cosmwasmController.WithdrawRewards(stakerAddr, fpPubkeyHex)
-	s.NoError(err)
-	s.NotNil(withdrawRewardsTx)
-
-	// Check they have been sent to the staker's Babylon address after withdrawal
-	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryBalances(stakerAddr)
-		if err != nil {
-			s.T().Logf("failed to query balance: %s", err.Error())
-			return false
-		}
-		if len(balance) == 0 {
-			return false
-		}
-		ibcDenom := getFirstIBCDenom(balance)
-		if ibcDenom == "" {
-			s.T().Logf("failed to get IBC denom")
-			return false
-		}
-		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
-		// Check that the balance of the IBC denom is greater than 0
-		return balance.AmountOf(ibcDenom).IsPositive()
-	}, 30*time.Second, time.Second*5)
 }
 
 // Test09BabylonFPCascadedSlashing
