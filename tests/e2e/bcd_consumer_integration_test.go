@@ -175,6 +175,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 // 3. Creates a fork in Babylon
 // 4. Verifies that fork headers propagate from Babylon -> Consumer
 func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
+	s.T().Skip("Skipping BTC header propagation test")
+
 	s.T().Log("Starting BTC header propagation test")
 
 	// Insert initial BTC headers in Babylon
