@@ -32,6 +32,7 @@ import (
 	cwcclient "github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/client"
 	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/cosmwasm-client/wasmclient"
 
+	"github.com/babylonlabs-io/babylon/v3/app/signingcontext"
 	"github.com/babylonlabs-io/babylon/v3/crypto/eots"
 	"github.com/babylonlabs-io/babylon/v3/testutil/datagen"
 	bbntypes "github.com/babylonlabs-io/babylon/v3/types"
@@ -107,6 +108,14 @@ func (cc *CosmwasmConsumerController) reliablySendMsgs(msgs []sdk.Msg, expectedE
 	)
 }
 
+func (cc *CosmwasmConsumerController) GetFpRandCommitContext() string {
+	return signingcontext.FpRandCommitContextV0(cc.cfg.ChainID, cc.MustQueryBabylonContracts().BtcFinalityContract)
+}
+
+func (cc *CosmwasmConsumerController) GetFpFinVoteContext() string {
+	return signingcontext.FpFinVoteContextV0(cc.cfg.ChainID, cc.MustQueryBabylonContracts().BtcFinalityContract)
+}
+
 // CommitPubRandList commits a list of Schnorr public randomness to contract deployed on Consumer Chain
 // it returns tx hash and error
 func (cc *CosmwasmConsumerController) CommitPubRandList(
@@ -156,7 +165,8 @@ func (cc *CosmwasmConsumerController) SubmitFinalitySig(
 		return nil, err
 	}
 
-	msgToSign := append(sdk.Uint64ToBigEndian(heightToVote), block.Block.AppHash...)
+	signingContext := cc.GetFpFinVoteContext()
+	msgToSign := append([]byte(signingContext), append(sdk.Uint64ToBigEndian(heightToVote), block.Block.AppHash...)...)
 	sig, err := eots.Sign(fpSK, privateRand, msgToSign)
 	if err != nil {
 		return nil, err

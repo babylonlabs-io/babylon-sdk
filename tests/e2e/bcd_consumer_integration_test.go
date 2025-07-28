@@ -371,7 +371,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	numPubRand := uint64(1000)
 
 	// TODO: finality contract needs upgrade to enable signing context
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, "", consumerInitialHeight, numPubRand)
+	signingContext := s.cosmwasmController.GetFpRandCommitContext()
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, signingContext, consumerInitialHeight, numPubRand)
 	s.NoError(err)
 	randListInfo2 = randListInfo
 
