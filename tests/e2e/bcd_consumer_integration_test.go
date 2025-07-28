@@ -216,13 +216,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 3
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
-	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
 	s.T().Log("Successfully verified headers in Consumer chain")
 
 	// Create fork from header2
@@ -268,14 +268,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.T().Log("Waiting for fork headers to propagate to Consumer chain")
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain after fork", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[4].Hash)
-	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
 	s.T().Log("Successfully verified fork headers in Consumer chain")
 }
 
