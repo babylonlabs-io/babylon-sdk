@@ -214,7 +214,9 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 	heightToVote uint64,
 ) (*types.TxResponse, error) {
 	invalidAppHash := datagen.GenRandomByteArray(r, 32)
-	invalidMsgToSign := append(sdk.Uint64ToBigEndian(uint64(heightToVote)), invalidAppHash...)
+
+	signingContext := cc.GetFpFinVoteContext()
+	invalidMsgToSign := append([]byte(signingContext), append(sdk.Uint64ToBigEndian(heightToVote), invalidAppHash...)...)
 	invalidSig, err := eots.Sign(fpSK, privateRand, invalidMsgToSign)
 	if err != nil {
 		return nil, err

@@ -372,7 +372,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	consumerInitialHeight := uint64(1)
 	numPubRand := uint64(1000)
 
-	// TODO: finality contract needs upgrade to enable signing context
 	signingContext := s.cosmwasmController.GetFpRandCommitContext()
 	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, signingContext, consumerInitialHeight, numPubRand)
 	s.NoError(err)
@@ -649,7 +648,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NotNil(consumerLatestBlock)
 
 	// commit public randomness at the latest block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, "", consumerLatestBlockHeight, 200)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, s.cosmwasmController.GetFpRandCommitContext(), consumerLatestBlockHeight, 200)
 	s.NoError(err)
 
 	txResp, err := s.cosmwasmController.CommitPubRandList(consumerFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
