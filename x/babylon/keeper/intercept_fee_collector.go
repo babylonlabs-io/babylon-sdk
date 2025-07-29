@@ -24,6 +24,9 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 	btcStakingPortion := params.BtcStakingPortion
 
 	contracts := k.GetBSNContracts(ctx)
+	if contracts == nil || !contracts.IsSet() {
+		return fmt.Errorf("BSN contracts are not set")
+	}
 
 	// send the collected fee to the finality contracts which will handle ICS20 transfer
 	contractAddr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)

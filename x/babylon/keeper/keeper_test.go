@@ -64,6 +64,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
@@ -171,14 +172,19 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		types.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
+
+	// Ensure authority address uses bbnc prefix
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(appparams.Bech32PrefixAccAddr, appparams.Bech32PrefixAccPub)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
 	accountKeeper := authkeeper.NewAccountKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]), // target store
 		authtypes.ProtoBaseAccount,                          // prototype
 		maccPerms,
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
+		authcodec.NewBech32Codec(appparams.Bech32PrefixAccAddr),
+		appparams.Bech32PrefixAccAddr,
 		authority,
 	)
 	blockedAddrs := make(map[string]bool)
@@ -206,8 +212,8 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		accountKeeper,
 		bankKeeper,
 		authority,
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
+		authcodec.NewBech32Codec(appparams.Bech32PrefixValAddr),
+		authcodec.NewBech32Codec(appparams.Bech32PrefixConsAddr),
 	)
 	require.NoError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
 
@@ -259,7 +265,7 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	cfg := sdk.GetConfig()
+	cfg = sdk.GetConfig() // Restore original config
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 
 	wasmKeeper := wasmkeeper.NewKeeper(

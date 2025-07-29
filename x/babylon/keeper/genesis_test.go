@@ -12,10 +12,11 @@ import (
 )
 
 func TestInitGenesis(t *testing.T) {
-	testAddr1 := "cosmos10ak4gg0cy6puxjed9sj58pwek7rms0cqmdma2w"
-	testAddr2 := "cosmos1vsegxma779druznaruxsr0emnfjgdpfrvtwr8v"
-	testAddr3 := "cosmos1336gfnzgwjr43a5mj7q756y84hc7krppn2uq3y"
-	testAddr4 := "cosmos169g8wamxt26v3r86pm0gyxykganntgeldaaztc"
+	// Valid bbnc addresses generated with correct checksums
+	testAddr1 := "bbnc16t8qwnmdd8wk60enqjugk644ha4xwlqwlkqq70"
+	testAddr2 := "bbnc1578akpvpdr8mmr3pd4jw50zpyhv6xucxgdkggr"
+	testAddr3 := "bbnc1gev2cfu5fdfupwy6gum9qh9pd75g5f025kh4np"
+	testAddr4 := "bbnc1wg94wzu9a62am7yzztvqqh4k2fqdaf5n9u6k40"
 
 	specs := map[string]struct {
 		state  types.GenesisState
@@ -123,10 +124,10 @@ func TestExportGenesis(t *testing.T) {
 	keepers := NewTestKeepers(t)
 	k := keepers.BabylonKeeper
 	params := types.DefaultParams(sdk.DefaultBondDenom)
-	testAddr1 := "cosmos10ak4gg0cy6puxjed9sj58pwek7rms0cqmdma2w"
-	testAddr2 := "cosmos1vsegxma779druznaruxsr0emnfjgdpfrvtwr8v"
-	testAddr3 := "cosmos1336gfnzgwjr43a5mj7q756y84hc7krppn2uq3y"
-	testAddr4 := "cosmos169g8wamxt26v3r86pm0gyxykganntgeldaaztc"
+	testAddr1 := "bbnc16t8qwnmdd8wk60enqjugk644ha4xwlqwlkqq70"
+	testAddr2 := "bbnc1578akpvpdr8mmr3pd4jw50zpyhv6xucxgdkggr"
+	testAddr3 := "bbnc1gev2cfu5fdfupwy6gum9qh9pd75g5f025kh4np"
+	testAddr4 := "bbnc1wg94wzu9a62am7yzztvqqh4k2fqdaf5n9u6k40"
 	bsnContracts := types.BSNContracts{
 		BabylonContract:        testAddr1,
 		BtcLightClientContract: testAddr2,

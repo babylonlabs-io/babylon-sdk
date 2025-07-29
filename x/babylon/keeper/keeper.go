@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -23,7 +22,7 @@ type Keeper struct {
 	cdc      codec.Codec
 	bank     types.BankKeeper
 	Staking  types.StakingKeeper
-	wasm     *wasmkeeper.Keeper
+	wasm     types.WasmKeeper
 
 	// name of the FeeCollector ModuleAccount
 	accountKeeper    types.AccountKeeper
@@ -41,7 +40,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bank types.BankKeeper,
 	staking types.StakingKeeper,
-	wasm *wasmkeeper.Keeper,
+	wasm types.WasmKeeper,
 	feeCollectorName string,
 	authority string,
 	opts ...Option,
