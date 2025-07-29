@@ -46,7 +46,7 @@ jobs:
           name: babylond-${{ github.sha }}
           path: /tmp/docker-babylond.tar.gz
 
-# TODO: re-enable e2e when issues are fixed
+# TODO: e2e tests should be reenabled after major refactoring
 #  e2e-test:
 #    needs: [e2e-docker-build-ibcsim, e2e-docker-build-babylond]
 #    runs-on: ubuntu-22.04
