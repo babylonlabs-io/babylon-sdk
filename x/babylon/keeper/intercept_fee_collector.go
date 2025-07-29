@@ -16,7 +16,7 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 	feesCollectedInt := k.bank.GetAllBalances(ctx, feeCollector.GetAddress())
 
 	if !feesCollectedInt.IsAllPositive() {
-		k.Logger(ctx).Info("not fees in fee collector")
+		k.Logger(ctx).Info("no fees in fee collector")
 		return nil
 	}
 
@@ -31,7 +31,8 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 	// send the collected fee to the finality contracts which will handle ICS20 transfer
 	contractAddr, err := sdk.AccAddressFromBech32(contracts.BtcFinalityContract)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to parse finality contract address %s: %w",
+			contracts.BtcFinalityContract, err)
 	}
 
 	btcStakingReward := types.GetCoinsPortion(feesCollectedInt, btcStakingPortion)

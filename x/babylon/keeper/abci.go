@@ -19,6 +19,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 	if sdkCtx.HeaderInfo().Height > 0 {
 		if err := k.HandleCoinsInFeeCollector(sdkCtx); err != nil {
 			k.Logger(sdkCtx).Error("BeginBlocker failed to handle coins in fee collector", err)
+			// not return error to not cause panic
 			return nil
 		}
 	}
