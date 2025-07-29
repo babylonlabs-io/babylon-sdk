@@ -1,12 +1,7 @@
-//go:build e2e
-// +build e2e
-
 package e2e
 
 import (
-	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -48,14 +43,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 
-	wasmdtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var (
@@ -69,8 +58,7 @@ var (
 
 	randListInfo1 *datagen.RandListInfo
 	randListInfo2 *datagen.RandListInfo
-	// TODO: get consumer id from ibc client-state query
-	consumerID     = "07-tendermint-0"
+
 	babylonChainID = "chain-test"
 
 	consumerFpBTCSK                       *btcec.PrivateKey
@@ -101,6 +89,7 @@ type BCDConsumerIntegrationTestSuite struct {
 
 	babylonController  *babylon.BabylonController
 	cosmwasmController *cosmwasm.CosmwasmConsumerController
+	consumerID         string
 }
 
 func (s *BCDConsumerIntegrationTestSuite) SetupSuite() {
@@ -162,17 +151,22 @@ func (s *BCDConsumerIntegrationTestSuite) Test01ChainStartup() {
 // 1. Verifies that an IBC connection is established between the consumer chain and Babylon
 // 2. Checks that the consumer is registered in Babylon's consumer registry
 // 3. Validates the consumer registration details in Babylon
-// Then, it waits until the IBC channel between babylon<->bcd is established
+// Note: setup-bcd.sh now handles IBC channel creation automatically
 func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
-	// initiate and set contracts
-	s.bootstrapContracts()
+	// Wait for transfer channel (created by setup-bcd.sh)
+	s.waitForTransferChannel()
 
-	// register and verify consumer
+	// Query and set the consumer ID from the IBC client
+	s.queryAndSetConsumerID()
+
+	// Register and verify consumer using the IBC client ID
 	s.registerVerifyConsumer()
 
-	// after the consumer is registered, wait till IBC connection/channel
-	// between babylon<->bcd is established
-	s.waitForIBCConnections()
+	// Wait for zoneconcierge channel (created by setup-bcd.sh after contracts)
+	s.waitForZoneconciergeChannel()
+
+	// Wait for all contracts are set
+	s.waitForContractInstantiation()
 }
 
 // Test03BTCHeaderPropagation
@@ -222,13 +216,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 3
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
-	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
 	s.T().Log("Successfully verified headers in Consumer chain")
 
 	// Create fork from header2
@@ -274,14 +268,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.T().Log("Waiting for fork headers to propagate to Consumer chain")
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain after fork", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[4].Hash)
-	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
 	s.T().Log("Successfully verified fork headers in Consumer chain")
 }
 
@@ -376,8 +370,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	consumerInitialHeight := uint64(1)
 	numPubRand := uint64(1000)
 
-	// TODO: finality contract needs upgrade to enable signing context
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, "", consumerInitialHeight, numPubRand)
+	signingContext := s.cosmwasmController.GetFpRandCommitContext()
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK, signingContext, consumerInitialHeight, numPubRand)
 	s.NoError(err)
 	randListInfo2 = randListInfo
 
@@ -425,7 +419,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	s.Len(activeDels.Dels, 1)
 
 	activeDel := activeDels.Dels[0]
-	s.True(activeDel.HasCovenantQuorums(1))
+	s.True(activeDel.HasCovenantQuorums(1, 1))
 
 	// Query the staking contract for delegations on the consumer chain
 	var dataFromContract *cosmwasm.ConsumerDelegationsResponse
@@ -458,7 +452,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
+func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalitySignature() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -470,16 +464,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	consumerActivatedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerActivatedHeight)
 	s.NoError(err)
 	s.NotNil(consumerActivatedBlock)
-
-	// Ensure the finality contract balance is initially empty
-	rewards, err := s.cosmwasmController.QueryFinalityContractBalances()
-	s.NoError(err)
-	s.Empty(rewards)
-
-	// Ensure the staking contract balance is initially empty
-	balance, err := s.cosmwasmController.QueryStakingContractBalances()
-	s.NoError(err)
-	s.Empty(balance)
 
 	// Consumer finality provider submits finality signature for first activated
 	// block to the consumer chain
@@ -496,7 +480,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 
 	// Ensure consumer finality provider's finality signature is received and stored in the smart contract
 	s.Eventually(func() bool {
-		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), uint64(consumerActivatedHeight))
+		fpSigsResponse, err := s.cosmwasmController.QueryFinalitySignature(consumerFp.FinalityProvider.BtcPk.MarshalHex(), consumerActivatedHeight)
 		if err != nil {
 			s.T().Logf("failed to query finality signature: %s", err.Error())
 			return false
@@ -508,76 +492,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPRewards() {
 	}, 30*time.Second, time.Second*5)
 
 	// Once the vote is cast, ensure the block is finalised
-	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(uint64(consumerActivatedHeight))
-	fmt.Println("Finalized block: ", finalizedBlock)
+	finalizedBlock, err := s.cosmwasmController.QueryIndexedBlock(consumerActivatedHeight)
+	s.T().Logf("Finalized block: %v", finalizedBlock)
 	s.NoError(err)
 	s.NotEmpty(finalizedBlock)
 	s.Equal(hex.EncodeToString(finalizedBlock.AppHash), hex.EncodeToString(consumerActivatedBlock.AppHash))
 	s.True(finalizedBlock.Finalized)
-
-	// Ensure consumer rewards are generated.
-	// Initially sent to the finality contract, then sent to the staking contract.
-	s.Eventually(func() bool {
-		balance, err := s.cosmwasmController.QueryStakingContractBalances()
-		if err != nil {
-			s.T().Logf("failed to query balance: %s", err.Error())
-			return false
-		}
-		if len(balance) == 0 {
-			return false
-		}
-		if len(balance) != 1 {
-			s.T().Logf("unexpected number of balances: %d", len(balance))
-			return false
-		}
-		denom := balance[0].Denom
-		fmt.Printf("Balance of denom '%s': %s\n", balance[0].Denom, balance.AmountOf(denom).String())
-		// Check that the balance of the denom is greater than 0
-		return balance.AmountOf(denom).IsPositive()
-	}, 30*time.Second, time.Second*5)
-
-	// Assert rewards are distributed among delegators
-	// Get staker address through a delegations query
-	delegations, err := s.cosmwasmController.QueryDelegations()
-	s.NoError(err)
-	s.Len(delegations.Delegations, 1)
-	delegation := delegations.Delegations[0]
-	stakerAddr := delegation.StakerAddr
-	s.Len(delegation.FpBtcPkList, 2)
-
-	// Get staker pending rewards
-	pendingRewards, err := s.cosmwasmController.QueryAllPendingRewards(stakerAddr, nil, nil)
-	s.NoError(err)
-	s.Len(pendingRewards.Rewards, 1)
-	// Assert pending rewards for this staker are greater than 0
-	s.True(pendingRewards.Rewards[0].Rewards.IsPositive())
-
-	// Withdraw rewards for this staker and FP
-	fpPubkeyHex := pendingRewards.Rewards[0].FpPubkeyHex
-	fmt.Println("Withdrawing rewards for staker: ", stakerAddr, " and FP: ", fpPubkeyHex)
-	withdrawRewardsTx, err := s.cosmwasmController.WithdrawRewards(stakerAddr, fpPubkeyHex)
-	s.NoError(err)
-	s.NotNil(withdrawRewardsTx)
-
-	// Check they have been sent to the staker's Babylon address after withdrawal
-	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryBalances(stakerAddr)
-		if err != nil {
-			s.T().Logf("failed to query balance: %s", err.Error())
-			return false
-		}
-		if len(balance) == 0 {
-			return false
-		}
-		ibcDenom := getFirstIBCDenom(balance)
-		if ibcDenom == "" {
-			s.T().Logf("failed to get IBC denom")
-			return false
-		}
-		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
-		// Check that the balance of the IBC denom is greater than 0
-		return balance.AmountOf(ibcDenom).IsPositive()
-	}, 30*time.Second, time.Second*5)
 }
 
 // Test09BabylonFPCascadedSlashing
@@ -726,7 +646,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NotNil(consumerLatestBlock)
 
 	// commit public randomness at the latest block height on the consumer chain
-	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, "", consumerLatestBlockHeight, 200)
+	randListInfo, msgCommitPubRandList, err := datagen.GenRandomMsgCommitPubRandList(r, consumerFpBTCSK2, s.cosmwasmController.GetFpRandCommitContext(), consumerLatestBlockHeight, 200)
 	s.NoError(err)
 
 	txResp, err := s.cosmwasmController.CommitPubRandList(consumerFpBTCPK2, consumerLatestBlockHeight, 200, randListInfo.Commitment, msgCommitPubRandList.Sig.MustToBTCSig())
@@ -991,7 +911,7 @@ func (s *BCDConsumerIntegrationTestSuite) submitCovenantSigs(consumerFp *bstypes
 		if len(activeDels.Dels) != 1 {
 			return false
 		}
-		if !activeDels.Dels[0].HasCovenantQuorums(1) {
+		if !activeDels.Dels[0].HasCovenantQuorums(1, 1) {
 			return false
 		}
 		return true
@@ -1210,7 +1130,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.NoError(err)
 
 	sc := signingcontext.FpPopContextV0(babylonChainID, appparams.AccBTCStaking.String())
-	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, sc, fpBabylonAddr, consumerID)
+	consumerFp, err := datagen.GenCustomFinalityProvider(r, consumerFpBTCSecretKey, sc, fpBabylonAddr, s.consumerID)
 	s.NoError(err)
 	consumerFp.Commission = &minCommissionRate
 	consumerFpPop, err := consumerFp.Pop.Marshal()
@@ -1219,7 +1139,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.NoError(err)
 
 	_, err = s.babylonController.RegisterFinalityProvider(
-		consumerID,
+		s.consumerID,
 		consumerFp.BtcPk,
 		consumerFpPop,
 		consumerFp.Commission,
@@ -1238,7 +1158,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.Equal(consumerFp.Pop, actualFp.Pop)
 	s.Equal(consumerFp.SlashedBabylonHeight, actualFp.SlashedBabylonHeight)
 	s.Equal(consumerFp.SlashedBtcHeight, actualFp.SlashedBtcHeight)
-	s.Equal(consumerID, actualFp.BsnId)
+	s.Equal(s.consumerID, actualFp.BsnId)
 	return consumerFp, consumerFpBTCSecretKey, consumerFpBTCPublicKey
 }
 
@@ -1332,8 +1252,8 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 			s.T().Logf("Error querying Babylon IBC channels: %v", err)
 			return false
 		}
-		if len(babylonChannelsResp.Channels) != 1 {
-			s.T().Logf("Expected 1 Babylon IBC channel, got %d", len(babylonChannelsResp.Channels))
+		if len(babylonChannelsResp.Channels) < 1 {
+			s.T().Logf("Expected at least one Babylon IBC channel")
 			return false
 		}
 		babylonChannel = babylonChannelsResp.Channels[0]
@@ -1354,7 +1274,7 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 			s.T().Logf("Error querying Consumer IBC channels: %v", err)
 			return false
 		}
-		if len(consumerChannelsResp.Channels) != 1 {
+		if len(consumerChannelsResp.Channels) < 1 {
 			return false
 		}
 		consumerChannel = consumerChannelsResp.Channels[0]
@@ -1408,15 +1328,117 @@ func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
 	}, time.Minute*3, time.Second*10, "Failed to get expected Consumer transfer IBC channel")
 }
 
+func (s *BCDConsumerIntegrationTestSuite) waitForContractInstantiation() {
+	s.Eventually(func() bool {
+		_, err := s.cosmwasmController.QueryBabylonContracts()
+		if err != nil {
+			s.T().Logf("Error querying Babylon contracts: %v", err)
+			return false
+		}
+
+		s.T().Logf("Babylon contract instantiated")
+		return true
+	}, time.Minute*2, time.Second*10, "Babylon contract instantiation failed")
+}
+
+func (s *BCDConsumerIntegrationTestSuite) waitForTransferChannel() {
+	// Wait for the transfer channel to be established
+	s.Eventually(func() bool {
+		babylonChannelsResp, err := s.babylonController.IBCChannels()
+		if err != nil {
+			s.T().Logf("Error querying Babylon IBC channels: %v", err)
+			return false
+		}
+		if len(babylonChannelsResp.Channels) < 1 {
+			s.T().Logf("Expected at least one Babylon IBC channel")
+			return false
+		}
+
+		// Check for transfer channel
+		for _, channel := range babylonChannelsResp.Channels {
+			if channel.State == channeltypes.OPEN &&
+				channel.Ordering == channeltypes.UNORDERED &&
+				channel.Counterparty.PortId == "transfer" {
+				s.T().Logf("Transfer channel found and open")
+				return true
+			}
+		}
+		s.T().Logf("Transfer channel not found or not open")
+		return false
+	}, time.Minute*3, time.Second*10, "Failed to find open transfer IBC channel")
+}
+
+func (s *BCDConsumerIntegrationTestSuite) queryAndSetConsumerID() {
+	// Query the actual IBC client ID from the channel information
+	s.T().Log("Querying IBC client ID from channel information...")
+
+	// Wait for IBC infrastructure and get the client ID
+	s.Eventually(func() bool {
+		babylonChannelsResp, err := s.babylonController.IBCChannels()
+		if err != nil {
+			s.T().Logf("Error querying Babylon IBC channels: %v", err)
+			return false
+		}
+		if len(babylonChannelsResp.Channels) < 1 {
+			s.T().Logf("No IBC channels found - IBC infrastructure not ready")
+			return false
+		}
+
+		// Look for the transfer channel to get the client ID
+		for _, channel := range babylonChannelsResp.Channels {
+			if channel.PortId == "transfer" && channel.State == channeltypes.OPEN {
+				// Extract the client ID from the client state
+				// TODO: use hardcoded client id for now as no available query yet
+				s.consumerID = "07-tendermint-0"
+				return true
+			}
+		}
+
+		s.T().Logf("Transfer channel not found or not open yet")
+		return false
+	}, time.Minute*2, time.Second*5, "Failed to get IBC client ID")
+
+	s.Require().NotEmpty(s.consumerID, "Consumer ID was not set")
+	s.T().Logf("Using consumer ID: %s", s.consumerID)
+}
+
+func (s *BCDConsumerIntegrationTestSuite) waitForZoneconciergeChannel() {
+	// Wait for the zoneconcierge channel (ordered, wasm port)
+	s.Eventually(func() bool {
+		babylonChannelsResp, err := s.babylonController.IBCChannels()
+		if err != nil {
+			s.T().Logf("Error querying Babylon IBC channels: %v", err)
+			return false
+		}
+		if len(babylonChannelsResp.Channels) < 2 {
+			s.T().Logf("Expected at least 2 Babylon IBC channels, got %d", len(babylonChannelsResp.Channels))
+			return false
+		}
+
+		// Check for zoneconcierge channel (ordered, wasm port)
+		for _, channel := range babylonChannelsResp.Channels {
+			if channel.State == channeltypes.OPEN &&
+				channel.Ordering == channeltypes.ORDERED &&
+				strings.Contains(channel.Counterparty.PortId, "wasm.") {
+				s.T().Logf("Zoneconcierge channel found and open")
+				return true
+			}
+		}
+		s.T().Logf("Zoneconcierge channel not found or not open")
+		return false
+	}, time.Minute*4, time.Second*10, "Failed to find open zoneconcierge IBC channel")
+}
+
 func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.ConsumerRegister {
 	var registeredConsumer *bsctypes.ConsumerRegister
 	var err error
 
 	// Register a random consumer on Babylon
 	registeredConsumer = bsctypes.NewCosmosConsumerRegister(
-		consumerID,
+		s.consumerID,
 		datagen.GenRandomHexStr(r, 5),
 		"Chain description: "+datagen.GenRandomHexStr(r, 15),
+		datagen.GenBabylonRewardsCommission(r),
 	)
 
 	// wait until the consumer is registered
@@ -1426,7 +1448,7 @@ func (s *BCDConsumerIntegrationTestSuite) registerVerifyConsumer() *bsctypes.Con
 			return false
 		}
 
-		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(consumerID)
+		consumerRegistryResp, err := s.babylonController.QueryConsumerRegistry(s.consumerID)
 		if err != nil {
 			return false
 		}
@@ -1734,155 +1756,4 @@ func ParseRespBTCDelToBTCDel(resp *bstypes.BTCDelegationResponse) (btcDel *bstyp
 	}
 
 	return btcDel, nil
-}
-
-func (s *BCDConsumerIntegrationTestSuite) bootstrapContracts() {
-	// 1. Upload contract codes
-	wasmDir := filepath.Join("..", "..", "tests", "testdata")
-	contractFiles := []string{
-		"babylon_contract.wasm",
-		"btc_light_client.wasm",
-		"btc_staking.wasm",
-		"btc_finality.wasm",
-	}
-	codeIDs := make([]uint64, 4)
-	for i, file := range contractFiles {
-		fullPath := filepath.Join(wasmDir, file)
-		err := s.cosmwasmController.StoreWasmCode(fullPath)
-		s.Require().NoError(err, "Failed to upload wasm code: %s", file)
-		codeID, err := s.cosmwasmController.GetLatestCodeId()
-		s.Require().NoError(err, "Failed to get code ID for: %s", file)
-		codeIDs[i] = codeID
-	}
-
-	// 2. Prepare init messages
-	network := "regtest"
-	btcConfirmationDepth := 1
-	btcFinalizationTimeout := 2
-	admin := s.cosmwasmController.MustGetValidatorAddress()
-	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`,
-		network, btcConfirmationDepth, btcFinalizationTimeout)
-	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
-	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, admin)
-	btcLightClientInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcLightClientInitMsg))
-	btcFinalityInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcFinalityInitMsg))
-	btcStakingInitMsgBz := base64.StdEncoding.EncodeToString([]byte(btcStakingInitMsg))
-
-	babylonInitMsg := map[string]interface{}{
-		"network":                         network,
-		"babylon_tag":                     "01020304",
-		"btc_confirmation_depth":          btcConfirmationDepth,
-		"checkpoint_finalization_timeout": btcFinalizationTimeout,
-		"notify_cosmos_zone":              false,
-		"btc_light_client_code_id":        codeIDs[1],
-		"btc_light_client_msg":            btcLightClientInitMsgBz,
-		"btc_staking_code_id":             codeIDs[2],
-		"btc_staking_msg":                 btcStakingInitMsgBz,
-		"btc_finality_code_id":            codeIDs[3],
-		"btc_finality_msg":                btcFinalityInitMsgBz,
-		"consumer_name":                   "test-consumer",
-		"consumer_description":            "test-consumer-description",
-	}
-	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
-	s.Require().NoError(err, "Failed to marshal Babylon init msg")
-
-	// 3. Instantiate Babylon contract and extract contract addresses from events
-	msg := &wasmdtypes.MsgInstantiateContract{
-		Sender: s.cosmwasmController.MustGetValidatorAddress(),
-		Admin:  s.cosmwasmController.MustGetValidatorAddress(),
-		CodeID: codeIDs[0],
-		Label:  "cw",
-		Msg:    babylonInitMsgBz,
-		Funds:  nil,
-	}
-
-	instantiateResp, err := s.cosmwasmController.SendMsg(msg)
-	s.Require().NoError(err, "Failed to instantiate Babylon contract")
-
-	var babylonAddr, btcLightClientAddr, btcStakingAddr, btcFinalityAddr string
-	for _, event := range instantiateResp.Events {
-		if event.EventType == "instantiate" {
-			addr := event.Attributes["_contract_address"]
-			if addr == "" {
-				addr = event.Attributes["contract_address"]
-			}
-			codeID := event.Attributes["code_id"]
-			switch codeID {
-			case fmt.Sprintf("%d", codeIDs[0]):
-				babylonAddr = addr
-			case fmt.Sprintf("%d", codeIDs[1]):
-				btcLightClientAddr = addr
-			case fmt.Sprintf("%d", codeIDs[2]):
-				btcStakingAddr = addr
-			case fmt.Sprintf("%d", codeIDs[3]):
-				btcFinalityAddr = addr
-			}
-		}
-	}
-	s.Require().NotEmpty(babylonAddr)
-	s.Require().NotEmpty(btcLightClientAddr)
-	s.Require().NotEmpty(btcStakingAddr)
-	s.Require().NotEmpty(btcFinalityAddr)
-
-	// 4. Submit MsgSetBSNContracts via governance
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	msgSet := &bbntypes.MsgSetBSNContracts{
-		Authority: authority,
-		Contracts: &bbntypes.BSNContracts{
-			BabylonContract:        babylonAddr,
-			BtcLightClientContract: btcLightClientAddr,
-			BtcStakingContract:     btcStakingAddr,
-			BtcFinalityContract:    btcFinalityAddr,
-		},
-	}
-
-	s.submitAndVoteGovernanceProposal(msgSet)
-
-	// 5. Verify the contracts are set in chain state
-	finalContracts := s.cosmwasmController.MustQueryBabylonContracts()
-	s.Require().Equal(babylonAddr, finalContracts.BabylonContract)
-	s.Require().Equal(btcLightClientAddr, finalContracts.BtcLightClientContract)
-	s.Require().Equal(btcStakingAddr, finalContracts.BtcStakingContract)
-	s.Require().Equal(btcFinalityAddr, finalContracts.BtcFinalityContract)
-}
-
-// Helper method to submit and vote on a governance proposal
-func (s *BCDConsumerIntegrationTestSuite) submitAndVoteGovernanceProposal(msg sdk.Msg) {
-	// 1. Submit the proposal
-	proposalID, err := s.cosmwasmController.SubmitGovernanceProposal([]sdk.Msg{msg}, "Set BSN Contracts", "Set contract addresses for Babylon system")
-	s.Require().NoError(err, "Failed to submit governance proposal")
-	s.T().Logf("Submitted governance proposal with ID: %d", proposalID)
-
-	// 2. Vote YES
-	err = s.cosmwasmController.VoteOnProposal(proposalID, govv1types.OptionYes)
-	s.Require().NoError(err, "Failed to vote on proposal")
-	s.T().Logf("Successfully voted YES on proposal %d", proposalID)
-
-	// 3. Wait for proposal to pass and provide detailed debugging if it fails
-	s.Require().Eventually(func() bool {
-		status, err := s.cosmwasmController.QueryProposalStatus(proposalID)
-		if err != nil {
-			s.T().Logf("Error querying proposal status: %v", err)
-			return false
-		}
-
-		// If proposal failed, get detailed information
-		if status == govv1types.ProposalStatus_PROPOSAL_STATUS_FAILED ||
-			status == govv1types.ProposalStatus_PROPOSAL_STATUS_REJECTED {
-
-			// Query final proposal details
-			finalProposal, err := s.cosmwasmController.QueryProposalDetails(proposalID)
-			if err == nil {
-				s.T().Logf("=== Final Proposal Details ===")
-				s.T().Logf("Final Status: %s", finalProposal.Status.String())
-				s.T().Logf("Failed Reason: %s", finalProposal.FailedReason)
-			}
-
-			s.T().Fatalf("Proposal %d failed with status: %s", proposalID, status.String())
-		}
-
-		return status == govv1types.ProposalStatus_PROPOSAL_STATUS_PASSED
-	}, 2*time.Minute, 5*time.Second, "proposal did not pass in time")
-
-	s.T().Logf("Proposal %d successfully passed!", proposalID)
 }

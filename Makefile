@@ -28,9 +28,6 @@ test:
 	$(MAKE) -C demo test
 	$(MAKE) -C x test
 
-test-integration:
-	$(MAKE) -C tests/e2e/ test
-
 test-e2e: build-docker-e2e test-e2e-cache
 
 test-e2e-cache:

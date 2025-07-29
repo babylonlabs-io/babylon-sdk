@@ -17,6 +17,7 @@ docker run --rm -v $(pwd)/ibcsim-bcd/.testnets:/data babylonlabs-io/babylond \
     --slashing-rate 0.1 \
     --min-commission-rate 0.05 \
     --covenant-quorum 1 \
+    --max-finality-providers-in-script 5 \
     --covenant-pks "bb50e2d89a4ed70663d080659fe0ad4b9bc3e06c17a227433966cb59ceee020d" # should be updated if `covenant-keyring` dir is changed`
 
 # Create separate subpaths for each component and copy relevant configuration
