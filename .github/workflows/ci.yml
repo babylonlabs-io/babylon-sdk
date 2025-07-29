@@ -13,7 +13,6 @@ jobs:
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
      run-unit-tests: true
-     run-integration-tests: false
 
   docker_pipeline:
     uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.11.2
