@@ -12,7 +12,6 @@ const (
 	EventTypeMaxCapLimitUpdated  = "max_cap_limit_updated"
 	EventTypeUnbond              = "instant_unbond"
 	EventTypeDelegate            = "instant_delegate"
-	EventTypeMintRewards         = "mint_rewards"
 )
 
 const (
