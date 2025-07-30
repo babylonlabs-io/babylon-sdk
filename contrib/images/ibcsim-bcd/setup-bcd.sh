@@ -289,7 +289,6 @@ echo "Babylon Address: $BABYLON_ADDR"
 # Query the Babylon contract's Config {} to get all contract addresses
 CONFIG_QUERY='{"config":{}}'
 CONFIG_RES=$($BINARY --home $CHAINDIR/$CHAINID query wasm contract-state smart $BABYLON_ADDR "$CONFIG_QUERY" --node http://localhost:$RPCPORT --output json)
-# Handle btc_light_client as array (contract inconsistency) - take first element
 BTC_LC_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_light_client')
 BTC_STAKING_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_staking')
 BTC_FINALITY_ADDR=$(echo $CONFIG_RES | jq -r '.data.btc_finality')
