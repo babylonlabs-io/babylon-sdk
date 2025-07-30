@@ -12,7 +12,6 @@ enabling seamless integration to become a BSN (Bitcoin Supercharged Network).
 * [Concepts](#concepts)
   * [Cosmos BSN Integration](#cosmos-bsn-integration)
   * [Smart Contract Communication](#smart-contract-communication)
-  * [Rewards Distribution](#rewards-distribution)
 * [States](#states)
   * [Parameters](#parameters)
 * [Messages](#messages)
@@ -23,7 +22,6 @@ enabling seamless integration to become a BSN (Bitcoin Supercharged Network).
 * [Events](#events)
 * [Queries](#queries)
 * [Contract Integration](#contract-integration)
-  * [In-Messages](#in-messages)
   * [Out-Messages](#out-messages)
 
 ## Concepts
@@ -50,26 +48,14 @@ to instantiate and communicate with these contracts from Cosmos layer.
 
 ### Smart Contract Communication
 
-The module communicates with smart contracts through two main mechanisms:
+The module communicates with smart contracts through one main mechanism:
 
 1. **Sudo Messages**: Messages sent from the module to smart contracts during
    block processing
-2. **Custom Messages**: Messages sent from smart contracts to the module for
-   specific operations
 
-This bidirectional communication enables the module to:
+This communication enables the module to:
 - Send block information to contracts during `BeginBlock` and `EndBlock`
-- Receive reward minting requests from contracts
 - Coordinate contract instantiation and configuration
-
-### Rewards Distribution
-
-The module handles the distribution of rewards to BTC Stakers
-by minting tokens and sending them to the finality contract.
-The minting is triggered by the smart contract suite through
-a custom message (`MintRewardsMsg`, detailed later),
-processed at the base Cosmos layer, and
-then sent back to the contract suite for distribution.
 
 ## States
 
@@ -171,9 +157,8 @@ the current block hash and app hash.
 
 The module emits events for various operations:
 
-- **Contract Instantiation**: Events when Babylon contracts are instantiated
+- **Contract Communication**: Events when messages are sent to contracts
 - **Parameter Updates**: Events when module parameters are updated
-- **Reward Minting**: Events when rewards are minted and distributed
 
 Event definitions are located in `x/babylon/types/events.go`.
 
@@ -217,29 +202,7 @@ babylond query babylon bsn-contracts
 
 ## Contract Integration
 
-The module integrates with the Cosmos BSN contracts through two types of messages:
-
-### In-Messages
-
-Messages sent from the Cosmos BSN contracts to the module:
-
-#### MintRewardsMsg
-
-Allows smart contracts to request reward minting:
-
-```go
-type MintRewardsMsg struct {
-    Amount    wasmvmtypes.Coin `json:"amount"`
-    Recipient string           `json:"recipient"`
-}
-```
-
-**Parameters:**
-- `amount`: The amount of tokens to mint
-- `recipient`: The address to receive the minted tokens
-
-The implementation is found in `x/babylon/keeper/mint_rewards.go` in the
-`MintBlockRewards` function.
+The module integrates with the Cosmos BSN contracts through outbound messages:
 
 ### Out-Messages
 
@@ -266,3 +229,11 @@ type EndBlock struct {
     AppHashHex string `json:"app_hash_hex"`
 }
 ```
+
+## Architecture Notes
+
+### Security
+
+The module includes an **IntegrityHandler** that prevents smart contracts from bypassing
+virtual staking mechanisms by blocking unauthorized staking operations. This ensures
+that all staking operations go through the proper BTC staking infrastructure.
