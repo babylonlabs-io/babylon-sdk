@@ -678,14 +678,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// ensure consumer finality provider is slashed
+	// ensure consumer finality provider is slashed and has zero voting power
 	s.Eventually(func() bool {
 		fp, err := s.cosmwasmController.QueryFinalityProvider(consumerFp.FinalityProvider.BtcPk.MarshalHex())
-		return err == nil && fp != nil && fp.SlashedHeight > 0
-	}, time.Minute, time.Second*5)
-
-	// query and assert consumer finality provider's voting power is zero after slashing
-	s.Eventually(func() bool {
+		if err != nil || fp == nil || fp.SlashedHeight == 0 {
+			return false
+		}
 		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
@@ -715,8 +713,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 			s.T().Logf("Error querying finality provider: %v", err)
 			return false
 		}
-		return fp != nil &&
-			fp.FinalityProvider.SlashedBtcHeight > 0 // should be recorded slashed
+		if fp == nil {
+			s.T().Logf("Finality provider is nil")
+			return false
+		}
+		if fp.FinalityProvider.SlashedBtcHeight == 0 || fp.FinalityProvider.SlashedBabylonHeight == 0 {
+			s.T().Logf("Finality provider not slashed yet, SlashedBtcHeight: %d, SlashedBabylonHeight: %d", fp.FinalityProvider.SlashedBtcHeight, fp.FinalityProvider.SlashedBabylonHeight)
+			return false
+		}
+		return true // should be recorded slashed
 	}, time.Minute, time.Second*5)
 }
 
