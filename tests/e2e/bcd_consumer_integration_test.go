@@ -169,6 +169,47 @@ func (s *BCDConsumerIntegrationTestSuite) Test02RegisterAndIntegrateConsumer() {
 	s.waitForContractInstantiation()
 }
 
+// Test03ConsumerFeeCollector tests whether the collected fees are sent to the finality contract
+func (s *BCDConsumerIntegrationTestSuite) Test03ConsumerFeeCollector() {
+	// Get initial finality contract balance on consumer chain
+	initialFinalityBalance, err := s.cosmwasmController.QueryFinalityContractBalances()
+	s.NoError(err)
+	s.T().Logf("Initial finality contract balance: %s", initialFinalityBalance)
+
+	// Generate some transactions to accumulate fees in the fee collector
+	// We'll finalize the next epoch which involves multiple transactions (BTC headers, proofs, etc.)
+	s.T().Log("Generating transactions to accumulate fees...")
+	s.finalizeNextEpoch()
+
+	// Check if finality contract balance increased (indicating rewards were transferred)
+	var finalFinalityBalance sdk.Coins
+	s.Eventually(func() bool {
+		finalFinalityBalance, err = s.cosmwasmController.QueryFinalityContractBalances()
+		if err != nil {
+			s.T().Logf("Error querying finality contract balance: %v", err)
+			return false
+		}
+		s.T().Logf("Final finality contract balance: %s", finalFinalityBalance)
+
+		// Check if the balance increased (rewards were distributed)
+		if finalFinalityBalance.IsAllGTE(initialFinalityBalance) && !finalFinalityBalance.Equal(initialFinalityBalance) {
+			s.T().Log("Finality contract balance increased - rewards were successfully distributed!")
+			return true
+		}
+		return false
+	}, time.Minute*2, time.Second*5)
+
+	// Assert that rewards distribution occurred
+	// TODO: here we only assert the finality balance is increasing but
+	//  we should further assert the increased number is correct
+	s.True(finalFinalityBalance.IsAllGTE(initialFinalityBalance),
+		"Finality contract balance should have increased due to reward distribution")
+	s.False(finalFinalityBalance.Equal(initialFinalityBalance),
+		"Finality contract balance should have changed from initial balance")
+
+	s.T().Log("Successfully verified rewards distribution to finality contracts via fee collector interception")
+}
+
 // Test03BTCHeaderPropagation
 // 1. Inserts initial BTC headers in Babylon
 // 2. Verifies that headers propagate from Babylon -> Consumer
@@ -448,7 +489,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalizationAndRewards() {
+func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalitySignature() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)

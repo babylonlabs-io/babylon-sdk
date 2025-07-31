@@ -245,7 +245,7 @@ CHECKPOINT_FINALIZATION_TIMEOUT=2
 BABYLON_TAG="01020304"
 CONSUMER_NAME="test-consumer"
 CONSUMER_DESCRIPTION="test-consumer-description"
-ICS20_CHANNEL_ID="channel-1"
+ICS20_CHANNEL_ID="channel-0"
 
 BTC_LC_INIT_MSG=$(jq -n --arg network "$NETWORK" --argjson btc_confirmation_depth $BTC_CONFIRMATION_DEPTH --argjson checkpoint_finalization_timeout $CHECKPOINT_FINALIZATION_TIMEOUT '{network: $network, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout}')
 BTCSTAKING_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
