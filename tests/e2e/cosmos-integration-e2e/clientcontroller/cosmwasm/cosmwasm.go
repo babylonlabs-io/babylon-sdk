@@ -315,8 +315,8 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 ) (bool, error) {
 	fpBtcPkHex := bbntypes.NewBIP340PubKeyFromBTCPK(fpPk).MarshalHex()
 
-	queryMsgStruct := QueryMsgFinalityProviderInfo{
-		FinalityProviderInfo: FinalityProviderInfo{
+	queryMsgStruct := QueryMsgFinalityProviderPower{
+		FinalityProviderPower: FinalityProviderPowerQuery{
 			BtcPkHex: fpBtcPkHex,
 			Height:   blockHeight,
 		},
@@ -330,7 +330,7 @@ func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 		return false, err
 	}
 
-	var resp ConsumerFpInfoResponse
+	var resp ConsumerFpPowerResponse
 	err = json.Unmarshal(dataFromContract.Data, &resp)
 	if err != nil {
 		return false, err
