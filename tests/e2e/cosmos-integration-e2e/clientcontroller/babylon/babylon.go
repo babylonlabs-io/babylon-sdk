@@ -352,6 +352,31 @@ func (bc *BabylonController) CreateBTCDelegation(
 
 	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
+func (bc *BabylonController) InsertBTCHeaders(r *rand.Rand, numHeaders uint32) ([]*btclctypes.BTCHeaderInfo, error) {
+	btcTipResp, err := bc.QueryBtcLightClientTip()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query BTC light client tip: %w", err)
+	}
+
+	tipHeader, err := bbntypes.NewBTCHeaderBytesFromHex(btcTipResp.HeaderHex)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create BTC header from hex: %w", err)
+	}
+
+	headers := datagen.NewBTCHeaderChainFromParentInfo(r, &btclctypes.BTCHeaderInfo{
+		Header: &tipHeader,
+		Hash:   tipHeader.Hash(),
+		Height: btcTipResp.Height,
+		Work:   &btcTipResp.Work,
+	}, numHeaders)
+
+	_, err = bc.InsertBtcBlockHeaders(headers.ChainToBytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert BTC block headers: %w", err)
+	}
+
+	return headers.GetChainInfo(), nil
+}
 
 func (bc *BabylonController) InsertWBTCHeaders(r *rand.Rand) error {
 	params, err := bc.QueryStakingParams()
@@ -359,24 +384,7 @@ func (bc *BabylonController) InsertWBTCHeaders(r *rand.Rand) error {
 		return fmt.Errorf("failed to query staking params: %w", err)
 	}
 
-	btcTipResp, err := bc.QueryBtcLightClientTip()
-	if err != nil {
-		return fmt.Errorf("failed to query BTC light client tip: %w", err)
-	}
-
-	tipHeader, err := bbntypes.NewBTCHeaderBytesFromHex(btcTipResp.HeaderHex)
-	if err != nil {
-		return fmt.Errorf("failed to create BTC header from hex: %w", err)
-	}
-
-	wHeaders := datagen.NewBTCHeaderChainFromParentInfo(r, &btclctypes.BTCHeaderInfo{
-		Header: &tipHeader,
-		Hash:   tipHeader.Hash(),
-		Height: btcTipResp.Height,
-		Work:   &btcTipResp.Work,
-	}, uint32(params.FinalizationTimeoutBlocks))
-
-	_, err = bc.InsertBtcBlockHeaders(wHeaders.ChainToBytes())
+	_, err = bc.InsertBTCHeaders(r, uint32(params.FinalizationTimeoutBlocks))
 	if err != nil {
 		return fmt.Errorf("failed to insert BTC block headers: %w", err)
 	}
