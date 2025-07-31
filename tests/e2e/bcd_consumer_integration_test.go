@@ -216,21 +216,17 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	var consumerBtcHeaders *cosmwasm.BtcHeadersResponse
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 3
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
-	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header3.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
 	s.T().Log("Successfully verified headers in Consumer chain")
 
 	// Create fork from header2
 	s.T().Log("Creating fork from header2")
-	// TODO: In case of re-org Babylon should send headers from BSN base to tip but currently
-	// it only sends last W+1 headers, so if in tests we insert more then 2 fork headers (W is 2 in tests)
-	// Consumer chain will not be able to re-org as Babylon will not send more than 2 headers
-	// See - https://github.com/babylonlabs-io/babylon-contract/issues/114
 	forkBase := header2 // Known ancestor to fork from
 	forkHeader1 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkBase)
 	forkHeader2 := datagen.GenRandomValidBTCHeaderInfoWithParent(r, *forkHeader1)
@@ -268,14 +264,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.T().Log("Waiting for fork headers to propagate to Consumer chain")
 	s.Eventually(func() bool {
 		consumerBtcHeaders, err = s.cosmwasmController.QueryBtcHeaders(nil)
-		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 4
+		return err == nil && consumerBtcHeaders != nil && len(consumerBtcHeaders.Headers) == 5
 	}, time.Second*60, time.Second)
 	s.T().Logf("Found %d headers in Consumer chain after fork", len(consumerBtcHeaders.Headers))
 
-	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
-	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
-	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
-	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[0].Hash)
+	s.Require().Equal(forkHeader2.Hash.MarshalHex(), consumerBtcHeaders.Headers[4].Hash)
+	s.Require().Equal(forkHeader1.Hash.MarshalHex(), consumerBtcHeaders.Headers[3].Hash)
+	s.Require().Equal(header2.Hash.MarshalHex(), consumerBtcHeaders.Headers[2].Hash)
+	s.Require().Equal(header1.Hash.MarshalHex(), consumerBtcHeaders.Headers[1].Hash)
 	s.T().Log("Successfully verified fork headers in Consumer chain")
 }
 
@@ -694,14 +690,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	s.NoError(err)
 	s.NotNil(txResp)
 
-	// ensure consumer finality provider is slashed
+	// ensure consumer finality provider is slashed and has zero voting power
 	s.Eventually(func() bool {
 		fp, err := s.cosmwasmController.QueryFinalityProvider(consumerFp.FinalityProvider.BtcPk.MarshalHex())
-		return err == nil && fp != nil && fp.SlashedHeight > 0
-	}, time.Minute, time.Second*5)
-
-	// query and assert consumer finality provider's voting power is zero after slashing
-	s.Eventually(func() bool {
+		if err != nil || fp == nil || fp.SlashedHeight == 0 {
+			return false
+		}
 		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
 			s.T().Logf("Error querying finality providers by power: %v", err)
@@ -731,8 +725,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 			s.T().Logf("Error querying finality provider: %v", err)
 			return false
 		}
-		return fp != nil &&
-			fp.FinalityProvider.SlashedBtcHeight > 0 // should be recorded slashed
+		if fp == nil {
+			s.T().Logf("Finality provider is nil")
+			return false
+		}
+		if fp.FinalityProvider.SlashedBtcHeight == 0 || fp.FinalityProvider.SlashedBabylonHeight == 0 {
+			s.T().Logf("Finality provider not slashed yet, SlashedBtcHeight: %d, SlashedBabylonHeight: %d", fp.FinalityProvider.SlashedBtcHeight, fp.FinalityProvider.SlashedBabylonHeight)
+			return false
+		}
+		return true // should be recorded slashed
 	}, time.Minute, time.Second*5)
 }
 

@@ -44,6 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Improvements
 
+- [#182](https://github.com/babylonlabs-io/babylon-sdk/pull/182) e2e: fix e2e tests
 - [#172](https://github.com/babylonlabs-io/babylon-sdk/pull/172) chore: Fix e2e tests
 - [#108](https://github.com/babylonlabs-io/babylon-sdk/pull/108) chore: Upgrade wasmd to 0.55
 - [#116](https://github.com/babylonlabs-io/babylon-sdk/pull/116) add docs for
