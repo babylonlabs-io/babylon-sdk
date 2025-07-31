@@ -508,10 +508,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalizationAndRewards
 	s.T().Log("Generating transactions to accumulate fees...")
 	s.finalizeNextEpoch()
 
-	// Wait for multiple blocks to ensure BeginBlocker runs and fee distribution occurs
-	s.T().Log("Waiting for fee distribution via BeginBlocker...")
-	time.Sleep(10 * time.Second)
-
 	// Check if finality contract balance increased (indicating rewards were transferred)
 	var finalFinalityBalance sdk.Coins
 	s.Eventually(func() bool {
