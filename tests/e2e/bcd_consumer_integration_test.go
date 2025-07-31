@@ -210,12 +210,12 @@ func (s *BCDConsumerIntegrationTestSuite) Test03ConsumerFeeCollector() {
 	s.T().Log("Successfully verified rewards distribution to finality contracts via fee collector interception")
 }
 
-// Test03BTCHeaderPropagation
+// Test04BTCHeaderPropagation
 // 1. Inserts initial BTC headers in Babylon
 // 2. Verifies that headers propagate from Babylon -> Consumer
 // 3. Creates a fork in Babylon
 // 4. Verifies that fork headers propagate from Babylon -> Consumer
-func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
+func (s *BCDConsumerIntegrationTestSuite) Test04BTCHeaderPropagation() {
 	s.T().Log("Starting BTC header propagation test")
 
 	// Insert initial BTC headers in Babylon
@@ -316,11 +316,11 @@ func (s *BCDConsumerIntegrationTestSuite) Test03BTCHeaderPropagation() {
 	s.T().Log("Successfully verified fork headers in Consumer chain")
 }
 
-// Test04CreateConsumerFinalityProvider
+// Test05CreateConsumerFinalityProvider
 // 1. Creates and registers a random number of consumer FPs in Babylon.
 // 2. Babylon automatically sends IBC packets to the consumer chain to transmit this data.
 // 3. Verifies that the registered consumer FPs in Babylon match the data stored in the consumer chain's contract.
-func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider() {
+func (s *BCDConsumerIntegrationTestSuite) Test05CreateConsumerFinalityProvider() {
 	// generate a random number of finality providers from 1 to 5
 	numConsumerFPs := datagen.RandomInt(r, 5) + 1
 	fmt.Println("Number of consumer finality providers: ", numConsumerFPs)
@@ -355,10 +355,10 @@ func (s *BCDConsumerIntegrationTestSuite) Test04CreateConsumerFinalityProvider()
 	}
 }
 
-// Test05RestakeDelegationToMultipleFPs
+// Test06RestakeDelegationToMultipleFPs
 // 1. Creates a Babylon finality provider
 // 2. Creates a pending state delegation restaking to both Babylon FP and 1 consumer FP
-func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs() {
+func (s *BCDConsumerIntegrationTestSuite) Test06RestakeDelegationToMultipleFPs() {
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
@@ -397,7 +397,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test05RestakeDelegationToMultipleFPs()
 	s.Len(pendingDels.Dels[0].CovenantSigs, 0)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
+func (s *BCDConsumerIntegrationTestSuite) Test07CommitPublicRandomness() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -430,13 +430,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test06CommitPublicRandomness() {
 	s.finalizeUntilConsumerHeight(consumerHeight)
 }
 
-// Test07ActivateDelegation
+// Test08ActivateDelegation
 // 1. Submits covenant signatures to activate a BTC delegation
 // 2. Verifies the delegation is activated on Babylon
 // 3. Checks that Babylon sends IBC packets to update the consumer chain
 // 4. Verifies the delegation details in the consumer chain contract match Babylon
 // 5. Confirms the consumer FP voting power equals the total stake amount
-func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
+func (s *BCDConsumerIntegrationTestSuite) Test08ActivateDelegation() {
 	// Query consumer finality provider
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -489,7 +489,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test07ActivateDelegation() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalitySignature() {
+func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPFinalitySignature() {
 	// Query consumer finality providers
 	consumerFp, err := s.babylonController.QueryFinalityProvider(bbn.NewBIP340PubKeyFromBTCPK(consumerFpBTCPK).MarshalHex())
 	s.Require().NoError(err)
@@ -576,14 +576,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test08ConsumerFPFinalitySignature() {
 	s.T().Log("Successfully verified rewards distribution to finality contracts via fee collector interception")
 }
 
-// Test09BabylonFPCascadedSlashing
+// Test10BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon.
 // 2. The block is finalized.
 // 3. Equivocates/ Submits an invalid finality sig to Babylon.
 // 4. Babylon FP is slashed.
 // 5. Babylon notifies the involved consumer about the delegations.
 // 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test10BabylonFPCascadedSlashing() {
 	// Finalize the next epoch, so that the babylon chain finality is activated
 	s.finalizeNextEpoch()
 
@@ -673,7 +673,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerFPCascadedSlashing() {
 	// create a new consumer finality provider
 	resp, consumerFpBTCSK2, consumerFpBTCPK2 := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
@@ -817,13 +817,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-// Test11ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
+// Test12ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
 // when the BTC height exceeds the delegation's end height.
 // 1. Creates a delegation with a very short timelock (11 blocks)
 // 2. Activates the delegation and verifies FP has voting power
 // 3. Inserts BTC headers to exceed the delegation's end height
 // 4. Verifies the delegation is expired and FP  zero voting power
-func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerDelegationExpiry() {
+func (s *BCDConsumerIntegrationTestSuite) Test12ConsumerDelegationExpiry() {
 	// create a new consumer finality provider
 	resp, _, _ := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
