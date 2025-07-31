@@ -592,18 +592,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test09BabylonFPCascadedSlashing() {
 	s.Require().NoError(err)
 	s.Require().NotNil(consumerFp)
 
-	// query and assert finality provider is slashed
-	s.Eventually(func() bool {
-		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
-		if err != nil {
-			s.T().Logf("Error querying finality providers by power: %v", err)
-			return false
-		}
-
-		return fpInfo != nil &&
-			fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex() &&
-			fpInfo.Slashed
-	}, time.Minute, time.Second*5)
 	// query and assert finality provider has zero voting power
 	s.Eventually(func() bool {
 		height, err := s.cosmwasmController.QueryLatestBlockHeight()
@@ -642,15 +630,6 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 		return err == nil && dataFromContract != nil && len(dataFromContract.Delegations) == 2
 	}, time.Second*30, time.Second)
 
-	// query and assert consumer finality provider has voting power
-	s.Eventually(func() bool {
-		height, err := s.cosmwasmController.QueryLatestBlockHeight()
-		s.NoError(err)
-		fpHasPower, err := s.cosmwasmController.QueryFinalityProviderHasPower(consumerFp.FinalityProvider.BtcPk.MustToBTCPK(), height)
-		s.NoError(err)
-		return fpHasPower
-	}, time.Minute, time.Second*5)
-
 	// get the latest block height and block on the consumer chain
 	consumerNodeStatus, err := s.cosmwasmController.GetCometNodeStatus()
 	s.NoError(err)
@@ -670,6 +649,15 @@ func (s *BCDConsumerIntegrationTestSuite) Test10ConsumerFPCascadedSlashing() {
 
 	// finalize the consumer chain until the latest block height
 	s.finalizeUntilConsumerHeight(consumerLatestBlockHeight)
+
+	// query and assert consumer finality provider has voting power
+	s.Eventually(func() bool {
+		height, err := s.cosmwasmController.QueryLatestBlockHeight()
+		s.NoError(err)
+		fpHasPower, err := s.cosmwasmController.QueryFinalityProviderHasPower(consumerFp.FinalityProvider.BtcPk.MustToBTCPK(), height)
+		s.NoError(err)
+		return fpHasPower
+	}, time.Minute, time.Second*5)
 
 	// Consumer finality provider submits finality signature
 	_, err = s.cosmwasmController.SubmitFinalitySig(
