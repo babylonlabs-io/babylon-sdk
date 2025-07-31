@@ -3,9 +3,11 @@ package types_test
 import (
 	"testing"
 
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 func TestValidateGenesis(t *testing.T) {
@@ -31,9 +33,26 @@ func TestValidateGenesis(t *testing.T) {
 			state: types.GenesisState{
 				Params: types.Params{
 					MaxGasBeginBlocker: 10_000,
+					BtcStakingPortion:  math.LegacySmallestDec(),
 				},
 			},
 			expErr: false,
+		},
+		"empty max gas begin blocker, should fail": {
+			state: types.GenesisState{
+				Params: types.Params{
+					BtcStakingPortion: math.LegacySmallestDec(),
+				},
+			},
+			expErr: true,
+		},
+		"nil btc staking portion, should fail": {
+			state: types.GenesisState{
+				Params: types.Params{
+					MaxGasBeginBlocker: 10_000,
+				},
+			},
+			expErr: true,
 		},
 		"invalid babylon contract address, should fail": {
 			state: types.GenesisState{

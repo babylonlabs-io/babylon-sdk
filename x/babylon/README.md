@@ -10,8 +10,9 @@ enabling seamless integration to become a BSN (Bitcoin Supercharged Network).
 
 * [Table of contents](#table-of-contents)
 * [Concepts](#concepts)
-  * [Cosmos BSN Integration](#cosmos-bsn-integration)
+  * [Cosmos BSN Integration Stack](#cosmos-bsn-integration-stack)
   * [Smart Contract Communication](#smart-contract-communication)
+  * [Rewards Distribution](#rewards-distribution)
 * [States](#states)
   * [Parameters](#parameters)
 * [Messages](#messages)
@@ -56,6 +57,45 @@ The module communicates with smart contracts through one main mechanism:
 This communication enables the module to:
 - Send block information to contracts during `BeginBlock` and `EndBlock`
 - Coordinate contract instantiation and configuration
+
+### Rewards Distribution
+
+The Babylon SDK leverages a **fee collector approach** for distributing rewards
+to BTC stakers. This mechanism provides a sustainable and economically sound
+method for reward distribution without inflating the token supply.
+
+#### Fee collector approach
+
+The fee collector approach operates by intercepting a portion of transaction
+fees collected by the network and redistributing them as rewards to BTC stakers.
+This process occurs during each `BeginBlock`:
+
+1. **Fee Collection**: Transaction fees from all network activity are collected
+   in the fee collector account during block processing
+2. **Staking Portion Calculation**: A configured percentage (staking portion) of
+   the collected fees is allocated for BTC staking rewards
+3. **Transfer to Finality Contracts**: The allocated fee portion is transferred
+   to the finality contracts during `BeginBlock`
+4. **Reward Distribution**: Finality contracts receive the fees and decide how
+   to distribute rewards among finality providers and their delegated stakers
+5. **Automatic Operation**: This entire process runs automatically per block
+   without requiring manual intervention or additional smart contract calls
+
+#### Benefits
+
+The fee collector approach offers several advantages over traditional token
+minting:
+
+- **No Inflation**: Uses existing transaction fees rather than creating new
+  tokens
+- **Economic Sustainability**: Rewards are tied to actual network usage and
+  activity
+- **Predictable Supply**: Maintains token supply predictability without
+  arbitrary inflation
+- **Network Alignment**: Higher network activity generates more fees and thus
+  more rewards
+- **Automatic Distribution**: Operates independently without smart contract
+  coordination
 
 ## States
 

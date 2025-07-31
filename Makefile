@@ -38,6 +38,17 @@ clean-e2e:
 	docker network prune -f || true
 
 ###############################################################################
+###                                Mocking                                  ###
+###############################################################################
+
+mockgen_cmd=go run github.com/golang/mock/mockgen@v1.6.0
+
+mocks: ## Generate mock objects for testing
+	$(mockgen_cmd) -source=x/babylon/types/expected_keepers.go -package types -destination x/babylon/types/mocked_keepers.go
+
+.PHONY: mocks
+
+###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
 
@@ -82,7 +93,7 @@ proto-lint:
 
 .PHONY: all install \
 	build build-linux-static test test-all test-e2e \
-	proto-all proto-format proto-swagger-gen proto-lint
+	proto-all proto-format proto-swagger-gen proto-lint mocks
 
 ###############################################################################
 ###                             Integration e2e	                            ###

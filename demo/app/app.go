@@ -326,9 +326,11 @@ func NewConsumerApp(
 		app.appCodec,
 		keys[bbntypes.StoreKey],
 		memKeys[bbntypes.MemStoreKey],
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		&app.WasmKeeper, // ensure this is a pointer as we instantiate the keeper a bit later
+		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -591,7 +593,10 @@ func NewConsumerApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName,
+		// babylon module should be put after the mint module before distribution module
+		minttypes.ModuleName, bbntypes.ModuleName, distrtypes.ModuleName,
+		slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
 		authz.ModuleName, feegrant.ModuleName,
@@ -600,7 +605,6 @@ func NewConsumerApp(
 		ibctransfertypes.ModuleName,
 		ibcexported.ModuleName,
 		wasmtypes.ModuleName,
-		bbntypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
