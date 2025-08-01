@@ -31,7 +31,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.BtcStakingPortion.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("BtcStakingPortion %v should not be exceeding 100%", p.BtcStakingPortion)
+		return fmt.Errorf("BtcStakingPortion %v should not be exceeding 1", p.BtcStakingPortion)
 	}
 
 	return nil

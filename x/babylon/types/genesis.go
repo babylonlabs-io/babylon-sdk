@@ -22,6 +22,6 @@ func NewGenesisState(params Params, bsnContracts *BSNContracts) *GenesisState {
 }
 
 // DefaultGenesisState default genesis state
-func DefaultGenesisState(denom string) *GenesisState {
-	return NewGenesisState(DefaultParams(denom), &BSNContracts{})
+func DefaultGenesisState() *GenesisState {
+	return NewGenesisState(DefaultParams(), &BSNContracts{})
 }
