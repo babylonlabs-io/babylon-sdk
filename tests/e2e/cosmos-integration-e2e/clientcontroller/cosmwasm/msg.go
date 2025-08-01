@@ -41,10 +41,10 @@ type SingleConsumerDelegationResponse struct {
 	ParamsVersion        uint32                      `json:"params_version"`
 	Slashed              bool                        `json:"slashed"`
 }
-
 type ConsumerFpInfoResponse struct {
-	BtcPkHex string `json:"btc_pk_hex"`
-	Power    uint64 `json:"power"`
+	BtcPkHex        string `json:"btc_pk_hex"`
+	TotalActiveSats uint64 `json:"total_active_sats"`
+	Slashed         bool   `json:"slashed"`
 }
 
 type ConsumerFpsByPowerResponse struct {
@@ -232,6 +232,19 @@ type BlocksQuery struct {
 	Limit      *uint32 `json:"limit,omitempty"`
 	Finalized  *bool   `json:"finalised,omitempty"` //TODO: finalised or finalized, typo in smart contract
 	Reverse    *bool   `json:"reverse,omitempty"`
+}
+
+type QueryMsgFinalityProviderPower struct {
+	FinalityProviderPower FinalityProviderPowerQuery `json:"finality_provider_power"`
+}
+
+type FinalityProviderPowerQuery struct {
+	BtcPkHex string `json:"btc_pk_hex"`
+	Height   uint64 `json:"height"`
+}
+
+type ConsumerFpPowerResponse struct {
+	Power uint64 `json:"power"`
 }
 
 type QueryMsgActivatedHeight struct {
