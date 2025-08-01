@@ -301,7 +301,7 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		authority,
 		opts...,
 	)
-	require.NoError(t, babylonKeeper.SetParams(ctx, types.DefaultParams(sdk.DefaultBondDenom)))
+	require.NoError(t, babylonKeeper.SetParams(ctx, types.DefaultParams()))
 	babylonMsgServer := keeper.NewMsgServer(babylonKeeper)
 
 	faucet := wasmkeeper.NewTestFaucet(t, ctx, bankKeeper, minttypes.ModuleName, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1_000_000_000_000))

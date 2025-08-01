@@ -7,11 +7,13 @@ import (
 )
 
 const (
-	EventTypeSchedulerExec       = "scheduler_execution"
-	EventTypeSchedulerRegistered = "scheduler_registered"
-	EventTypeMaxCapLimitUpdated  = "max_cap_limit_updated"
-	EventTypeUnbond              = "instant_unbond"
-	EventTypeDelegate            = "instant_delegate"
+	EventTypeSchedulerExec              = "scheduler_execution"
+	EventTypeSchedulerRegistered        = "scheduler_registered"
+	EventTypeMaxCapLimitUpdated         = "max_cap_limit_updated"
+	EventTypeUnbond                     = "instant_unbond"
+	EventTypeDelegate                   = "instant_delegate"
+	EventTypeFeeCollectorError          = "fee_collector_error"
+	EventTypeContractCommunicationError = "contract_communication_error"
 )
 
 const (
@@ -22,6 +24,9 @@ const (
 	AttributeKeySchedulerExecError   = "error"
 	AttributeKeyValidator            = "validator"
 	AttributeKeyDelegator            = "delegator"
+	AttributeKeyError                = "error"
+	AttributeKeyHeight               = "height"
+	AttributeKeyPhase                = "phase"
 )
 
 // EmitSchedulerExecutionEvent emits an event signalling a successful or failed scheduler execution and including the error
