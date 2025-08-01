@@ -34,11 +34,6 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 		return nil
 	}
 
-	// Validate we have sufficient balance for the transfer
-	if !feesCollectedInt.IsAllGTE(btcStakingReward) {
-		return fmt.Errorf("insufficient fee collector balance")
-	}
-
 	contracts := k.GetBSNContracts(ctx)
 	if contracts == nil || !contracts.IsSet() {
 		return fmt.Errorf("BSN contracts are not set")

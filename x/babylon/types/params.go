@@ -6,12 +6,12 @@ import (
 	"cosmossdk.io/math"
 )
 
-const DefaultGasBeginBlocker = 500_000
+const DefaultMaxGasBeginBlocker = 500_000
 
 // DefaultParams returns default babylon parameters
 func DefaultParams() Params {
 	return Params{
-		MaxGasBeginBlocker: DefaultGasBeginBlocker,
+		MaxGasBeginBlocker: DefaultMaxGasBeginBlocker,
 		BtcStakingPortion:  math.LegacyMustNewDecFromStr("0.1"),
 	}
 }

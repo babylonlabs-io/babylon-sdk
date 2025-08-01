@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo.
@@ -34,10 +35,12 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	}
 
 	// Send the sudo call to the BTC staking contract with gas limits
+	headerHashHex := hex.EncodeToString(headerInfo.Hash)
+	appHashHex := hex.EncodeToString(headerInfo.AppHash)
 	stakingMsg := contract.SudoMsg{
 		BeginBlockMsg: &contract.BeginBlock{
-			HashHex:    hex.EncodeToString(headerInfo.Hash),
-			AppHashHex: hex.EncodeToString(headerInfo.AppHash),
+			HashHex:    headerHashHex,
+			AppHashHex: appHashHex,
 		},
 	}
 	if err := k.doSudoCallWithGasLimit(ctx, stakingAddr, stakingMsg); err != nil {
@@ -48,12 +51,12 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	// Send the sudo call to the finality contract with gas limits
 	finalityMsg := contract.SudoMsg{
 		BeginBlockMsg: &contract.BeginBlock{
-			HashHex:    hex.EncodeToString(headerInfo.Hash),
-			AppHashHex: hex.EncodeToString(headerInfo.AppHash),
+			HashHex:    headerHashHex,
+			AppHashHex: appHashHex,
 		},
 	}
 	if err := k.doSudoCallWithGasLimit(ctx, finalityAddr, finalityMsg); err != nil {
-		return fmt.Errorf("failed to send BeginBlock message to BTC staking contract %s: %w",
+		return fmt.Errorf("failed to send BeginBlock message to BTC finality contract %s: %w",
 			finalityAddr.String(), err)
 	}
 
@@ -108,7 +111,7 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 	// Set gas limit to prevent excessive gas consumption
 	maxGas := k.GetMaxSudoGas(ctx)
 	if maxGas == 0 {
-		maxGas = 500_000 // Default gas limit
+		maxGas = types.DefaultMaxGasBeginBlocker // Default gas limit
 	}
 
 	// Create a gas-limited context
