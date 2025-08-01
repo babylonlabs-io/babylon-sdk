@@ -178,6 +178,7 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 		"btc_light_client_initial_header": datagen.MustGetInitialHeaderInHex(),
 		"consumer_description":            "test-consumer-description",
 		"ics20_channel_id":                "channel-0",
+		"destination_module":              "btcstaking",
 	}
 	babylonInitMsgBz, err := json.Marshal(babylonInitMsg)
 	require.NoError(t, err)
