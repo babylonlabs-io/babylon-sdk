@@ -37,7 +37,9 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -548,14 +550,86 @@ func (s *BCDConsumerIntegrationTestSuite) Test09ConsumerFPFinalitySignature() {
 	s.True(finalizedBlock.Finalized)
 }
 
-// Test10BabylonFPCascadedSlashing
+func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
+	// Ensure BSN rewards are being gathered.
+	// Initially sent to the finality contract, then sent to Babylon on an epoch boundary
+	s.Eventually(func() bool {
+		balance, err := s.cosmwasmController.QueryFinalityContractBalances()
+		if err != nil {
+			s.T().Logf("failed to query balance: %s", err.Error())
+			return false
+		}
+		if len(balance) == 0 {
+			return false
+		}
+		positiveBalance := false
+		for _, b := range balance {
+			denom := b.Denom
+			fmt.Printf("Balance of denom '%s': %s\n", denom, b.Amount.String())
+			// Check that the balance of the denom is greater than 0
+			if b.Amount.IsPositive() {
+				positiveBalance = true
+			} else {
+				s.T().Logf("balance of denom '%s' is not positive: %s", denom, b.Amount.String())
+			}
+		}
+		return positiveBalance
+	}, 30*time.Second, time.Second*5)
+
+	// Wait for an epoch boundary on the BSN (reward_interval = 50, so BSN height has to be a multiple of 50)
+	s.T().Logf("Waiting for an epoch boundary on the BSN")
+	rewardInterval := uint64(50)
+	s.Eventually(func() bool {
+		bsnHeight, err := s.cosmwasmController.QueryLatestBlockHeight()
+		if err != nil {
+			s.T().Logf("failed to query latest block height: %s", err.Error())
+			return false
+		}
+		s.T().Logf("BSN height: %d", bsnHeight)
+		if bsnHeight % rewardInterval == 0 {
+			s.T().Logf("Epoch boundary on the BSN reached")
+			return true
+		}
+		return false
+	}, 30*time.Second, time.Second*1)
+
+	// Check they have been sent to the Babylon "btcstaking" module address on an epoch boundary
+	stakingModule := "btcstaking"
+	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", stakingModule)
+	babylonPrefix := "bbn"
+	stakingModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(stakingModule))
+	s.NoError(err)
+	s.T().Logf("Staking module address: %s", stakingModuleAddr)
+
+	s.Eventually(func() bool {
+		balance, err := s.babylonController.QueryBalances(stakingModuleAddr)
+		if err != nil {
+			s.T().Logf("failed to query balance: %s", err.Error())
+			return false
+		}
+		if len(balance) == 0 {
+			s.T().Logf("no balance found")
+			return false
+		}
+		ibcDenom := getFirstIBCDenom(balance)
+		if ibcDenom == "" {
+			s.T().Logf("failed to get IBC denom")
+			return false
+		}
+		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
+		// Check that the balance of the IBC denom is greater than 0
+		return balance.AmountOf(ibcDenom).IsPositive()
+	}, 30*time.Second, time.Second*5)
+}
+
+// Test11BabylonFPCascadedSlashing
 // 1. Submits a Babylon FP valid finality sig to Babylon.
 // 2. The block is finalized.
 // 3. Equivocates/ Submits an invalid finality sig to Babylon.
 // 4. Babylon FP is slashed.
 // 5. Babylon notifies the involved consumer about the delegations.
 // 6. Consumer discounts the voting power of other involved consumer FP's in the affected delegations
-func (s *BCDConsumerIntegrationTestSuite) Test10BabylonFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test11BabylonFPCascadedSlashing() {
 	// Finalize the next epoch, so that the babylon chain finality is activated
 	s.finalizeNextEpoch()
 
@@ -643,7 +717,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BabylonFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerFPCascadedSlashing() {
+func (s *BCDConsumerIntegrationTestSuite) Test12ConsumerFPCascadedSlashing() {
 	// create a new consumer finality provider
 	resp, consumerFpBTCSK2, consumerFpBTCPK2 := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
@@ -797,13 +871,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test11ConsumerFPCascadedSlashing() {
 	}, time.Minute, time.Second*5)
 }
 
-// Test12ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
+// Test13ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
 // when the BTC height exceeds the delegation's end height.
 // 1. Creates a delegation with a very short timelock (11 blocks)
 // 2. Activates the delegation and verifies FP has voting power
 // 3. Inserts BTC headers to exceed the delegation's end height
 // 4. Verifies the delegation is expired and FP  zero voting power
-func (s *BCDConsumerIntegrationTestSuite) Test12ConsumerDelegationExpiry() {
+func (s *BCDConsumerIntegrationTestSuite) Test13ConsumerDelegationExpiry() {
 	// create a new consumer finality provider
 	resp, _, _ := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
@@ -1225,7 +1299,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.Equal(consumerFp.Pop, actualFp.Pop)
 	s.Equal(consumerFp.SlashedBabylonHeight, actualFp.SlashedBabylonHeight)
 	s.Equal(consumerFp.SlashedBtcHeight, actualFp.SlashedBtcHeight)
-	s.Equal(s.consumerID, actualFp.BsnId)
+		s.Equal(s.consumerID, actualFp.BsnId)
 	return consumerFp, consumerFpBTCSecretKey, consumerFpBTCPublicKey
 }
 
