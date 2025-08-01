@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
@@ -19,7 +18,7 @@ func TestValidateGenesis(t *testing.T) {
 	}{
 		"default params": {
 			state: types.GenesisState{
-				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				Params: types.DefaultParams(),
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        validAddr,
 					BtcLightClientContract: validAddr,
@@ -56,7 +55,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		"invalid babylon contract address, should fail": {
 			state: types.GenesisState{
-				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				Params: types.DefaultParams(),
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        invalidAddr,
 					BtcLightClientContract: validAddr,
@@ -68,7 +67,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		"invalid btc light client contract address, should fail": {
 			state: types.GenesisState{
-				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				Params: types.DefaultParams(),
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        validAddr,
 					BtcLightClientContract: invalidAddr,
@@ -80,7 +79,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		"invalid btc staking contract address, should fail": {
 			state: types.GenesisState{
-				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				Params: types.DefaultParams(),
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        validAddr,
 					BtcLightClientContract: validAddr,
@@ -92,7 +91,7 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		"invalid btc finality contract address, should fail": {
 			state: types.GenesisState{
-				Params: types.DefaultParams(sdk.DefaultBondDenom),
+				Params: types.DefaultParams(),
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        validAddr,
 					BtcLightClientContract: validAddr,

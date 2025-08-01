@@ -6,8 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
@@ -123,7 +121,7 @@ func TestInitGenesis(t *testing.T) {
 func TestExportGenesis(t *testing.T) {
 	keepers := NewTestKeepers(t)
 	k := keepers.BabylonKeeper
-	params := types.DefaultParams(sdk.DefaultBondDenom)
+	params := types.DefaultParams()
 	testAddr1 := "bbnc16t8qwnmdd8wk60enqjugk644ha4xwlqwlkqq70"
 	testAddr2 := "bbnc1578akpvpdr8mmr3pd4jw50zpyhv6xucxgdkggr"
 	testAddr3 := "bbnc1gev2cfu5fdfupwy6gum9qh9pd75g5f025kh4np"
@@ -151,7 +149,7 @@ func TestExportGenesis(t *testing.T) {
 func TestExportGenesisEmptyContracts(t *testing.T) {
 	keepers := NewTestKeepers(t)
 	k := keepers.BabylonKeeper
-	params := types.DefaultParams(sdk.DefaultBondDenom)
+	params := types.DefaultParams()
 
 	err := k.SetParams(keepers.Ctx, params)
 	require.NoError(t, err)

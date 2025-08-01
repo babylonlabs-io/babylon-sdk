@@ -87,7 +87,7 @@ func BabylonKeeperWithStoreKey(
 	k, ctx := BabylonKeeperWithStore(t, db, stateStore, storeKey, bankKeeper, accountKeeper, wasmKeeper, stakingKeeper)
 
 	// Initialize params
-	if err := k.SetParams(ctx, types.DefaultParams(sdk.DefaultBondDenom)); err != nil {
+	if err := k.SetParams(ctx, types.DefaultParams()); err != nil {
 		panic(err)
 	}
 
