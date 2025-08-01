@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 - [#188](https://github.com/babylonlabs-io/babylon-sdk/pull/188) chore: refactor error handling and sudo call to avoid chain halt
 - [#187](https://github.com/babylonlabs-io/babylon-sdk/pull/187) chore: bump contracts with finality signature fix
+- [#186](https://github.com/babylonlabs-io/babylon-sdk/pull/186) e2e: test for fee collector
 - [#182](https://github.com/babylonlabs-io/babylon-sdk/pull/182) e2e: reenable and fix e2e tests
 - [#172](https://github.com/babylonlabs-io/babylon-sdk/pull/172) chore: Fix e2e tests
 - [#108](https://github.com/babylonlabs-io/babylon-sdk/pull/108) chore: Upgrade wasmd to 0.55
