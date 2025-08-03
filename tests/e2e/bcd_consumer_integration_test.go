@@ -565,7 +565,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 		positiveBalance := false
 		for _, b := range balance {
 			denom := b.Denom
-			fmt.Printf("Balance of denom '%s': %s\n", denom, b.Amount.String())
+			s.T().Logf("Balance of denom '%s': %s", denom, b.Amount.String())
 			// Check that the balance of the denom is greater than 0
 			if b.Amount.IsPositive() {
 				positiveBalance = true
