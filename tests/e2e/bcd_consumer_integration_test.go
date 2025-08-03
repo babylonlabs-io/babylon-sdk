@@ -616,7 +616,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 			s.T().Logf("failed to get IBC denom")
 			return false
 		}
-		fmt.Printf("Balance of IBC denom '%s': %s\n", ibcDenom, balance.AmountOf(ibcDenom).String())
+		s.T().Logf("Balance of IBC denom '%s': %s", ibcDenom, balance.AmountOf(ibcDenom).String())
 		// Check that the balance of the IBC denom is greater than 0
 		return balance.AmountOf(ibcDenom).IsPositive()
 	}, 30*time.Second, time.Second*5)
