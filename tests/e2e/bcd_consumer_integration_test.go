@@ -586,7 +586,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 			return false
 		}
 		s.T().Logf("BSN height: %d", bsnHeight)
-		if bsnHeight % rewardInterval == 0 {
+		if (bsnHeight % rewardInterval) == 0 {
 			s.T().Logf("Epoch boundary on the BSN reached")
 			return true
 		}
