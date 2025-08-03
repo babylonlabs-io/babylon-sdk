@@ -593,16 +593,16 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 		return false
 	}, 30*time.Second, time.Second*1)
 
-	// Check they have been sent to the Babylon "btcstaking" module address on an epoch boundary
-	stakingModule := "btcstaking"
-	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", stakingModule)
+	// Check they end up in the Babylon "incentive" module address on an epoch boundary
+	destModule := "incentive"
+	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", destModule)
 	babylonPrefix := "bbn"
-	stakingModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(stakingModule))
+	destModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(destModule))
 	s.NoError(err)
-	s.T().Logf("Staking module address: %s", stakingModuleAddr)
+	s.T().Logf("Destination module address: %s", destModuleAddr)
 
 	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryBalances(stakingModuleAddr)
+		balance, err := s.babylonController.QueryBalances(destModuleAddr)
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
