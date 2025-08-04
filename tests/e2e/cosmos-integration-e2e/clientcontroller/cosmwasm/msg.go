@@ -234,6 +234,22 @@ type BlocksQuery struct {
 	Reverse    *bool   `json:"reverse,omitempty"`
 }
 
+type QueryMsgFinalityConfig struct {
+	FinalityConfig struct{} `json:"config"`
+}
+
+
+type FinalityConfigResponse struct {
+    Denom                      string `json:"denom"`
+    BabylonAddr                string`json:"babylon"`
+    StakingAddr                string `json:"staking"`
+    MaxActiveFinalityProviders uint32 `json:"max_active_finality_providers"`
+    MinPubRand                 uint64`json:"min_pub_rand"`
+    RewardInterval             uint64 `json:"reward_interval"`
+    MissedBlocksWindow         uint64 `json:"missed_blocks_window"`
+    JailDuration               uint64 `json:"jail_duration"`
+}
+
 type QueryMsgFinalityProviderPower struct {
 	FinalityProviderPower FinalityProviderPowerQuery `json:"finality_provider_power"`
 }

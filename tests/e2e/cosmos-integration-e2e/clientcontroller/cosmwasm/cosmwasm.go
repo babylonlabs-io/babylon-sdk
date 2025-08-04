@@ -308,6 +308,25 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryFinalityConfig() (*FinalityConfigResponse, error) {
+	queryMsgStruct := QueryMsgFinalityConfig{}
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	var resp FinalityConfigResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	return &resp, nil
+}
+
 // QueryFinalityProviderHasPower queries whether the finality provider has voting power at a given height
 func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 	fpPk *btcec.PublicKey,

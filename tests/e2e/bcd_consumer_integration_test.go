@@ -576,9 +576,13 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 		return positiveBalance
 	}, 30*time.Second, time.Second*5)
 
-	// Wait for an epoch boundary on the BSN (reward_interval = 50, so BSN height has to be a multiple of 50)
+	// Wait for an epoch boundary (reward_internval) on the BSN. So, BSN height has to be a multiple of reward_interval
 	s.T().Logf("Waiting for an epoch boundary on the BSN")
-	rewardInterval := uint64(50)
+	// Get the reward interval from the consumer chain's finality contract config
+	finalityConfig, err := s.cosmwasmController.QueryFinalityConfig()
+	s.NoError(err)
+	rewardInterval := finalityConfig.RewardInterval
+
 	s.Eventually(func() bool {
 		bsnHeight, err := s.cosmwasmController.QueryLatestBlockHeight()
 		if err != nil {
