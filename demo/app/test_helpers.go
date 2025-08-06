@@ -15,8 +15,6 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
-	bbntypes "github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -44,6 +42,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+
+	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 )
 
 // SetupOptions defines arguments that are passed into `Simapp` constructor.
@@ -411,17 +411,6 @@ func GenesisStateWithValSet(
 	// update total supply
 	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
-
-	// Inject a valid BsnContracts field for the Babylon module
-	babylonGenesis := map[string]interface{}{
-		"params":        map[string]interface{}{}, // use default params if needed
-		"bsn_contracts": map[string]interface{}{}, // use default params if needed
-	}
-	bz, err := json.Marshal(babylonGenesis)
-	if err != nil {
-		return nil, err
-	}
-	genesisState[bbntypes.ModuleName] = bz
 
 	return genesisState, nil
 }

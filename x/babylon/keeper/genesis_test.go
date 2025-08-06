@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,6 +25,8 @@ func TestInitGenesis(t *testing.T) {
 			state: types.GenesisState{
 				Params: types.Params{
 					MaxGasBeginBlocker: 600_000,
+					MaxGasEndBlocker:   600_000,
+					BtcStakingPortion:  math.LegacyMustNewDecFromStr("0.01"),
 				},
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        testAddr1,
@@ -34,10 +37,11 @@ func TestInitGenesis(t *testing.T) {
 			},
 			expErr: false,
 		},
-		"custom small value param, should pass": {
+		"empty gas begin blocker, should panic": {
 			state: types.GenesisState{
 				Params: types.Params{
-					MaxGasBeginBlocker: 10_000,
+					MaxGasEndBlocker:  10_000,
+					BtcStakingPortion: math.LegacyMustNewDecFromStr("0.01"),
 				},
 				BsnContracts: &types.BSNContracts{
 					BabylonContract:        testAddr1,
@@ -46,7 +50,37 @@ func TestInitGenesis(t *testing.T) {
 					BtcFinalityContract:    testAddr4,
 				},
 			},
-			expErr: false,
+			expErr: true,
+		},
+		"empty gas end blocker, should panic": {
+			state: types.GenesisState{
+				Params: types.Params{
+					MaxGasBeginBlocker: 10_000,
+					BtcStakingPortion:  math.LegacyMustNewDecFromStr("0.01"),
+				},
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        testAddr1,
+					BtcLightClientContract: testAddr2,
+					BtcStakingContract:     testAddr3,
+					BtcFinalityContract:    testAddr4,
+				},
+			},
+			expErr: true,
+		},
+		"empty btc staking portion, should panic": {
+			state: types.GenesisState{
+				Params: types.Params{
+					MaxGasBeginBlocker: 10_000,
+					MaxGasEndBlocker:   10_000,
+				},
+				BsnContracts: &types.BSNContracts{
+					BabylonContract:        testAddr1,
+					BtcLightClientContract: testAddr2,
+					BtcStakingContract:     testAddr3,
+					BtcFinalityContract:    testAddr4,
+				},
+			},
+			expErr: true,
 		},
 	}
 	specs["invalid babylon contract address, should panic"] = struct {
@@ -54,9 +88,7 @@ func TestInitGenesis(t *testing.T) {
 		expErr bool
 	}{
 		state: types.GenesisState{
-			Params: types.Params{
-				MaxGasBeginBlocker: 600_000,
-			},
+			Params: types.DefaultParams(),
 			BsnContracts: &types.BSNContracts{
 				BabylonContract:        "not-a-valid-address",
 				BtcLightClientContract: testAddr2,
@@ -71,9 +103,7 @@ func TestInitGenesis(t *testing.T) {
 		expErr bool
 	}{
 		state: types.GenesisState{
-			Params: types.Params{
-				MaxGasBeginBlocker: 600_000,
-			},
+			Params:       types.DefaultParams(),
 			BsnContracts: nil,
 		},
 		expErr: false,
@@ -83,9 +113,7 @@ func TestInitGenesis(t *testing.T) {
 		expErr bool
 	}{
 		state: types.GenesisState{
-			Params: types.Params{
-				MaxGasBeginBlocker: 600_000,
-			},
+			Params:       types.DefaultParams(),
 			BsnContracts: &types.BSNContracts{},
 		},
 		expErr: false,
@@ -106,6 +134,7 @@ func TestInitGenesis(t *testing.T) {
 
 			p := k.GetParams(keepers.Ctx)
 			assert.Equal(t, spec.state.Params.MaxGasBeginBlocker, p.MaxGasBeginBlocker)
+			assert.Equal(t, spec.state.Params.MaxGasEndBlocker, p.MaxGasEndBlocker)
 			// Check contract addresses
 			contracts := k.GetBSNContracts(keepers.Ctx)
 			if spec.state.BsnContracts != nil && spec.state.BsnContracts.IsSet() {
@@ -141,6 +170,7 @@ func TestExportGenesis(t *testing.T) {
 
 	exported := k.ExportGenesis(keepers.Ctx)
 	assert.Equal(t, params.MaxGasBeginBlocker, exported.Params.MaxGasBeginBlocker)
+	assert.Equal(t, params.MaxGasEndBlocker, exported.Params.MaxGasEndBlocker)
 	assert.Equal(t, testAddr1, exported.BsnContracts.BabylonContract)
 	assert.Equal(t, testAddr2, exported.BsnContracts.BtcLightClientContract)
 	assert.Equal(t, testAddr3, exported.BsnContracts.BtcStakingContract)
@@ -156,5 +186,6 @@ func TestExportGenesisEmptyContracts(t *testing.T) {
 
 	exported := k.ExportGenesis(keepers.Ctx)
 	assert.Equal(t, params.MaxGasBeginBlocker, exported.Params.MaxGasBeginBlocker)
+	assert.Equal(t, params.MaxGasEndBlocker, exported.Params.MaxGasEndBlocker)
 	assert.Nil(t, exported.BsnContracts)
 }

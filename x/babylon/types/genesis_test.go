@@ -32,6 +32,7 @@ func TestValidateGenesis(t *testing.T) {
 			state: types.GenesisState{
 				Params: types.Params{
 					MaxGasBeginBlocker: 10_000,
+					MaxGasEndBlocker:   10_000,
 					BtcStakingPortion:  math.LegacySmallestDec(),
 				},
 			},
@@ -40,6 +41,7 @@ func TestValidateGenesis(t *testing.T) {
 		"empty max gas begin blocker, should fail": {
 			state: types.GenesisState{
 				Params: types.Params{
+					MaxGasEndBlocker:  10_000,
 					BtcStakingPortion: math.LegacySmallestDec(),
 				},
 			},
@@ -49,6 +51,7 @@ func TestValidateGenesis(t *testing.T) {
 			state: types.GenesisState{
 				Params: types.Params{
 					MaxGasBeginBlocker: 10_000,
+					MaxGasEndBlocker:   10_000,
 				},
 			},
 			expErr: true,
@@ -97,14 +100,6 @@ func TestValidateGenesis(t *testing.T) {
 					BtcLightClientContract: validAddr,
 					BtcStakingContract:     validAddr,
 					BtcFinalityContract:    invalidAddr,
-				},
-			},
-			expErr: true,
-		},
-		"invalid max cap coin denom, should fail": {
-			state: types.GenesisState{
-				Params: types.Params{
-					MaxGasBeginBlocker: 0,
 				},
 			},
 			expErr: true,

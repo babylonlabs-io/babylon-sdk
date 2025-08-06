@@ -109,6 +109,7 @@ The module parameters are defined in the `Params` protobuf message and include:
 message Params {
   // Gas limits
   uint32 max_gas_begin_blocker = 1;
+  uint32 max_gas_end_blocker = 2;
 }
 ```
 

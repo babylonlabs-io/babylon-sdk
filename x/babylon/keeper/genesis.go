@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
@@ -8,7 +10,7 @@ import (
 
 func (k Keeper) InitGenesis(ctx sdk.Context, data types.GenesisState) {
 	if err := k.SetParams(ctx, data.Params); err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to set params in genesis: %w, params: %v", err, data.BsnContracts))
 	}
 	// Set BSN contracts if provided
 	if data.BsnContracts != nil && data.BsnContracts.IsSet() {
