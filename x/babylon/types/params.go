@@ -7,11 +7,13 @@ import (
 )
 
 const DefaultMaxGasBeginBlocker = 500_000
+const DefaultMaxGasEndBlocker = 500_000
 
 // DefaultParams returns default babylon parameters
 func DefaultParams() Params {
 	return Params{
 		MaxGasBeginBlocker: DefaultMaxGasBeginBlocker,
+		MaxGasEndBlocker:   DefaultMaxGasEndBlocker,
 		BtcStakingPortion:  math.LegacyMustNewDecFromStr("0.1"),
 	}
 }
@@ -19,6 +21,10 @@ func DefaultParams() Params {
 // ValidateBasic performs basic validation on babylon parameters.
 func (p Params) ValidateBasic() error {
 	if p.MaxGasBeginBlocker == 0 {
+		return ErrInvalid.Wrap("empty max gas begin-blocker setting")
+	}
+
+	if p.MaxGasEndBlocker == 0 {
 		return ErrInvalid.Wrap("empty max gas end-blocker setting")
 	}
 
