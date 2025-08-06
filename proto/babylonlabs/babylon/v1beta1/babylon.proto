@@ -11,15 +11,17 @@ option (gogoproto.equal_all) = false;
 // Params defines the parameters for the x/babylon module.
 message Params {
   option (gogoproto.equal) = true;
-
   // max_gas_begin_blocker defines the maximum gas that can be spent in a
-  // contract sudo callback
+  // contract sudo callback for begin blocker
   uint32 max_gas_begin_blocker = 1;
+  // max_gas_end_blocker defines the maximum gas that can be spent in a
+  // contract sudo callback for end blocker
+  uint32 max_gas_end_blocker = 2;
   // btc_staking_portion is the portion of rewards that goes to Finality
   // Providers/delegations NOTE: the portion of each Finality
   // Provider/delegation is calculated by using its voting power and finality
   // provider's commission
-  string btc_staking_portion = 2 [
+  string btc_staking_portion = 3 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false

@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/contract"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 // SendBeginBlockMsg sends a BeginBlock sudo message to the BTC staking and finality contracts via sudo.
@@ -43,7 +42,10 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 			AppHashHex: appHashHex,
 		},
 	}
-	if err := k.doSudoCallWithGasLimit(ctx, stakingAddr, stakingMsg); err != nil {
+
+	maxGas := k.GetMaxSudoGasBeginBlocker(ctx)
+	err = k.doSudoCallWithGasLimit(ctx, stakingAddr, stakingMsg, maxGas)
+	if err != nil {
 		return fmt.Errorf("failed to send BeginBlock message to BTC staking contract %s: %w",
 			stakingAddr.String(), err)
 	}
@@ -55,7 +57,7 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 			AppHashHex: appHashHex,
 		},
 	}
-	if err := k.doSudoCallWithGasLimit(ctx, finalityAddr, finalityMsg); err != nil {
+	if err := k.doSudoCallWithGasLimit(ctx, finalityAddr, finalityMsg, maxGas); err != nil {
 		return fmt.Errorf("failed to send BeginBlock message to BTC finality contract %s: %w",
 			finalityAddr.String(), err)
 	}
@@ -88,7 +90,8 @@ func (k Keeper) SendEndBlockMsg(c context.Context) error {
 	}
 
 	// send the sudo call with gas limits
-	if err := k.doSudoCallWithGasLimit(ctx, finalityAddr, msg); err != nil {
+	err = k.doSudoCallWithGasLimit(ctx, finalityAddr, msg, k.GetMaxSudoGasEndBlocker(ctx))
+	if err != nil {
 		k.Logger(ctx).Error("Failed to send EndBlock message to BTC finality contract", "error", err)
 		return fmt.Errorf("BTC finality contract EndBlock call failed: %w", err)
 	}
@@ -107,11 +110,9 @@ func (k Keeper) doSudoCall(ctx sdk.Context, contractAddr sdk.AccAddress, msg con
 }
 
 // doSudoCallWithGasLimit performs a sudo call with gas limit protection and error recovery
-func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg) error {
-	// Set gas limit to prevent excessive gas consumption
-	maxGas := k.GetMaxSudoGas(ctx)
+func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg, maxGas storetypes.Gas) error {
 	if maxGas == 0 {
-		maxGas = types.DefaultMaxGasBeginBlocker // Default gas limit
+		return fmt.Errorf("max gas cannot be zero")
 	}
 
 	// Create a gas-limited context

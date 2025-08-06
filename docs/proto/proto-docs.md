@@ -64,7 +64,8 @@ Params defines the parameters for the x/babylon module.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback |
+| `max_gas_begin_blocker` | [uint32](#uint32) |  | max_gas_begin_blocker defines the maximum gas that can be spent in a contract sudo callback for begin blocker |
+| `max_gas_end_blocker` | [uint32](#uint32) |  | max_gas_end_blocker defines the maximum gas that can be spent in a contract sudo callback for end blocker |
 | `btc_staking_portion` | [string](#string) |  | btc_staking_portion is the portion of rewards that goes to Finality Providers/delegations NOTE: the portion of each Finality Provider/delegation is calculated by using its voting power and finality provider's commission |
 
 
