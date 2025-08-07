@@ -32,6 +32,7 @@ import (
 	ckpttypes "github.com/babylonlabs-io/babylon/v3/x/checkpointing/types"
 	epochingtypes "github.com/babylonlabs-io/babylon/v3/x/epoching/types"
 	ftypes "github.com/babylonlabs-io/babylon/v3/x/finality/types"
+	itypes "github.com/babylonlabs-io/babylon/v3/x/incentive/types"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
@@ -50,7 +51,6 @@ import (
 )
 
 const (
-	destModule    = "btcstaking"
 	babylonPrefix = "bbn"
 )
 
@@ -603,13 +603,16 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 	}, 30*time.Second, time.Second*1)
 
 	// Check they end up in Babylon on an epoch boundary
-	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", destModule)
-	destModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(destModule))
+	// NOTE: The callback function in Babylon will redirect the reward from BTC staking
+	// module to incentive module. Thus, although the IBC callback is in BTC staking module,
+	// we will have to check the incentive module's balance.
+	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", itypes.ModuleName)
+	incentiveModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(itypes.ModuleName))
 	s.NoError(err)
-	s.T().Logf("Destination module address: %s", destModuleAddr)
+	s.T().Logf("Incentive module address: %s", incentiveModuleAddr)
 
 	s.Eventually(func() bool {
-		balance, err := s.babylonController.QueryBalances(destModuleAddr)
+		balance, err := s.babylonController.QueryBalances(incentiveModuleAddr)
 		if err != nil {
 			s.T().Logf("failed to query balance: %s", err.Error())
 			return false
