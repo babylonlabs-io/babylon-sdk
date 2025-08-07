@@ -242,42 +242,25 @@ ADMIN=$($BINARY --home $CHAINDIR/$CHAINID keys show user --keyring-backend test 
 NETWORK="regtest"
 BTC_CONFIRMATION_DEPTH=1
 CHECKPOINT_FINALIZATION_TIMEOUT=2
-BABYLON_TAG="01020304"
 CONSUMER_NAME="test-consumer"
 CONSUMER_DESCRIPTION="test-consumer-description"
 ICS20_CHANNEL_ID="channel-0"
 DESTINATION_MODULE="btcstaking"
 
-BTC_LC_INIT_MSG=$(jq -n --arg network "$NETWORK" --argjson btc_confirmation_depth $BTC_CONFIRMATION_DEPTH --argjson checkpoint_finalization_timeout $CHECKPOINT_FINALIZATION_TIMEOUT '{network: $network, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout}')
-BTCSTAKING_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
-BTCFINALITY_INIT_MSG=$(jq -n --arg admin "$ADMIN" '{admin: $admin}')
-
-
-
-# Base64 encode the init messages as required by the Babylon contract
-BTC_LC_INIT_MSG_B64=$(echo -n "$BTC_LC_INIT_MSG" | base64 | tr -d '\n')
-BTCSTAKING_INIT_MSG_B64=$(echo -n "$BTCSTAKING_INIT_MSG" | base64 | tr -d '\n')
-BTCFINALITY_INIT_MSG_B64=$(echo -n "$BTCFINALITY_INIT_MSG" | base64 | tr -d '\n')
-
 # Build the Babylon contract instantiation message
 BABYLON_INIT_MSG=$(jq -n \
   --arg network "$NETWORK" \
-  --arg babylon_tag "$BABYLON_TAG" \
   --argjson btc_confirmation_depth $BTC_CONFIRMATION_DEPTH \
   --argjson checkpoint_finalization_timeout $CHECKPOINT_FINALIZATION_TIMEOUT \
-  --argjson notify_cosmos_zone false \
   --argjson btc_light_client_code_id $BTC_LC_CODE_ID \
-  --arg btc_light_client_msg "$BTC_LC_INIT_MSG_B64" \
   --argjson btc_staking_code_id $BTCSTAKING_CODE_ID \
-  --arg btc_staking_msg "$BTCSTAKING_INIT_MSG_B64" \
   --argjson btc_finality_code_id $BTCFINALITY_CODE_ID \
-  --arg btc_finality_msg "$BTCFINALITY_INIT_MSG_B64" \
   --arg consumer_name "$CONSUMER_NAME" \
   --arg consumer_description "$CONSUMER_DESCRIPTION" \
   --arg ics20_channel_id "$ICS20_CHANNEL_ID" \
   --arg destination_module "$DESTINATION_MODULE" \
   --arg admin "$ADMIN" \
-  '{network: $network, babylon_tag: $babylon_tag, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, notify_cosmos_zone: $notify_cosmos_zone, btc_light_client_code_id: $btc_light_client_code_id, btc_light_client_msg: $btc_light_client_msg, btc_staking_code_id: $btc_staking_code_id, btc_staking_msg: $btc_staking_msg, btc_finality_code_id: $btc_finality_code_id, btc_finality_msg: $btc_finality_msg, consumer_name: $consumer_name, consumer_description: $consumer_description, ics20_channel_id: $ics20_channel_id, destination_module: $destination_module, admin: $admin}')
+  '{network: $network, btc_confirmation_depth: $btc_confirmation_depth, checkpoint_finalization_timeout: $checkpoint_finalization_timeout, btc_light_client_code_id: $btc_light_client_code_id, btc_staking_code_id: $btc_staking_code_id, btc_finality_code_id: $btc_finality_code_id, consumer_name: $consumer_name, consumer_description: $consumer_description, ics20_channel_id: $ics20_channel_id, destination_module: $destination_module, admin: $admin}')
 echo "Babylon contract instantiation message: $BABYLON_INIT_MSG"
 
 # Instantiate only the Babylon contract

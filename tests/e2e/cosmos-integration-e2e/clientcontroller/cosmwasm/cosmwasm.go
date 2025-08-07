@@ -308,6 +308,25 @@ func (cc *CosmwasmConsumerController) SubmitBatchFinalitySigs(
 	return &types.TxResponse{TxHash: res.TxHash}, nil
 }
 
+func (cc *CosmwasmConsumerController) QueryFinalityConfig() (*FinalityConfigResponse, error) {
+	queryMsgStruct := QueryMsgFinalityConfig{}
+	queryMsgBytes, err := json.Marshal(queryMsgStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query message: %v", err)
+	}
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	var resp FinalityConfigResponse
+	err = json.Unmarshal(dataFromContract.Data, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+	return &resp, nil
+}
+
 // QueryFinalityProviderHasPower queries whether the finality provider has voting power at a given height
 func (cc *CosmwasmConsumerController) QueryFinalityProviderHasPower(
 	fpPk *btcec.PublicKey,
@@ -513,26 +532,17 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 		return 0, fmt.Errorf("failed to marshal query message: %w", err)
 	}
 
-	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return 0, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
 
-	// Unmarshal the response
-	var resp struct {
-		Height uint64 `json:"height"`
+	// Unmarshal the response - try both formats
+	var height uint64
+	if err = json.Unmarshal(dataFromContract.Data, &height); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal response as object: %w", err)
 	}
-	err = json.Unmarshal(dataFromContract.Data, &resp)
-	if err != nil {
-		return 0, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	if resp.Height == 0 {
-		return 0, fmt.Errorf("BTC staking is not activated yet")
-	}
-
-	// Return the activated height
-	return resp.Height, nil
+	return height, nil
 }
 
 func (cc *CosmwasmConsumerController) QueryLatestBlockHeight() (uint64, error) {
