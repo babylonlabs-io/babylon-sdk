@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Improvements
 
+- [#194](https://github.com/babylonlabs-io/babylon-sdk/pull/194) chore: bump babylon to v3.0.0-rc.0 and update contracts version
 - [#189](https://github.com/babylonlabs-io/babylon-sdk/pull/189) e2e: Add rewards test
 - [#188](https://github.com/babylonlabs-io/babylon-sdk/pull/188) chore: refactor error handling and sudo call to avoid chain halt
 - [#187](https://github.com/babylonlabs-io/babylon-sdk/pull/187) chore: bump contracts with finality signature fix
