@@ -532,8 +532,7 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 		return 0, fmt.Errorf("failed to marshal query message: %w", err)
 	}
 
-	// Query the smart contract state
-	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcStakingContract, string(queryMsgBytes))
+	dataFromContract, err := cc.QuerySmartContractState(cc.MustQueryBabylonContracts().BtcFinalityContract, string(queryMsgBytes))
 	if err != nil {
 		return 0, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
