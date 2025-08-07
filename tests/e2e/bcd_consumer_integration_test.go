@@ -49,6 +49,11 @@ import (
 	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 )
 
+const (
+	destModule    = "btcstaking"
+	babylonPrefix = "bbn"
+)
+
 var (
 	r   = rand.New(rand.NewSource(time.Now().Unix()))
 	net = &chaincfg.SimNetParams
@@ -597,10 +602,8 @@ func (s *BCDConsumerIntegrationTestSuite) Test10BsnFpRewards() {
 		return false
 	}, 30*time.Second, time.Second*1)
 
-	// Check they end up in the Babylon "incentive" module address on an epoch boundary
-	destModule := "incentive"
+	// Check they end up in Babylon on an epoch boundary
 	s.T().Logf("Checking if rewards have been sent to the Babylon '%s' module address", destModule)
-	babylonPrefix := "bbn"
 	destModuleAddr, err := bech32.ConvertAndEncode(babylonPrefix, authtypes.NewModuleAddress(destModule))
 	s.NoError(err)
 	s.T().Logf("Destination module address: %s", destModuleAddr)
@@ -1303,7 +1306,7 @@ func (s *BCDConsumerIntegrationTestSuite) createVerifyConsumerFP() (*bstypes.Fin
 	s.Equal(consumerFp.Pop, actualFp.Pop)
 	s.Equal(consumerFp.SlashedBabylonHeight, actualFp.SlashedBabylonHeight)
 	s.Equal(consumerFp.SlashedBtcHeight, actualFp.SlashedBtcHeight)
-		s.Equal(s.consumerID, actualFp.BsnId)
+	s.Equal(s.consumerID, actualFp.BsnId)
 	return consumerFp, consumerFpBTCSecretKey, consumerFpBTCPublicKey
 }
 
