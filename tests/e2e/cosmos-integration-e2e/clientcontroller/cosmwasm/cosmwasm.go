@@ -537,20 +537,12 @@ func (cc *CosmwasmConsumerController) QueryActivatedHeight() (uint64, error) {
 		return 0, fmt.Errorf("failed to query smart contract state: %w", err)
 	}
 
-	// Unmarshal the response
-	var resp struct {
-		Height uint64 `json:"height"`
+	// Unmarshal the response - try both formats
+	var height uint64
+	if err = json.Unmarshal(dataFromContract.Data, &height); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal response as object: %w", err)
 	}
-	err = json.Unmarshal(dataFromContract.Data, &resp)
-	if err != nil {
-		return 0, fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-	if resp.Height == 0 {
-		return 0, fmt.Errorf("BTC staking is not activated yet")
-	}
-
-	// Return the activated height
-	return resp.Height, nil
+	return height, nil
 }
 
 func (cc *CosmwasmConsumerController) QueryLatestBlockHeight() (uint64, error) {
