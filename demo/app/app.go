@@ -969,8 +969,12 @@ func TestAppOptions() simsutils.AppOptionsMap {
 }
 
 func NewTmpApp() *ConsumerApp {
+	return NewTmpAppWithLogger(log.NewNopLogger())
+}
+
+func NewTmpAppWithLogger(logger log.Logger) *ConsumerApp {
 	return NewConsumerApp(
-		log.NewNopLogger(),
+		logger,
 		dbm.NewMemDB(),
 		nil,
 		true,
