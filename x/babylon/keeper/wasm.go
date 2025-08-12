@@ -122,8 +122,9 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 	// Use defer to recover from panics that might occur during contract execution
 	defer func() {
 		if r := recover(); r != nil {
-			k.Logger(ctx).Error("Contract call panicked", "contract", contractAddr.String(), "panic", r)
-			err = fmt.Errorf("contract call to %s panicked: %v", contractAddr, r)
+			err = fmt.Errorf("contract call to %s panicked: %v, gas_used: %d",
+				contractAddr.String(), r, gasCtx.GasMeter().GasConsumed())
+			return
 		}
 	}()
 
