@@ -110,16 +110,16 @@ func (k Keeper) doSudoCall(ctx sdk.Context, contractAddr sdk.AccAddress, msg con
 }
 
 // doSudoCallWithGasLimit performs a sudo call with gas limit protection and error recovery
-func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg, maxGas storetypes.Gas) error {
+func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg, maxGas storetypes.Gas) (err error) {
 	if maxGas == 0 {
-		return fmt.Errorf("max gas cannot be zero")
+		err = fmt.Errorf("max gas cannot be zero")
+		return
 	}
 
 	// Create a gas-limited context
 	gasCtx := ctx.WithGasMeter(storetypes.NewGasMeter(maxGas))
 
 	// Use defer to recover from panics that might occur during contract execution
-	var err error
 	defer func() {
 		if r := recover(); r != nil {
 			k.Logger(ctx).Error("Contract call panicked", "contract", contractAddr.String(), "panic", r)
@@ -133,7 +133,8 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 			"contract", contractAddr.String(),
 			"error", err,
 			"gas_used", gasCtx.GasMeter().GasConsumed())
-		return errorsmod.Wrapf(err, "sudo call to contract failed")
+		err = errorsmod.Wrapf(err, "sudo call to contract failed")
+		return
 	}
 
 	k.Logger(ctx).Debug("Sudo call successful",
@@ -141,5 +142,5 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 		"gas_used", gasCtx.GasMeter().GasConsumed(),
 		"response", string(resp))
 
-	return nil
+	return
 }
