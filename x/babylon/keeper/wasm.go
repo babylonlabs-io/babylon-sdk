@@ -138,7 +138,6 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 			gasConsumed = gasCtx.GasMeter().GasConsumed()
 			err = fmt.Errorf("contract call to %s panicked: %v, gas_used: %d",
 				contractAddr.String(), r, gasConsumed)
-			return
 		}
 	}()
 
