@@ -44,11 +44,15 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 	}
 
 	maxGas := k.GetMaxSudoGasBeginBlocker(ctx)
-	err = k.doSudoCallWithGasLimit(ctx, stakingAddr, stakingMsg, maxGas)
+
+	gasConsumed, err := k.doSudoCallWithGasLimit(ctx, stakingAddr, stakingMsg, maxGas)
 	if err != nil {
 		return fmt.Errorf("failed to send BeginBlock message to BTC staking contract %s: %w",
 			stakingAddr.String(), err)
 	}
+	k.Logger(ctx).Debug("BeginBlock sudo call to BTC staking contract successful",
+		"contract", stakingAddr.String(),
+		"gas_used", gasConsumed)
 
 	// Send the sudo call to the finality contract with gas limits
 	finalityMsg := contract.SudoMsg{
@@ -57,10 +61,14 @@ func (k Keeper) SendBeginBlockMsg(c context.Context) error {
 			AppHashHex: appHashHex,
 		},
 	}
-	if err := k.doSudoCallWithGasLimit(ctx, finalityAddr, finalityMsg, maxGas); err != nil {
+	gasConsumed, err = k.doSudoCallWithGasLimit(ctx, finalityAddr, finalityMsg, maxGas)
+	if err != nil {
 		return fmt.Errorf("failed to send BeginBlock message to BTC finality contract %s: %w",
 			finalityAddr.String(), err)
 	}
+	k.Logger(ctx).Debug("BeginBlock sudo call to BTC finality contract successful",
+		"contract", finalityAddr.String(),
+		"gas_used", gasConsumed)
 
 	return nil
 }
@@ -90,11 +98,14 @@ func (k Keeper) SendEndBlockMsg(c context.Context) error {
 	}
 
 	// send the sudo call with gas limits
-	err = k.doSudoCallWithGasLimit(ctx, finalityAddr, msg, k.GetMaxSudoGasEndBlocker(ctx))
+	gasConsumed, err := k.doSudoCallWithGasLimit(ctx, finalityAddr, msg, k.GetMaxSudoGasEndBlocker(ctx))
 	if err != nil {
 		k.Logger(ctx).Error("Failed to send EndBlock message to BTC finality contract", "error", err)
 		return fmt.Errorf("BTC finality contract EndBlock call failed: %w", err)
 	}
+	k.Logger(ctx).Debug("EndBlock sudo call to BTC finality contract successful",
+		"contract", finalityAddr.String(),
+		"gas_used", gasConsumed)
 
 	return nil
 }
@@ -110,36 +121,37 @@ func (k Keeper) doSudoCall(ctx sdk.Context, contractAddr sdk.AccAddress, msg con
 }
 
 // doSudoCallWithGasLimit performs a sudo call with gas limit protection and error recovery
-func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg, maxGas storetypes.Gas) error {
+func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, msg contract.SudoMsg, maxGas storetypes.Gas) (gasConsumed storetypes.Gas, err error) {
+	gasConsumed = 0
+
 	if maxGas == 0 {
-		return fmt.Errorf("max gas cannot be zero")
+		err = fmt.Errorf("max gas cannot be zero")
+		return
 	}
 
 	// Create a gas-limited context
 	gasCtx := ctx.WithGasMeter(storetypes.NewGasMeter(maxGas))
 
 	// Use defer to recover from panics that might occur during contract execution
-	var err error
 	defer func() {
 		if r := recover(); r != nil {
-			k.Logger(ctx).Error("Contract call panicked", "contract", contractAddr.String(), "panic", r)
-			err = fmt.Errorf("contract call to %s panicked: %v", contractAddr, r)
+			gasConsumed = gasCtx.GasMeter().GasConsumed()
+			err = fmt.Errorf("contract call to %s panicked: %v, gas_used: %d",
+				contractAddr.String(), r, gasConsumed)
 		}
 	}()
 
-	resp, err := k.doSudoCall(gasCtx, contractAddr, msg)
-	if err != nil {
+	if _, err = k.doSudoCall(gasCtx, contractAddr, msg); err != nil {
+		gasConsumed = gasCtx.GasMeter().GasConsumed()
 		k.Logger(ctx).Error("Sudo call failed",
 			"contract", contractAddr.String(),
 			"error", err,
-			"gas_used", gasCtx.GasMeter().GasConsumed())
-		return errorsmod.Wrapf(err, "sudo call to contract failed")
+			"gas_used", gasConsumed)
+		err = errorsmod.Wrapf(err, "sudo call to contract failed")
+		return
 	}
 
-	k.Logger(ctx).Debug("Sudo call successful",
-		"contract", contractAddr.String(),
-		"gas_used", gasCtx.GasMeter().GasConsumed(),
-		"response", string(resp))
+	gasConsumed = gasCtx.GasMeter().GasConsumed()
 
-	return nil
+	return
 }
