@@ -38,6 +38,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+### Bug fixes
+
+- [#198](https://github.com/babylonlabs-io/babylon-sdk/pull/198) fix: fix ineffective error propagation
+
 ## v0.12.0
 
 ### Improvements
