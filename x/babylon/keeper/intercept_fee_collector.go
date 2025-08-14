@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/babylonlabs-io/babylon/v3/x/incentive/types"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,7 +27,7 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 	}
 
 	params := k.GetParams(ctx)
-	btcStakingReward := types.GetCoinsPortion(feesCollectedInt, params.BtcStakingPortion)
+	btcStakingReward := GetCoinsPortion(feesCollectedInt, params.BtcStakingPortion)
 
 	if btcStakingReward.IsZero() {
 		k.Logger(ctx).Debug("Calculated BTC staking reward is zero, skipping transfer")
@@ -58,4 +58,14 @@ func (k Keeper) HandleCoinsInFeeCollector(ctx sdk.Context) error {
 		"portion", params.BtcStakingPortion)
 
 	return nil
+}
+
+func GetCoinsPortion(coinsInt sdk.Coins, portion sdkmath.LegacyDec) sdk.Coins {
+	// coins with decimal value
+	coins := sdk.NewDecCoinsFromCoins(coinsInt...)
+	// portion of coins with decimal values
+	portionCoins := coins.MulDecTruncate(portion)
+	// truncate back
+	portionCoinsInt, _ := portionCoins.TruncateDecimal()
+	return portionCoinsInt
 }

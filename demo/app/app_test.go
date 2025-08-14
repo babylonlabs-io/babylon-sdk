@@ -11,16 +11,14 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
-	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/datagen"
-	babylonkeeper "github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var emptyWasmOpts []wasm.Option
@@ -152,8 +150,8 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 	btcConfirmationDepth := 1
 	btcFinalizationTimeout := 2
 	babylonAdmin := consumerApp.BabylonKeeper.GetAuthority()
-	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d,"initial_header":%s}`,
-		network, btcConfirmationDepth, btcFinalizationTimeout, datagen.MustGetInitialHeaderInStr())
+	btcLightClientInitMsg := fmt.Sprintf(`{"network":"%s","btc_confirmation_depth":%d,"checkpoint_finalization_timeout":%d}`,
+		network, btcConfirmationDepth, btcFinalizationTimeout)
 	btcFinalityInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 	btcStakingInitMsg := fmt.Sprintf(`{"admin":"%s"}`, babylonAdmin)
 
@@ -164,10 +162,8 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 
 	babylonInitMsg := map[string]interface{}{
 		"network":                         network,
-		"babylon_tag":                     "01020304",
 		"btc_confirmation_depth":          btcConfirmationDepth,
 		"checkpoint_finalization_timeout": btcFinalizationTimeout,
-		"notify_cosmos_zone":              false,
 		"btc_light_client_code_id":        btcLightClientContractCodeID,
 		"btc_light_client_msg":            btcLightClientInitMsgBz,
 		"btc_staking_code_id":             btcStakingContractCodeID,
@@ -175,7 +171,6 @@ func TestInstantiateBabylonContracts(t *testing.T) {
 		"btc_finality_code_id":            btcFinalityContractCodeID,
 		"btc_finality_msg":                btcFinalityInitMsgBz,
 		"consumer_name":                   "test-consumer",
-		"btc_light_client_initial_header": datagen.MustGetInitialHeaderInHex(),
 		"consumer_description":            "test-consumer-description",
 		"ics20_channel_id":                "channel-0",
 		"destination_module":              "btcstaking",
