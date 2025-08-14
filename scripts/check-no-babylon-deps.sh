@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu
 
 echo "Checking that demo/ and x/ directories don't use babylonlabs-io/babylon dependencies..."
 
