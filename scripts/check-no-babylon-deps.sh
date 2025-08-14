@@ -16,7 +16,7 @@ check_go_mod() {
     echo "Checking $mod_file..."
 
     # Check for any babylon dependencies (excluding babylon-sdk and local workspace references)
-    babylon_deps=$(grep -E "github\.com/babylonlabs-io/babylon[^-]" "$mod_file" | grep -v "// local work dir" | grep -v "=> \.\." || true)
+    babylon_deps=$(grep -E "github\.com/babylonlabs-io/babylon($|[^-])" "$mod_file" | grep -v "// local work dir" | grep -v "=> \.\." || true)
 
     if [ -n "$babylon_deps" ]; then
         echo "ERROR: Found babylonlabs-io/babylon dependencies in $dir_name/:"
