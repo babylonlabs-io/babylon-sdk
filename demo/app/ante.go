@@ -3,8 +3,8 @@ package app
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
-	"github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
+	"github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	errorsmod "cosmossdk.io/errors"
 

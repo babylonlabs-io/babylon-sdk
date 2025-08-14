@@ -2,7 +2,7 @@ package app
 
 import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"

@@ -3,9 +3,9 @@ module github.com/babylonlabs-io/babylon-sdk/demo
 go 1.23.8
 
 require (
-	github.com/CosmWasm/wasmd v0.55.1
+	github.com/CosmWasm/wasmd v0.50.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk v0.53.3
+	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.4 // indirect
@@ -34,21 +34,21 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/evidence v0.2.0
-	cosmossdk.io/x/feegrant v0.2.0
+	cosmossdk.io/x/evidence v0.1.1
+	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/tx v0.14.0
-	cosmossdk.io/x/upgrade v0.2.0
+	cosmossdk.io/x/upgrade v0.1.4
 	github.com/CosmWasm/wasmvm/v2 v2.2.4 // indirect
 	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250407051200-a5d652116d6d
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
-	github.com/cosmos/ibc-go/v10 v10.3.0
+	github.com/cosmos/ibc-go/v8 v8.7.0
 	github.com/spf13/viper v1.20.1
 )
 
 require (
-	cosmossdk.io/client/v2 v2.0.0-beta.9
-	cosmossdk.io/core v0.12.0
+	cosmossdk.io/client/v2 v2.0.0-beta.7
+	cosmossdk.io/core v0.11.3
 )
 
 require (
@@ -63,9 +63,11 @@ require (
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
+	cosmossdk.io/x/circuit v0.1.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
+	github.com/CosmWasm/wasmvm v1.5.0 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.27.0 // indirect
@@ -95,6 +97,7 @@ require (
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
+	github.com/cosmos/ibc-go/modules/capability v1.0.1 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/creachadair/atomicfile v0.3.1 // indirect
 	github.com/creachadair/tomledit v0.0.24 // indirect
@@ -109,7 +112,6 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/ethereum/go-ethereum v1.15.11 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -151,7 +153,6 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
-	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
@@ -167,7 +168,6 @@ require (
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mdp/qrterminal/v3 v3.2.1 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -213,7 +213,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.35.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
-	go.uber.org/mock v0.5.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
@@ -233,16 +232,24 @@ require (
 	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
-	rsc.io/qr v0.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
 replace (
-	cosmossdk.io/core => cosmossdk.io/core v0.11.3
+	// need this replace when importing cosmos/rosetta pkg
+	cosmossdk.io/core => cosmossdk.io/core v0.11.0
+
+	// need this replace to pick up the store changes (Copy func) in our cosmos-sdk fork
+	cosmossdk.io/store => github.com/cosmos/cosmos-sdk/store v1.1.2-0.20250319183239-53dea340efc7
+
+	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// local work dir
 	github.com/babylonlabs-io/babylon-sdk/x => ../x
+
+	// use Cosmos-SDK fork to enable Ledger functionality
+	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.50.13-0.20250319183239-53dea340efc7
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// See: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
