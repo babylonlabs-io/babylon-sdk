@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"math/rand"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/babylonlabs-io/babylon/v3/testutil/datagen"
+	testkeeper "github.com/babylonlabs-io/babylon-sdk/tests/e2e/testutils"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-
-	testkeeper "github.com/babylonlabs-io/babylon-sdk/tests/e2e/testutils"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var (
@@ -20,19 +20,24 @@ var (
 	fees            = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100)))
 )
 
-// GetCoinsPortion calculates a portion of coins based on a decimal percentage
-func GetCoinsPortion(coinsInt sdk.Coins, portion sdkmath.LegacyDec) sdk.Coins {
-	// coins with decimal value
-	coins := sdk.NewDecCoinsFromCoins(coinsInt...)
-	// portion of coins with decimal values
-	portionCoins := coins.MulDecTruncate(portion)
-	// truncate back
-	portionCoinsInt, _ := portionCoins.TruncateDecimal()
-	return portionCoinsInt
+func AddRandomSeedsToFuzzer(f *testing.F, num uint) {
+	// Seed based on the current time
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	var idx uint
+	for idx = 0; idx < num; idx++ {
+		f.Add(r.Int63())
+	}
+}
+
+func WithCtxHeight(ctx sdk.Context, height uint64) sdk.Context {
+	headerInfo := ctx.HeaderInfo()
+	headerInfo.Height = int64(height)
+	ctx = ctx.WithHeaderInfo(headerInfo)
+	return ctx
 }
 
 func FuzzInterceptFeeCollector(f *testing.F) {
-	datagen.AddRandomSeedsToFuzzer(f, 10)
+	AddRandomSeedsToFuzzer(f, 10)
 	f.Fuzz(func(t *testing.T, seed int64) {
 		r := rand.New(rand.NewSource(seed))
 
@@ -55,17 +60,17 @@ func FuzzInterceptFeeCollector(f *testing.F) {
 		accountKeeper := types.NewMockAccountKeeper(ctrl)
 		accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), authtypes.FeeCollectorName).Return(feeCollectorAcc).Times(1)
 
-		keeper, ctx := testkeeper.BabylonKeeper(t, bankKeeper, accountKeeper, nil, nil)
-		height := datagen.RandomInt(r, 1000)
-		ctx = datagen.WithCtxHeight(ctx, height)
+		babylonKeeper, ctx := testkeeper.BabylonKeeper(t, bankKeeper, accountKeeper, nil, nil)
+		height := uint64(r.Intn(1000))
+		ctx = WithCtxHeight(ctx, height)
 
 		// Set BSN contracts in the keeper
-		err := keeper.SetBSNContracts(ctx, bsnContracts)
+		err := babylonKeeper.SetBSNContracts(ctx, bsnContracts)
 		require.NoError(t, err)
 
 		// Get params and calculate expected fees for BTC staking
-		params := keeper.GetParams(ctx)
-		feesForBTCStaking := GetCoinsPortion(fees, params.BtcStakingPortion)
+		params := babylonKeeper.GetParams(ctx)
+		feesForBTCStaking := keeper.GetCoinsPortion(fees, params.BtcStakingPortion)
 
 		// Convert contractAddr string to sdk.AccAddress for expectation
 		contractAddrAcc, err := sdk.AccAddressFromBech32(bsnContracts.BtcFinalityContract)
@@ -78,7 +83,7 @@ func FuzzInterceptFeeCollector(f *testing.F) {
 			gomock.Eq(feesForBTCStaking)).Return(nil).Times(1)
 
 		// Handle coins in fee collector
-		err = keeper.HandleCoinsInFeeCollector(ctx)
+		err = babylonKeeper.HandleCoinsInFeeCollector(ctx)
 
 		require.NoError(t, err)
 	})
