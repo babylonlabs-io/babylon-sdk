@@ -9,7 +9,16 @@ permissions:
   contents: read
 
 jobs:
+  check-no-babylon-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check no babylon dependencies in demo/ and x/
+        run: ./scripts/check-no-babylon-deps.sh
+
   test:
+    needs: ["check-no-babylon-deps"]
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
      run-unit-tests: true
