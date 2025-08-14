@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
@@ -117,6 +118,77 @@ func makeEncodingConfig(_ testing.TB) encodingConfig {
 		TxConfig:          tx.NewTxConfig(marshaler, tx.DefaultSignModes),
 		Amino:             amino,
 	}
+}
+
+func NewTestBabylonKeeperWithStore(
+	t testing.TB,
+	db dbm.DB,
+	stateStore store.CommitMultiStore,
+	storeKey *storetypes.KVStoreKey,
+	bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper,
+	wasmKeeper types.WasmKeeper,
+	stakingKeeper types.StakingKeeper,
+) (*keeper.Keeper, sdk.Context) {
+	if storeKey == nil {
+		storeKey = storetypes.NewKVStoreKey(types.StoreKey)
+	}
+
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+
+	memKeys := storetypes.NewMemoryStoreKeys(types.MemStoreKey)
+	k := keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKeys[types.MemStoreKey],
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		wasmKeeper,
+		authtypes.FeeCollectorName,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
+	ctx := sdk.NewContext(
+		stateStore,
+		cmtproto.Header{
+			Time: time.Now().UTC(),
+		},
+		false,
+		log.NewNopLogger(),
+	)
+	ctx = ctx.WithHeaderInfo(header.Info{})
+
+	return k, ctx
+}
+
+func NewTestBabylonKeeper(t testing.TB, bankKeeper types.BankKeeper, accountKeeper types.AccountKeeper, wasmKeeper types.WasmKeeper, stakingKeeper types.StakingKeeper) (*keeper.Keeper, sdk.Context) {
+	return NewTestBabylonKeeperWithStoreKey(t, nil, bankKeeper, accountKeeper, wasmKeeper, stakingKeeper)
+}
+
+func NewTestBabylonKeeperWithStoreKey(
+	t testing.TB,
+	storeKey *storetypes.KVStoreKey,
+	bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper,
+	wasmKeeper types.WasmKeeper,
+	stakingKeeper types.StakingKeeper,
+) (*keeper.Keeper, sdk.Context) {
+	db := dbm.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db, log.NewTestLogger(t), storemetrics.NewNoOpMetrics())
+
+	k, ctx := NewTestBabylonKeeperWithStore(t, db, stateStore, storeKey, bankKeeper, accountKeeper, wasmKeeper, stakingKeeper)
+
+	// Initialize params
+	if err := k.SetParams(ctx, types.DefaultParams()); err != nil {
+		panic(err)
+	}
+
+	return k, ctx
 }
 
 type TestKeepers struct {

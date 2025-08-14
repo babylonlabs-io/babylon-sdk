@@ -6,7 +6,6 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	testkeeper "github.com/babylonlabs-io/babylon-sdk/tests/e2e/testutils"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,7 +59,7 @@ func FuzzInterceptFeeCollector(f *testing.F) {
 		accountKeeper := types.NewMockAccountKeeper(ctrl)
 		accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), authtypes.FeeCollectorName).Return(feeCollectorAcc).Times(1)
 
-		babylonKeeper, ctx := testkeeper.BabylonKeeper(t, bankKeeper, accountKeeper, nil, nil)
+		babylonKeeper, ctx := NewTestBabylonKeeper(t, bankKeeper, accountKeeper, nil, nil)
 		height := uint64(r.Intn(1000))
 		ctx = WithCtxHeight(ctx, height)
 
