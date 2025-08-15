@@ -20,6 +20,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	wasmparams "github.com/CosmWasm/wasmd/app/params"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	bbnparams "github.com/babylonlabs-io/babylon/v3/app/params"
 	txformat "github.com/babylonlabs-io/babylon/v3/btctxformatter"
 	"github.com/babylonlabs-io/babylon/v3/client/config"
@@ -37,21 +38,28 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/wire"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkquerytypes "github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
-
-	bcdapp "github.com/babylonlabs-io/babylon-sdk/demo/app"
-	bcdparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 )
 
 const (
 	babylonPrefix = "bbn"
+	// Consumer chain address prefixes (hardcoded from demo/app/params)
+	consumerBech32PrefixAccAddr  = "bbnc"
+	consumerBech32PrefixAccPub   = "bbnc" + "pub"
+	consumerBech32PrefixValAddr  = "bbnc" + "valoper"
+	consumerBech32PrefixValPub   = "bbnc" + "valoperpub"
+	consumerBech32PrefixConsAddr = "bbnc" + "valcons"
+	consumerBech32PrefixConsPub  = "bbnc" + "valconspub"
 )
 
 var (
@@ -1379,14 +1387,15 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 	logger, _ := zap.NewDevelopment()
 
 	sdk.SetAddrCacheEnabled(false)
-	bcdparams.SetAddressPrefixes()
-	tempApp := bcdapp.NewTmpApp()
-	encodingCfg := wasmparams.EncodingConfig{
-		InterfaceRegistry: tempApp.InterfaceRegistry(),
-		Codec:             tempApp.AppCodec(),
-		TxConfig:          tempApp.TxConfig(),
-		Amino:             tempApp.LegacyAmino(),
-	}
+
+	// Set consumer chain address prefixes (hardcoded)
+	sdkConfig := sdk.GetConfig()
+	sdkConfig.SetBech32PrefixForAccount(consumerBech32PrefixAccAddr, consumerBech32PrefixAccPub)
+	sdkConfig.SetBech32PrefixForValidator(consumerBech32PrefixValAddr, consumerBech32PrefixValPub)
+	sdkConfig.SetBech32PrefixForConsensusNode(consumerBech32PrefixConsAddr, consumerBech32PrefixConsPub)
+
+	// Create minimal encoding config for tests (without full app dependency)
+	encodingCfg := createTestEncodingConfig()
 
 	wcc, err := cosmwasm.NewCosmwasmConsumerController(cfg, encodingCfg, logger)
 	require.NoError(s.T(), err)
@@ -1835,6 +1844,29 @@ func ParseRespsBTCDelToBTCDel(resp *bstypes.BTCDelegatorDelegationsResponse) (bt
 		btcDels.Dels[i] = del
 	}
 	return btcDels, nil
+}
+
+// createTestEncodingConfig creates a minimal encoding config for e2e tests
+// without depending on the full demo app
+func createTestEncodingConfig() wasmparams.EncodingConfig {
+	// Create basic encoding components
+	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(interfaceRegistry)
+	amino := codec.NewLegacyAmino()
+
+	// Register necessary interfaces for CosmWasm
+	wasmtypes.RegisterInterfaces(interfaceRegistry)
+	wasmtypes.RegisterLegacyAminoCodec(amino)
+
+	// Create transaction config
+	txConfig := tx.NewTxConfig(cdc, tx.DefaultSignModes)
+
+	return wasmparams.EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             cdc,
+		TxConfig:          txConfig,
+		Amino:             amino,
+	}
 }
 
 // ParseRespBTCDelToBTCDel parses an BTC delegation response to BTC Delegation

@@ -34,8 +34,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	github.com/avast/retry-go/v4 v4.5.1
-	github.com/babylonlabs-io/babylon-sdk/demo v0.0.0-20250407051200-a5d652116d6d
-	github.com/babylonlabs-io/babylon-sdk/x v0.0.0-20250407051200-a5d652116d6d
+
 	github.com/babylonlabs-io/babylon/v3 v3.0.0-rc.1
 	github.com/btcsuite/btcd v0.24.2
 	github.com/btcsuite/btcd/btcec/v2 v2.3.5
@@ -258,8 +257,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// local work dirs
-	github.com/babylonlabs-io/babylon-sdk/demo => ../../demo
-	github.com/babylonlabs-io/babylon-sdk/x => ../../x
+
 
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// See: https://github.com/cosmos/cosmos-sdk/issues/13134
