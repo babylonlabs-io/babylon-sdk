@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 func RegisterGrpcQueries(bApp *baseapp.BaseApp, appCodec codec.Codec) []wasmkeeper.Option {
@@ -13,7 +12,6 @@ func RegisterGrpcQueries(bApp *baseapp.BaseApp, appCodec codec.Codec) []wasmkeep
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(
 		&wasmkeeper.QueryPlugins{
 			Stargate: wasmkeeper.AcceptListStargateQuerier(WhitelistedGrpcQuery(), queryRouter, appCodec),
-			Grpc:     wasmkeeper.AcceptListGrpcQuerier(WhitelistedGrpcQuery(), queryRouter, appCodec),
 		})
 
 	return []wasmkeeper.Option{
@@ -22,11 +20,9 @@ func RegisterGrpcQueries(bApp *baseapp.BaseApp, appCodec codec.Codec) []wasmkeep
 }
 
 // WhitelistedGrpcQuery returns the whitelisted Grpc queries
-func WhitelistedGrpcQuery() wasmkeeper.AcceptedQueries {
-	return wasmkeeper.AcceptedQueries{
+func WhitelistedGrpcQuery() wasmkeeper.AcceptedStargateQueries {
+	return wasmkeeper.AcceptedStargateQueries{
 		// mint
-		"/cosmos.mint.v1beta1.Query/Params": func() proto.Message {
-			return &minttypes.QueryParamsResponse{}
-		},
+		"/cosmos.mint.v1beta1.Query/Params": &minttypes.QueryParamsResponse{},
 	}
 }

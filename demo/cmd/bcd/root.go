@@ -115,7 +115,7 @@ func initAppConfig() (string, interface{}) {
 	type CustomAppConfig struct {
 		serverconfig.Config
 
-		Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
+		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -138,7 +138,7 @@ func initAppConfig() (string, interface{}) {
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
-		Wasm:   wasmtypes.DefaultNodeConfig(),
+		Wasm:   wasmtypes.DefaultWasmConfig(),
 	}
 
 	customAppTemplate := serverconfig.DefaultConfigTemplate +

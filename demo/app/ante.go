@@ -20,7 +20,7 @@ type HandlerOptions struct {
 	ante.HandlerOptions
 
 	IBCKeeper         *keeper.Keeper
-	WasmConfig        *wasmTypes.NodeConfig
+	WasmConfig        *wasmTypes.WasmConfig
 	TXCounterStoreKey storetypes.StoreKey
 }
 
