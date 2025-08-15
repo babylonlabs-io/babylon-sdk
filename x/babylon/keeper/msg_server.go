@@ -21,8 +21,6 @@ func NewMsgServer(k Keeper) types.MsgServer {
 	return &msgServer{k: k}
 }
 
-var _ types.MsgServer = msgServer{}
-
 func (ms msgServer) SetBSNContracts(goCtx context.Context, req *types.MsgSetBSNContracts) (*types.MsgSetBSNContractsResponse, error) {
 	if err := req.ValidateBasic(); err != nil {
 		return nil, err
