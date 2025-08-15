@@ -110,5 +110,5 @@ build-babylond:
 start-bcd-consumer-integration:
 	$(MAKE) -C contrib/images start-bcd-consumer-integration
 
-test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
-	@cd tests/e2e && go test -count 1 -run TestBCDConsumerIntegrationTestSuite -mod=readonly -timeout=30m -v github.com/babylonlabs-io/babylon-sdk/tests/e2e --tags=e2e
+test-e2e-bcd-consumer-integration: #start-bcd-consumer-integration
+	@cd tests/e2e && GOWORK=off go test -count 1 -run TestBCDConsumerIntegrationTestSuite -timeout=30m -v . --tags=e2e
