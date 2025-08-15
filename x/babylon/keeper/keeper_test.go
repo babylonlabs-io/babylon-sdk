@@ -129,7 +129,7 @@ func NewTestBabylonKeeperWithStore(
 	accountKeeper types.AccountKeeper,
 	wasmKeeper types.WasmKeeper,
 	stakingKeeper types.StakingKeeper,
-) (*keeper.Keeper, sdk.Context) {
+) (keeper.Keeper, sdk.Context) {
 	if storeKey == nil {
 		storeKey = storetypes.NewKVStoreKey(types.StoreKey)
 	}
@@ -166,7 +166,7 @@ func NewTestBabylonKeeperWithStore(
 	return k, ctx
 }
 
-func NewTestBabylonKeeper(t testing.TB, bankKeeper types.BankKeeper, accountKeeper types.AccountKeeper, wasmKeeper types.WasmKeeper, stakingKeeper types.StakingKeeper) (*keeper.Keeper, sdk.Context) {
+func NewTestBabylonKeeper(t testing.TB, bankKeeper types.BankKeeper, accountKeeper types.AccountKeeper, wasmKeeper types.WasmKeeper, stakingKeeper types.StakingKeeper) (keeper.Keeper, sdk.Context) {
 	return NewTestBabylonKeeperWithStoreKey(t, nil, bankKeeper, accountKeeper, wasmKeeper, stakingKeeper)
 }
 
@@ -177,7 +177,7 @@ func NewTestBabylonKeeperWithStoreKey(
 	accountKeeper types.AccountKeeper,
 	wasmKeeper types.WasmKeeper,
 	stakingKeeper types.StakingKeeper,
-) (*keeper.Keeper, sdk.Context) {
+) (keeper.Keeper, sdk.Context) {
 	db := dbm.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewTestLogger(t), storemetrics.NewNoOpMetrics())
 
@@ -198,7 +198,7 @@ type TestKeepers struct {
 	BankKeeper       bankkeeper.Keeper
 	StoreKey         *storetypes.KVStoreKey
 	EncodingConfig   encodingConfig
-	BabylonKeeper    *keeper.Keeper
+	BabylonKeeper    keeper.Keeper
 	BabylonMsgServer types.MsgServer
 	AccountKeeper    authkeeper.AccountKeeper
 	WasmKeeper       *wasmkeeper.Keeper
@@ -206,7 +206,7 @@ type TestKeepers struct {
 	Faucet           *wasmkeeper.TestFaucet
 }
 
-func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
+func NewTestKeepers(t testing.TB) TestKeepers {
 	db := dbm.NewMemDB()
 	ms := store.NewCommitMultiStore(db, log.NewTestLogger(t), storemetrics.NewNoOpMetrics())
 
@@ -371,7 +371,6 @@ func NewTestKeepers(t testing.TB, opts ...keeper.Option) TestKeepers {
 		&wasmKeeper,
 		authtypes.FeeCollectorName,
 		authority,
-		opts...,
 	)
 	require.NoError(t, babylonKeeper.SetParams(ctx, types.DefaultParams()))
 	babylonMsgServer := keeper.NewMsgServer(babylonKeeper)

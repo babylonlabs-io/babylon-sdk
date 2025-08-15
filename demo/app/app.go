@@ -178,7 +178,7 @@ type ConsumerApp struct {
 	IBCKeeper      *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper ibctransferkeeper.Keeper
 	WasmKeeper     wasmkeeper.Keeper
-	BabylonKeeper  *bbnkeeper.Keeper
+	BabylonKeeper  bbnkeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -432,7 +432,7 @@ func NewConsumerApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
