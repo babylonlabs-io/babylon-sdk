@@ -1,4 +1,4 @@
-package keeper
+package babylon
 
 import (
 	"context"
@@ -9,10 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
-func (k *Keeper) BeginBlocker(ctx context.Context) error {
+func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	// handle coins in the fee collector account
@@ -51,7 +52,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 }
 
 // EndBlocker is called after every block
-func (k *Keeper) EndBlocker(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+func EndBlocker(ctx context.Context, k keeper.Keeper) ([]abci.ValidatorUpdate, error) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

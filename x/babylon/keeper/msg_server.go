@@ -4,21 +4,24 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
 )
 
 var _ types.MsgServer = msgServer{}
 
 type msgServer struct {
-	k *Keeper
+	k Keeper
 }
 
 // NewMsgServer constructor
-func NewMsgServer(k *Keeper) *msgServer {
+func NewMsgServer(k Keeper) types.MsgServer {
 	return &msgServer{k: k}
 }
+
+var _ types.MsgServer = msgServer{}
 
 func (ms msgServer) SetBSNContracts(goCtx context.Context, req *types.MsgSetBSNContracts) (*types.MsgSetBSNContractsResponse, error) {
 	if err := req.ValidateBasic(); err != nil {

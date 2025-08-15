@@ -85,11 +85,11 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 	cdc codec.Codec
-	k   *keeper.Keeper
+	k   keeper.Keeper
 }
 
 // NewAppModule constructor with defaults
-func NewAppModule(cdc codec.Codec, k *keeper.Keeper) *AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) *AppModule {
 	return &AppModule{cdc: cdc, k: k}
 }
 
@@ -129,12 +129,12 @@ func (AppModule) ConsensusVersion() uint64 {
 
 // BeginBlock executed before every block
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.k.BeginBlocker(ctx)
+	return BeginBlocker(ctx, am.k)
 }
 
 // EndBlock executed after every block. It returns no validator updates.
 func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	return am.k.EndBlocker(ctx)
+	return EndBlocker(ctx, am.k)
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
