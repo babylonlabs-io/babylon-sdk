@@ -90,11 +90,6 @@ type AppModule struct {
 
 // NewAppModule constructor with defaults
 func NewAppModule(cdc codec.Codec, k *keeper.Keeper) *AppModule {
-	return NewAppModuleX(cdc, k)
-}
-
-// NewAppModuleX extended constructor
-func NewAppModuleX(cdc codec.Codec, k *keeper.Keeper) *AppModule {
 	return &AppModule{cdc: cdc, k: k}
 }
 
@@ -107,7 +102,7 @@ func (AppModule) Name() string { return types.ModuleName }
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.k))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.cdc, am.k))
+	types.RegisterQueryServer(cfg.QueryServer(), am.k)
 }
 
 // RegisterInvariants registers the module's invariants.
@@ -125,11 +120,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Ra
 // ExportGenesis returns the exported genesis state as raw bytes for the babylon
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(am.k.ExportGenesis(ctx))
-}
-
-// QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.RouterKey
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

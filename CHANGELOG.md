@@ -44,6 +44,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [#199](https://github.com/babylonlabs-io/babylon-sdk/pull/199) dep: avoid using babylon utilities in demo/ and x/
 - [#198](https://github.com/babylonlabs-io/babylon-sdk/pull/198) fix: fix ineffective error propagation
 
+### Improvements
+
+- [#203](https://github.com/babylonlabs-io/babylon-sdk/pull/203) chore: refactor querier
+
 ## v0.12.0
 
 ### Improvements
