@@ -471,19 +471,6 @@ func NewConsumerApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 
-	messageHandler := wasmkeeper.WithMessageHandlerDecorator(func(nested wasmkeeper.Messenger) wasmkeeper.Messenger {
-		return wasmkeeper.NewMessageHandlerChain(
-			// security layer for system integrity, should always be first in chain
-			bbnkeeper.NewIntegrityHandler(app.BabylonKeeper),
-			nested,
-			// append our custom message handler
-			bbnkeeper.NewDefaultCustomMsgHandler(app.BabylonKeeper),
-		)
-	})
-	wasmOpts = append(wasmOpts, messageHandler,
-		// add support for the custom queries
-		wasmkeeper.WithQueryHandlerDecorator(bbnkeeper.NewQueryDecorator(app.BabylonKeeper)),
-	)
 	// Add grpc query support for the whitelisted grpc queries
 	wasmOpts = append(wasmOpts, appwasm.RegisterGrpcQueries(bApp, appCodec)...)
 

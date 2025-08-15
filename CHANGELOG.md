@@ -46,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Improvements
 
+- [#205](https://github.com/babylonlabs-io/babylon-sdk/pull/205) chore: remove custom handlers
 - [#203](https://github.com/babylonlabs-io/babylon-sdk/pull/203) chore: refactor querier
 
 ## v0.12.0
