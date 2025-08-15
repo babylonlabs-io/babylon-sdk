@@ -71,7 +71,3 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
-
-func (k Keeper) GetTest(ctx sdk.Context, actor sdk.AccAddress) string {
-	return "placeholder"
-}
