@@ -21,11 +21,11 @@ func DefaultParams() Params {
 // ValidateBasic performs basic validation on babylon parameters.
 func (p Params) ValidateBasic() error {
 	if p.MaxGasBeginBlocker == 0 {
-		return ErrInvalid.Wrap("empty max gas begin-blocker setting")
+		return fmt.Errorf("empty max gas begin-blocker setting")
 	}
 
 	if p.MaxGasEndBlocker == 0 {
-		return ErrInvalid.Wrap("empty max gas end-blocker setting")
+		return fmt.Errorf("empty max gas end-blocker setting")
 	}
 
 	if p.BtcStakingPortion.IsNil() {
