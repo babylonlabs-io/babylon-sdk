@@ -43,9 +43,8 @@ func NewKeeper(
 	wasm types.WasmKeeper,
 	feeCollectorName string,
 	authority string,
-	opts ...Option,
-) *Keeper {
-	k := &Keeper{
+) Keeper {
+	return Keeper{
 		storeKey:         storeKey,
 		memKey:           memoryStoreKey,
 		cdc:              cdc,
@@ -56,11 +55,6 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 	}
-	for _, o := range opts {
-		o.apply(k)
-	}
-
-	return k
 }
 
 // GetAuthority returns the module's authority.
