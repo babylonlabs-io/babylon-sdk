@@ -610,29 +610,7 @@ func NewConsumerApp(
 	// NOTE: upgrade module is required to be prioritized
 	app.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
-		// NOTE: All modules must be defined when setting SetOrderPreBlockers
-		// Including modules that don't have PreBlock functionality as no-op modules
 		authtypes.ModuleName,
-		banktypes.ModuleName,
-		capabilitytypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		minttypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		ibcexported.ModuleName,
-		ibctransfertypes.ModuleName,
-		ibcfeetypes.ModuleName,
-		wasmtypes.ModuleName,
-		bbntypes.ModuleName,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -641,7 +619,11 @@ func NewConsumerApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName,
+		capabilitytypes.ModuleName,
+		// babylon module should be put after the mint module before distribution module
+		minttypes.ModuleName, bbntypes.ModuleName, distrtypes.ModuleName,
+		slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName,
 		authz.ModuleName, feegrant.ModuleName,
@@ -651,12 +633,11 @@ func NewConsumerApp(
 		ibcexported.ModuleName,
 		ibcfeetypes.ModuleName,
 		wasmtypes.ModuleName,
-		bbntypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
-		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
+		authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
 		slashingtypes.ModuleName, minttypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName,
