@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/math"
 )
 
-const DefaultMaxGasBeginBlocker = 500_000
-const DefaultMaxGasEndBlocker = 500_000
+const DefaultMaxGasBeginBlocker = 5_000_000
+const DefaultMaxGasEndBlocker = 5_000_000
 
 // DefaultParams returns default babylon parameters
 func DefaultParams() Params {

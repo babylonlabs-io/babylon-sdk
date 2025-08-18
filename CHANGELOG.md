@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Bug fixes
 
+- [#208](https://github.com/babylonlabs-io/babylon-sdk/pull/208) fix: increase default gas limit in sudo call by 10x
 - [#200](https://github.com/babylonlabs-io/babylon-sdk/pull/200) ci: add `check-no-babylon-deps` check
 - [#199](https://github.com/babylonlabs-io/babylon-sdk/pull/199) dep: avoid using babylon utilities in demo/ and x/
 - [#198](https://github.com/babylonlabs-io/babylon-sdk/pull/198) fix: fix ineffective error propagation
