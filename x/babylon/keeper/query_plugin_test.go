@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/stretchr/testify/assert"
