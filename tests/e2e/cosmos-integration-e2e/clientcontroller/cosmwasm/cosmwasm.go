@@ -145,7 +145,7 @@ func (cc *CosmwasmConsumerController) CommitPubRandList(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (cc *CosmwasmConsumerController) SubmitFinalitySig(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -905,12 +905,24 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 }
 
 func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
-	// Use docker exec approach to avoid keyring version mismatch issues
-	return cc.executeFinalityContractViaDocker(msgBytes)
+	emptyErrs := []*sdkErr.Error{}
+
+	execMsg := &wasmdtypes.MsgExecuteContract{
+		Sender:   cc.cwClient.MustGetAddr(),
+		Contract: cc.MustQueryBabylonContracts().BtcFinalityContract,
+		Msg:      msgBytes,
+	}
+
+	res, err := cc.sendMsg(execMsg, emptyErrs, emptyErrs)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
-// executeFinalityContractViaDocker executes the finality contract using docker exec to avoid keyring issues
-func (cc *CosmwasmConsumerController) executeFinalityContractViaDocker(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
+// ExecuteFinalityContractViaDocker executes the finality contract using docker exec to avoid keyring issues
+func (cc *CosmwasmConsumerController) ExecuteFinalityContractViaDocker(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
 	// Get the contract address dynamically using the same method as the original
 	contracts, err := cc.QueryBabylonContracts()
 	if err != nil {
