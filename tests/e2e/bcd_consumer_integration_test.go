@@ -893,12 +893,14 @@ func (s *BCDConsumerIntegrationTestSuite) Test12ConsumerFPCascadedSlashing() {
 }
 
 // Test13ConsumerDelegationExpiry tests the automatic expiration of BTC delegations
-// when the BTC height exceeds the delegation's end height.
-// 1. Creates a delegation with a very short timelock (11 blocks)
+// when the BTC height reaches end_height - unbonding_time (fixed behavior).
+// 1. Creates a delegation with a specific timelock
 // 2. Activates the delegation and verifies FP has voting power
-// 3. Inserts BTC headers to exceed the delegation's end height
-// 4. Verifies the delegation is expired and FP  zero voting power
+// 3. Inserts BTC headers to reach end_height - unbonding_time
+// 4. Verifies the delegation expires at the CORRECT height (not at end_height)
 func (s *BCDConsumerIntegrationTestSuite) Test13ConsumerDelegationExpiry() {
+	s.T().Log("Testing natural delegation expiry at end_height - unbonding_time")
+
 	// create a new consumer finality provider
 	resp, _, _ := s.createVerifyConsumerFP()
 	consumerFp, err := s.babylonController.QueryFinalityProvider(resp.BtcPk.MarshalHex())
@@ -913,15 +915,30 @@ func (s *BCDConsumerIntegrationTestSuite) Test13ConsumerDelegationExpiry() {
 	s.NoError(err)
 	s.commitAndFinalizePubRand(babylonFpBTCSK3, babylonFpBTCPK3, uint64(currentHeight))
 
+	// Get current BTC height to calculate proper expiry
+	currentBtcTipResp, err := s.babylonController.QueryBtcLightClientTip()
+	s.NoError(err)
+	currentBtcHeight := currentBtcTipResp.Height
+	s.T().Logf("Current BTC height: %d", currentBtcHeight)
+
 	// create a new delegation and multi-stake to both Babylon and consumer finality provider
 	// NOTE: this will create delegation in pending state as covenant sigs are not provided
-	stakingTimeBlocks := uint16(11) // just enough to exceed the min staking time
+	stakingTimeBlocks := uint16(15) // Use 15 blocks for clearer testing
 	_, stakingTxHash := s.createBabylonDelegation(babylonFp, consumerFp.FinalityProvider, stakingTimeBlocks)
 
 	// check delegation
 	delegation, err := s.babylonController.QueryBTCDelegation(stakingTxHash)
 	s.Require().NoError(err)
 	s.NotNil(delegation)
+
+	// Log delegation parameters for debugging
+	s.T().Logf("Delegation created: start_height=%d, end_height=%d, unbonding_time=%d",
+		delegation.StartHeight, delegation.EndHeight, delegation.UnbondingTime)
+
+	// Calculate expected expiry height: end_height - unbonding_time
+	expectedExpiryHeight := delegation.EndHeight - delegation.UnbondingTime
+	s.T().Logf("Expected expiry at BTC height: %d (end_height %d - unbonding_time %d)",
+		expectedExpiryHeight, delegation.EndHeight, delegation.UnbondingTime)
 
 	// activate the delegation by submitting covenant sigs
 	s.submitCovenantSigs(consumerFp.FinalityProvider)
@@ -933,7 +950,7 @@ func (s *BCDConsumerIntegrationTestSuite) Test13ConsumerDelegationExpiry() {
 		return err == nil && dataFromContract != nil
 	}, time.Second*30, time.Second)
 
-	// query and assert consumer finality provider's total stake
+	// query and assert consumer finality provider's total stake is active initially
 	s.Eventually(func() bool {
 		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
 		if err != nil {
@@ -946,20 +963,41 @@ func (s *BCDConsumerIntegrationTestSuite) Test13ConsumerDelegationExpiry() {
 			!fpInfo.Slashed
 	}, time.Minute, time.Second*5)
 
-	// just enough headers to exceed the delegation's end height
-	for i := 0; i < int(stakingTimeBlocks)+1; i++ {
+	s.T().Logf("✅ Delegation is active before expiry")
+
+	// Insert BTC headers to reach the expected expiry height (end_height - unbonding_time)
+	// We need to be careful to insert exactly the right number of headers
+	headersToInsert := int(expectedExpiryHeight - currentBtcHeight)
+	s.T().Logf("Inserting %d BTC headers to reach expiry height %d", headersToInsert, expectedExpiryHeight)
+
+	for i := 0; i < headersToInsert; i++ {
 		_, err := s.babylonController.InsertNewEmptyBtcHeader(r)
 		s.Require().NoError(err)
 	}
 
-	// query and assert consumer finality provider's total stake is zero after inserting headers
+	// Verify the delegation expires at the CORRECT height (end_height - unbonding_time)
 	s.Eventually(func() bool {
 		fpInfo, err := s.cosmwasmController.QueryFinalityProviderInfo(consumerFp.FinalityProvider.BtcPk.MustToBTCPK())
-		return err == nil && fpInfo != nil &&
+		if err != nil {
+			s.T().Logf("Error querying finality provider info: %v", err)
+			return false
+		}
+
+		// Check current BTC height
+		currentBtcTipResp, err := s.babylonController.QueryBtcLightClientTip()
+		if err == nil {
+			s.T().Logf("Current BTC height: %d, TotalActiveSats: %d",
+				currentBtcTipResp.Height, fpInfo.TotalActiveSats)
+		}
+
+		return fpInfo != nil &&
 			fpInfo.TotalActiveSats == 0 &&
 			fpInfo.BtcPkHex == consumerFp.FinalityProvider.BtcPk.MarshalHex() &&
 			!fpInfo.Slashed
 	}, time.Minute, time.Second*5)
+
+	s.T().Logf("✅ Delegation expired at the correct height: end_height - unbonding_time = %d - %d = %d",
+		delegation.EndHeight, delegation.UnbondingTime, expectedExpiryHeight)
 }
 
 // helper function: submitCovenantSigs submits the covenant signatures to activate the BTC delegation

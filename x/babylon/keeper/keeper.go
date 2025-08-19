@@ -43,9 +43,8 @@ func NewKeeper(
 	wasm types.WasmKeeper,
 	feeCollectorName string,
 	authority string,
-	opts ...Option,
-) *Keeper {
-	k := &Keeper{
+) Keeper {
+	return Keeper{
 		storeKey:         storeKey,
 		memKey:           memoryStoreKey,
 		cdc:              cdc,
@@ -56,11 +55,6 @@ func NewKeeper(
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 	}
-	for _, o := range opts {
-		o.apply(k)
-	}
-
-	return k
 }
 
 // GetAuthority returns the module's authority.
@@ -70,8 +64,4 @@ func (k Keeper) GetAuthority() string {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-func (k Keeper) GetTest(ctx sdk.Context, actor sdk.AccAddress) string {
-	return "placeholder"
 }

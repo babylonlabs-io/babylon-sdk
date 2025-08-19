@@ -85,16 +85,11 @@ func (b AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry
 type AppModule struct {
 	AppModuleBasic
 	cdc codec.Codec
-	k   *keeper.Keeper
+	k   keeper.Keeper
 }
 
 // NewAppModule constructor with defaults
-func NewAppModule(cdc codec.Codec, k *keeper.Keeper) *AppModule {
-	return NewAppModuleX(cdc, k)
-}
-
-// NewAppModuleX extended constructor
-func NewAppModuleX(cdc codec.Codec, k *keeper.Keeper) *AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) *AppModule {
 	return &AppModule{cdc: cdc, k: k}
 }
 
@@ -107,7 +102,7 @@ func (AppModule) Name() string { return types.ModuleName }
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(am.k))
-	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.cdc, am.k))
+	types.RegisterQueryServer(cfg.QueryServer(), am.k)
 }
 
 // RegisterInvariants registers the module's invariants.
@@ -127,11 +122,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(am.k.ExportGenesis(ctx))
 }
 
-// QuerierRoute returns the bank module's querier route name.
-func (AppModule) QuerierRoute() string {
-	return types.RouterKey
-}
-
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 {
 	return ConsensusVersion
@@ -139,12 +129,12 @@ func (AppModule) ConsensusVersion() uint64 {
 
 // BeginBlock executed before every block
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return am.k.BeginBlocker(ctx)
+	return BeginBlocker(ctx, am.k)
 }
 
 // EndBlock executed after every block. It returns no validator updates.
 func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-	return am.k.EndBlocker(ctx)
+	return EndBlocker(ctx, am.k)
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

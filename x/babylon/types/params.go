@@ -6,8 +6,8 @@ import (
 	"cosmossdk.io/math"
 )
 
-const DefaultMaxGasBeginBlocker = 500_000
-const DefaultMaxGasEndBlocker = 500_000
+const DefaultMaxGasBeginBlocker = 5_000_000
+const DefaultMaxGasEndBlocker = 5_000_000
 
 // DefaultParams returns default babylon parameters
 func DefaultParams() Params {
@@ -21,11 +21,11 @@ func DefaultParams() Params {
 // ValidateBasic performs basic validation on babylon parameters.
 func (p Params) ValidateBasic() error {
 	if p.MaxGasBeginBlocker == 0 {
-		return ErrInvalid.Wrap("empty max gas begin-blocker setting")
+		return fmt.Errorf("empty max gas begin-blocker setting")
 	}
 
 	if p.MaxGasEndBlocker == 0 {
-		return ErrInvalid.Wrap("empty max gas end-blocker setting")
+		return fmt.Errorf("empty max gas end-blocker setting")
 	}
 
 	if p.BtcStakingPortion.IsNil() {

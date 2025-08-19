@@ -188,7 +188,7 @@ type ConsumerApp struct {
 	IBCFeeKeeper   ibcfeekeeper.Keeper
 	TransferKeeper ibctransferkeeper.Keeper
 	WasmKeeper     wasmkeeper.Keeper
-	BabylonKeeper  *bbnkeeper.Keeper
+	BabylonKeeper  bbnkeeper.Keeper
 
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -442,7 +442,7 @@ func NewConsumerApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -490,19 +490,6 @@ func NewConsumerApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 
-	messageHandler := wasmkeeper.WithMessageHandlerDecorator(func(nested wasmkeeper.Messenger) wasmkeeper.Messenger {
-		return wasmkeeper.NewMessageHandlerChain(
-			// security layer for system integrity, should always be first in chain
-			bbnkeeper.NewIntegrityHandler(app.BabylonKeeper),
-			nested,
-			// append our custom message handler
-			bbnkeeper.NewDefaultCustomMsgHandler(app.BabylonKeeper),
-		)
-	})
-	wasmOpts = append(wasmOpts, messageHandler,
-		// add support for the custom queries
-		wasmkeeper.WithQueryHandlerDecorator(bbnkeeper.NewQueryDecorator(app.BabylonKeeper)),
-	)
 	// Add grpc query support for the whitelisted grpc queries
 	wasmOpts = append(wasmOpts, appwasm.RegisterGrpcQueries(bApp, appCodec)...)
 
