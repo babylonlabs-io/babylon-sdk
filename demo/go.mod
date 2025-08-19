@@ -29,6 +29,7 @@ require (
 
 require (
 	cosmossdk.io/api v0.9.2
+	cosmossdk.io/client/v2 v2.0.0-beta.7
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
@@ -45,7 +46,10 @@ require (
 	github.com/spf13/viper v1.20.1
 )
 
-require github.com/cosmos/ibc-go/modules/capability v1.0.1
+require (
+	cosmossdk.io/core v0.11.3
+	github.com/cosmos/ibc-go/modules/capability v1.0.1
+)
 
 require (
 	cel.dev/expr v0.23.0 // indirect
@@ -57,7 +61,6 @@ require (
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/x/circuit v0.1.1 // indirect
