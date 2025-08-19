@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -904,20 +905,66 @@ func (cc *CosmwasmConsumerController) ExecuteStakingContract(msgBytes []byte) (*
 }
 
 func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
-	emptyErrs := []*sdkErr.Error{}
+	// Use docker exec approach to avoid keyring version mismatch issues
+	return cc.executeFinalityContractViaDocker(msgBytes)
+}
 
-	execMsg := &wasmdtypes.MsgExecuteContract{
-		Sender:   cc.cwClient.MustGetAddr(),
-		Contract: cc.MustQueryBabylonContracts().BtcFinalityContract,
-		Msg:      msgBytes,
-	}
-
-	res, err := cc.sendMsg(execMsg, emptyErrs, emptyErrs)
+// executeFinalityContractViaDocker executes the finality contract using docker exec to avoid keyring issues
+func (cc *CosmwasmConsumerController) executeFinalityContractViaDocker(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
+	// Get the contract address dynamically using the same method as the original
+	contracts, err := cc.QueryBabylonContracts()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to query Babylon contracts: %w", err)
+	}
+	contractAddr := contracts.BtcFinalityContract
+
+	// Convert msgBytes to string for command line
+	msgStr := string(msgBytes)
+
+	// Execute the contract via docker exec
+	dockerArgs := []string{
+		"exec", "ibcsim-bcd", "bcd",
+		"tx", "wasm", "execute", contractAddr, msgStr,
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test",
+		"--from", "validator",
+		"--chain-id", "bcd-test",
+		"--node", "http://localhost:26657",
+		"--gas", "auto",
+		"--gas-adjustment", "1.5",
+		"--fees", "1000ustake",
+		"--yes",
+		"--output", "json",
 	}
 
-	return res, nil
+	cmd := exec.Command("docker", dockerArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute finality contract via docker: %v, output: %s", err, string(output))
+	}
+
+	// Find the JSON part of the output (skip gas estimation line)
+	outputStr := string(output)
+	jsonStart := strings.Index(outputStr, "{")
+	if jsonStart == -1 {
+		return nil, fmt.Errorf("no JSON found in output: %s", outputStr)
+	}
+	jsonOutput := outputStr[jsonStart:]
+
+	// Parse the transaction response to extract the tx hash
+	var txResp map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonOutput), &txResp); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction response: %v, output: %s", err, jsonOutput)
+	}
+
+	txHash, ok := txResp["txhash"].(string)
+	if !ok {
+		return nil, fmt.Errorf("failed to extract tx hash from response: %s", string(output))
+	}
+
+	return &wasmclient.RelayerTxResponse{
+		TxHash: txHash,
+	}, nil
 }
 
 // QuerySmartContractState queries the smart contract state

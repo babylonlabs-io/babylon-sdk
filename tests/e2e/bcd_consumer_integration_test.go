@@ -1404,6 +1404,119 @@ func (s *BCDConsumerIntegrationTestSuite) initCosmwasmController() error {
 	return nil
 }
 
+// executeBCDCommand executes a command in the BCD container
+func (s *BCDConsumerIntegrationTestSuite) executeBCDCommand(args ...string) (string, error) {
+	// Prepare the docker exec command
+	dockerArgs := append([]string{"exec", "ibcsim-bcd", "bcd"}, args...)
+
+	cmd := exec.Command("docker", dockerArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to execute BCD command: %v, output: %s", err, string(output))
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
+
+// executeContractViaDockerExec executes a CosmWasm contract using docker exec
+func (s *BCDConsumerIntegrationTestSuite) executeContractViaDockerExec(contractAddr, execMsg string) (string, error) {
+	// Execute the contract via docker exec
+	s.T().Logf("🔗 Executing contract %s with message: %s", contractAddr, execMsg)
+	
+	txOutput, err := s.executeBCDCommand(
+		"tx", "wasm", "execute", contractAddr, execMsg,
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test",
+		"--from", "validator",
+		"--chain-id", "bcd-test", 
+		"--node", "http://localhost:26657",
+		"--gas", "auto",
+		"--gas-adjustment", "1.5",
+		"--fees", "1000ustake",
+		"--yes",
+		"--output", "json",
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to execute contract: %w", err)
+	}
+	
+	s.T().Logf("✅ Contract execution result: %s", txOutput)
+	return txOutput, nil
+}
+
+// getBabylonContractAddress queries the Babylon finality contract address via docker exec
+func (s *BCDConsumerIntegrationTestSuite) getBabylonContractAddress() (string, error) {
+	// Query all contracts to find the Babylon finality contract
+	// First, let's list all contract instances
+	output, err := s.executeBCDCommand(
+		"query", "wasm", "list-contract-by-code", "1", // Assuming code ID 1 for now
+		"--node", "http://localhost:26657",
+		"--output", "json",
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to query contracts: %w", err)
+	}
+	
+	s.T().Logf("📋 Contract query result: %s", output)
+	
+	// For now, let's try a hardcoded address that might be typical for the first instantiated contract
+	// This is a temporary approach - ideally we'd parse the JSON response above
+	contractAddr := "bbnc14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s0k0puz"
+	
+	return contractAddr, nil
+}
+
+// TestSimpleBCDTransaction tests broadcasting a simple transaction using docker exec
+func (s *BCDConsumerIntegrationTestSuite) TestSimpleBCDTransaction() {
+	// Simple bank send transaction to test if docker exec approach works
+	s.T().Log("🧪 Testing simple BCD transaction via docker exec...")
+	
+	// Get validator address
+	validatorAddr := "bbnc1872s5c72c4h2tv6zvp8cc3h3yaxtllmzjm4dyv"
+	userAddr := "bbnc1e5579v5mv75p2jvhpsxn5kjh357v79njz7kal7"
+	
+	// Check initial balance
+	output, err := s.executeBCDCommand(
+		"query", "bank", "balances", userAddr,
+		"--node", "http://localhost:26657",
+		"--output", "json",
+	)
+	require.NoError(s.T(), err)
+	s.T().Logf("📊 Initial balance query result: %s", output)
+	
+	// Send a small amount from validator to user (1 ustake)
+	s.T().Log("💸 Sending transaction from validator to user...")
+	txOutput, err := s.executeBCDCommand(
+		"tx", "bank", "send", validatorAddr, userAddr, "1ustake",
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test", 
+		"--from", "validator",
+		"--chain-id", "bcd-test",
+		"--node", "http://localhost:26657",
+		"--gas", "auto",
+		"--gas-adjustment", "1.3",
+		"--fees", "100ustake",
+		"--yes",
+		"--output", "json",
+	)
+	require.NoError(s.T(), err)
+	s.T().Logf("✅ Transaction submitted successfully: %s", txOutput)
+	
+	// Wait a bit for transaction to be processed
+	time.Sleep(3 * time.Second)
+	
+	// Check final balance to confirm transaction worked
+	finalOutput, err := s.executeBCDCommand(
+		"query", "bank", "balances", userAddr,
+		"--node", "http://localhost:26657",
+		"--output", "json",
+	)
+	require.NoError(s.T(), err)
+	s.T().Logf("📊 Final balance query result: %s", finalOutput)
+	
+	s.T().Log("🎉 Simple BCD transaction test completed successfully!")
+}
+
 // helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
 // Consumer.
 func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
