@@ -1504,57 +1504,6 @@ func (s *BCDConsumerIntegrationTestSuite) getBabylonContractAddress() (string, e
 	return contractAddr, nil
 }
 
-// TestSimpleBCDTransaction tests broadcasting a simple transaction using docker exec
-func (s *BCDConsumerIntegrationTestSuite) TestSimpleBCDTransaction() {
-	// Simple bank send transaction to test if docker exec approach works
-	s.T().Log("🧪 Testing simple BCD transaction via docker exec...")
-	
-	// Get validator address
-	validatorAddr := "bbnc1872s5c72c4h2tv6zvp8cc3h3yaxtllmzjm4dyv"
-	userAddr := "bbnc1e5579v5mv75p2jvhpsxn5kjh357v79njz7kal7"
-	
-	// Check initial balance
-	output, err := s.executeBCDCommand(
-		"query", "bank", "balances", userAddr,
-		"--node", "http://localhost:26657",
-		"--output", "json",
-	)
-	require.NoError(s.T(), err)
-	s.T().Logf("📊 Initial balance query result: %s", output)
-	
-	// Send a small amount from validator to user (1 ustake)
-	s.T().Log("💸 Sending transaction from validator to user...")
-	txOutput, err := s.executeBCDCommand(
-		"tx", "bank", "send", validatorAddr, userAddr, "1ustake",
-		"--keyring-backend", "test",
-		"--home", "/data/bcd/bcd-test", 
-		"--from", "validator",
-		"--chain-id", "bcd-test",
-		"--node", "http://localhost:26657",
-		"--gas", "auto",
-		"--gas-adjustment", "1.3",
-		"--fees", "100ustake",
-		"--yes",
-		"--output", "json",
-	)
-	require.NoError(s.T(), err)
-	s.T().Logf("✅ Transaction submitted successfully: %s", txOutput)
-	
-	// Wait a bit for transaction to be processed
-	time.Sleep(3 * time.Second)
-	
-	// Check final balance to confirm transaction worked
-	finalOutput, err := s.executeBCDCommand(
-		"query", "bank", "balances", userAddr,
-		"--node", "http://localhost:26657",
-		"--output", "json",
-	)
-	require.NoError(s.T(), err)
-	s.T().Logf("📊 Final balance query result: %s", finalOutput)
-	
-	s.T().Log("🎉 Simple BCD transaction test completed successfully!")
-}
-
 // helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
 // Consumer.
 func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
