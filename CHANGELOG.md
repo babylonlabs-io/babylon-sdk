@@ -38,6 +38,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+## v0.14.0
+
 ### Bug fixes
 
 - [#208](https://github.com/babylonlabs-io/babylon-sdk/pull/208) fix: increase default gas limit in sudo call by 10x
