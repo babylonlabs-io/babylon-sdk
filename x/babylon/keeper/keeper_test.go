@@ -66,9 +66,26 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
-	appparams "github.com/babylonlabs-io/babylon-sdk/demo/app/params"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+)
+
+const (
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
+	Bech32PrefixAccAddr = "bbnc"
+)
+
+var (
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key.
+	Bech32PrefixAccPub = Bech32PrefixAccAddr + "pub"
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address.
+	Bech32PrefixValAddr = Bech32PrefixAccAddr + "valoper"
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key.
+	Bech32PrefixValPub = Bech32PrefixAccAddr + "valoperpub"
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address.
+	Bech32PrefixConsAddr = Bech32PrefixAccAddr + "valcons"
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key.
+	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
 )
 
 type encodingConfig struct {
@@ -248,7 +265,7 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 
 	// Ensure authority address uses bbnc prefix
 	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount(appparams.Bech32PrefixAccAddr, appparams.Bech32PrefixAccPub)
+	cfg.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	accountKeeper := authkeeper.NewAccountKeeper(
@@ -256,8 +273,8 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]), // target store
 		authtypes.ProtoBaseAccount,                          // prototype
 		maccPerms,
-		authcodec.NewBech32Codec(appparams.Bech32PrefixAccAddr),
-		appparams.Bech32PrefixAccAddr,
+		authcodec.NewBech32Codec(Bech32PrefixAccAddr),
+		Bech32PrefixAccAddr,
 		authority,
 	)
 	blockedAddrs := make(map[string]bool)
@@ -285,8 +302,8 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		accountKeeper,
 		bankKeeper,
 		authority,
-		authcodec.NewBech32Codec(appparams.Bech32PrefixValAddr),
-		authcodec.NewBech32Codec(appparams.Bech32PrefixConsAddr),
+		authcodec.NewBech32Codec(Bech32PrefixValAddr),
+		authcodec.NewBech32Codec(Bech32PrefixConsAddr),
 	)
 	require.NoError(t, stakingKeeper.SetParams(ctx, stakingtypes.DefaultParams()))
 
