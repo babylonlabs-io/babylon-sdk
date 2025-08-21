@@ -383,8 +383,9 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		msgRouter,
 		querier,
 		t.TempDir(),
-		wasmtypes.DefaultWasmConfig(),
-		"iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3,cosmwasm_1_4,cosmwasm_2_0,virtual_staking",
+		wasmtypes.DefaultNodeConfig(),
+		wasmtypes.VMConfig{},
+		[]string{"iterator", "staking", "stargate", "cosmwasm_1_1", "cosmwasm_1_2", "cosmwasm_1_3", "cosmwasm_1_4", "cosmwasm_2_0", "virtual_staking"},
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	require.NoError(t, wasmKeeper.SetParams(ctx, wasmtypes.DefaultParams()))
