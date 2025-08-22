@@ -1482,28 +1482,6 @@ func (s *BCDConsumerIntegrationTestSuite) executeContractViaDockerExec(contractA
 	return txOutput, nil
 }
 
-// getBabylonContractAddress queries the Babylon finality contract address via docker exec
-func (s *BCDConsumerIntegrationTestSuite) getBabylonContractAddress() (string, error) {
-	// Query all contracts to find the Babylon finality contract
-	// First, let's list all contract instances
-	output, err := s.executeBCDCommand(
-		"query", "wasm", "list-contract-by-code", "1", // Assuming code ID 1 for now
-		"--node", "http://localhost:26657",
-		"--output", "json",
-	)
-	if err != nil {
-		return "", fmt.Errorf("failed to query contracts: %w", err)
-	}
-	
-	s.T().Logf("📋 Contract query result: %s", output)
-	
-	// For now, let's try a hardcoded address that might be typical for the first instantiated contract
-	// This is a temporary approach - ideally we'd parse the JSON response above
-	contractAddr := "bbnc14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9s0k0puz"
-	
-	return contractAddr, nil
-}
-
 // helper function: waitForIBCConnections waits for the IBC connections to be established between Babylon and the
 // Consumer.
 func (s *BCDConsumerIntegrationTestSuite) waitForIBCConnections() {
