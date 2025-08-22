@@ -3,4 +3,11 @@ go 1.23.8
 use (
 	./demo
 	./x
+	// Note: ./tests/e2e is intentionally excluded from the workspace
+	// to avoid dependency version conflicts. The demo/ and x/ modules
+	// use downgraded versions (e.g., IBC-Go v8, cosmos-sdk v0.50.13)
+	// for TAC compatibility, while tests/e2e may require higher versions.
+	// Go's MVS (Minimum Version Selection) would force the entire
+	// workspace to use the higher versions, breaking the intended
+	// compatibility constraints.
 )

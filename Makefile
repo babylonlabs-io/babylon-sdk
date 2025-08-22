@@ -111,4 +111,6 @@ start-bcd-consumer-integration:
 	$(MAKE) -C contrib/images start-bcd-consumer-integration
 
 test-e2e-bcd-consumer-integration: start-bcd-consumer-integration
+	# GOWORK=off is required because tests/e2e is excluded from the workspace
+	# due to dependency version conflicts (tests/e2e uses higher versions than demo/ and x/)
 	@cd tests/e2e && GOWORK=off go test -count 1 -run TestBCDConsumerIntegrationTestSuite -timeout=30m -v . --tags=e2e
