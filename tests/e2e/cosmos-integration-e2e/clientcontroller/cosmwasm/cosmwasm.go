@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/url"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -144,7 +145,7 @@ func (cc *CosmwasmConsumerController) CommitPubRandList(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +197,7 @@ func (cc *CosmwasmConsumerController) SubmitFinalitySig(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +247,7 @@ func (cc *CosmwasmConsumerController) SubmitInvalidFinalitySig(
 		return nil, err
 	}
 
-	res, err := cc.ExecuteFinalityContract(msgBytes)
+	res, err := cc.ExecuteFinalityContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -724,7 +725,7 @@ func (cc *CosmwasmConsumerController) WithdrawRewards(stakerAddress, fpPubkeyHex
 		return nil, err
 	}
 
-	res, err := cc.ExecuteStakingContract(msgBytes)
+	res, err := cc.ExecuteStakingContractViaDocker(msgBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -920,6 +921,122 @@ func (cc *CosmwasmConsumerController) ExecuteFinalityContract(msgBytes []byte) (
 	return res, nil
 }
 
+// ExecuteStakingContractViaDocker executes the staking contract using docker exec to avoid keyring issues
+func (cc *CosmwasmConsumerController) ExecuteStakingContractViaDocker(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
+	// Get the contract address dynamically using the same method as the original
+	contracts, err := cc.QueryBabylonContracts()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Babylon contracts: %w", err)
+	}
+	contractAddr := contracts.BtcStakingContract
+
+	// Convert msgBytes to string for command line
+	msgStr := string(msgBytes)
+
+	// Execute the contract via docker exec
+	dockerArgs := []string{
+		"exec", "ibcsim-bcd", "bcd",
+		"tx", "wasm", "execute", contractAddr, msgStr,
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test",
+		"--from", "validator",
+		"--chain-id", "bcd-test",
+		"--node", "http://localhost:26657",
+		"--gas", "auto",
+		"--gas-adjustment", "1.5",
+		"--fees", "1000ustake",
+		"--yes",
+		"--output", "json",
+	}
+
+	cmd := exec.Command("docker", dockerArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute staking contract via docker: %v, output: %s", err, string(output))
+	}
+
+	// Find the JSON part of the output (skip gas estimation line)
+	outputStr := string(output)
+	jsonStart := strings.Index(outputStr, "{")
+	if jsonStart == -1 {
+		return nil, fmt.Errorf("no JSON found in output: %s", outputStr)
+	}
+	jsonOutput := outputStr[jsonStart:]
+
+	// Parse the transaction response to extract the tx hash
+	var txResp map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonOutput), &txResp); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction response: %v, output: %s", err, jsonOutput)
+	}
+
+	txHash, ok := txResp["txhash"].(string)
+	if !ok {
+		return nil, fmt.Errorf("failed to extract tx hash from response: %s", string(output))
+	}
+
+	return &wasmclient.RelayerTxResponse{
+		TxHash: txHash,
+	}, nil
+}
+
+// ExecuteFinalityContractViaDocker executes the finality contract using docker exec to avoid keyring issues
+func (cc *CosmwasmConsumerController) ExecuteFinalityContractViaDocker(msgBytes []byte) (*wasmclient.RelayerTxResponse, error) {
+	// Get the contract address dynamically using the same method as the original
+	contracts, err := cc.QueryBabylonContracts()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Babylon contracts: %w", err)
+	}
+	contractAddr := contracts.BtcFinalityContract
+
+	// Convert msgBytes to string for command line
+	msgStr := string(msgBytes)
+
+	// Execute the contract via docker exec
+	dockerArgs := []string{
+		"exec", "ibcsim-bcd", "bcd",
+		"tx", "wasm", "execute", contractAddr, msgStr,
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test",
+		"--from", "validator",
+		"--chain-id", "bcd-test",
+		"--node", "http://localhost:26657",
+		"--gas", "auto",
+		"--gas-adjustment", "1.5",
+		"--fees", "1000ustake",
+		"--yes",
+		"--output", "json",
+	}
+
+	cmd := exec.Command("docker", dockerArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute finality contract via docker: %v, output: %s", err, string(output))
+	}
+
+	// Find the JSON part of the output (skip gas estimation line)
+	outputStr := string(output)
+	jsonStart := strings.Index(outputStr, "{")
+	if jsonStart == -1 {
+		return nil, fmt.Errorf("no JSON found in output: %s", outputStr)
+	}
+	jsonOutput := outputStr[jsonStart:]
+
+	// Parse the transaction response to extract the tx hash
+	var txResp map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonOutput), &txResp); err != nil {
+		return nil, fmt.Errorf("failed to parse transaction response: %v, output: %s", err, jsonOutput)
+	}
+
+	txHash, ok := txResp["txhash"].(string)
+	if !ok {
+		return nil, fmt.Errorf("failed to extract tx hash from response: %s", string(output))
+	}
+
+	return &wasmclient.RelayerTxResponse{
+		TxHash: txHash,
+	}, nil
+}
+
 // QuerySmartContractState queries the smart contract state
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) QuerySmartContractState(contractAddress string, queryData string) (*wasmdtypes.QuerySmartContractStateResponse, error) {
@@ -950,10 +1067,32 @@ func (cc *CosmwasmConsumerController) ListContractsByCode(codeID uint64, paginat
 	return cc.cwClient.ListContractsByCode(codeID, pagination)
 }
 
-// ustGetValidatorAddress gets the validator address of the consumer chain
+// MustGetValidatorAddress gets the validator address of the consumer chain
 // NOTE: this function is only meant to be used in tests.
 func (cc *CosmwasmConsumerController) MustGetValidatorAddress() string {
 	return cc.cwClient.MustGetAddr()
+}
+
+// MustGetValidatorAddressViaDocker gets the validator address using docker exec to avoid keyring issues
+// NOTE: this function is only meant to be used in tests.
+func (cc *CosmwasmConsumerController) MustGetValidatorAddressViaDocker() string {
+	// Query the validator address via docker exec
+	dockerArgs := []string{
+		"exec", "ibcsim-bcd", "bcd",
+		"keys", "show", "validator",
+		"--keyring-backend", "test",
+		"--home", "/data/bcd/bcd-test",
+		"--address",
+	}
+
+	cmd := exec.Command("docker", dockerArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		panic(fmt.Errorf("failed to get validator address via docker: %v, output: %s", err, string(output)))
+	}
+
+	// Return the address (trim whitespace)
+	return strings.TrimSpace(string(output))
 }
 
 // GetCometNodeStatus gets the tendermint node status of the consumer chain

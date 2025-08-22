@@ -38,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+### Improvements
+
+- [#204](https://github.com/babylonlabs-io/babylon-sdk/pull/204) chore: TAC
+  compatible
+
 ## v0.14.0
 
 ### Bug fixes

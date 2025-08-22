@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/babylonlabs-io/babylon-sdk/x/babylon/types"
+	"github.com/babylonlabs-io/babylon-sdk/tests/e2e/types"
 	"github.com/cosmos/cosmos-sdk/client"
 )
 
@@ -17,22 +17,11 @@ type BabylonContracts struct {
 }
 
 func (cc *CosmwasmConsumerController) MustQueryBabylonContracts() *BabylonContracts {
-	ctx := context.Background()
-
-	clientCtx := client.Context{Client: cc.cwClient.RPCClient}
-	queryClient := types.NewQueryClient(clientCtx)
-
-	resp, err := queryClient.BSNContracts(ctx, &types.QueryBSNContractsRequest{})
+	contracts, err := cc.QueryBabylonContracts()
 	if err != nil {
 		panic(err)
 	}
-
-	return &BabylonContracts{
-		BabylonContract:        resp.BsnContracts.BabylonContract,
-		BtcLightClientContract: resp.BsnContracts.BtcLightClientContract,
-		BtcStakingContract:     resp.BsnContracts.BtcStakingContract,
-		BtcFinalityContract:    resp.BsnContracts.BtcFinalityContract,
-	}
+	return contracts
 }
 
 func (cc *CosmwasmConsumerController) QueryBabylonContracts() (*BabylonContracts, error) {
