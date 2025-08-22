@@ -72,6 +72,8 @@ import (
 
 const (
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
+	// Note: This is hardcoded here to keep x/babylon and demo/ modules
+	// completely independent and avoid any dependencies between them
 	Bech32PrefixAccAddr = "bbnc"
 )
 
