@@ -57,13 +57,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+
+	// "github.com/cosmos/ibc-go/modules/capability" // Removed in IBC-Go v10
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
@@ -100,7 +100,7 @@ type encodingConfig struct {
 var moduleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	bank.AppModuleBasic{},
-	capability.AppModuleBasic{},
+	// capability.AppModuleBasic{}, // Removed in IBC-Go v10
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
 	distribution.AppModuleBasic{},
@@ -349,26 +349,27 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		authtypes.NewModuleAddress(upgradetypes.ModuleName).String(),
 	)
 
-	capabilityKeeper := capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedWasmKeeper := capabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
+	// capabilityKeeper := capabilitykeeper.NewKeeper(
+	// 	appCodec,
+	// 	keys[capabilitytypes.StoreKey],
+	// 	memKeys[capabilitytypes.MemStoreKey],
+	// )
+	// scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	// scopedWasmKeeper := capabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	ibcKeeper := ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibcexported.StoreKey],
+		runtime.NewKVStoreService(keys[ibcexported.StoreKey]),
 		paramsKeeper.Subspace(ibcexported.ModuleName),
-		stakingKeeper,
 		upgradeKeeper,
-		scopedIBCKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	cfg = sdk.GetConfig() // Restore original config
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+
+	// Create a mock transfer keeper that implements the ICS20TransferPortSource interface
+	mockTransferKeeper := &wasmtesting.MockIBCTransferKeeper{}
 
 	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec,
@@ -379,9 +380,7 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		distributionkeeper.NewQuerier(distKeeper),
 		ibcKeeper.ChannelKeeper,
 		ibcKeeper.ChannelKeeper,
-		ibcKeeper.PortKeeper,
-		scopedWasmKeeper,
-		wasmtesting.MockIBCTransferKeeper{},
+		mockTransferKeeper,
 		msgRouter,
 		querier,
 		t.TempDir(),
