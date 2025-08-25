@@ -357,7 +357,7 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 	cfg = sdk.GetConfig() // Restore original config
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 
-	// Create a mock transfer keeper that implements the ICS20TransferPortSource interface
+	// Create a mock transfer keeper for testing IBC transfer functionality
 	mockTransferKeeper := &wasmtesting.MockIBCTransferKeeper{}
 
 	wasmKeeper := wasmkeeper.NewKeeper(
