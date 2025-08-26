@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Improvements
 
+- [#217](https://github.com/babylonlabs-io/babylon-sdk/pull/217) chore: fix go
+  mod
 - [#215](https://github.com/babylonlabs-io/babylon-sdk/pull/215) chore: bump
   dependencies cosmos v0.53, wasmd v0.55, ibc v10
 

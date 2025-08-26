@@ -46,10 +46,7 @@ require (
 	github.com/spf13/viper v1.20.1
 )
 
-require (
-	cosmossdk.io/core v0.11.3
-	github.com/cosmos/ibc-go/modules/capability v1.0.1
-)
+require cosmossdk.io/core v0.11.3
 
 require (
 	cel.dev/expr v0.23.0 // indirect

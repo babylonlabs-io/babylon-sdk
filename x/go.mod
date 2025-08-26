@@ -40,7 +40,6 @@ require (
 	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
-	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v10 v10.3.0
 	github.com/golang/mock v1.6.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a
