@@ -57,13 +57,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v10/modules/core"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 	"github.com/stretchr/testify/require"
 
 	"github.com/babylonlabs-io/babylon-sdk/x/babylon/keeper"
@@ -100,7 +98,6 @@ type encodingConfig struct {
 var moduleBasics = module.NewBasicManager(
 	auth.AppModuleBasic{},
 	bank.AppModuleBasic{},
-	capability.AppModuleBasic{},
 	staking.AppModuleBasic{},
 	mint.AppModuleBasic{},
 	distribution.AppModuleBasic{},
@@ -235,13 +232,13 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		minttypes.StoreKey, distributiontypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
-		capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
+		feegrant.StoreKey, authzkeeper.StoreKey,
 		wasmtypes.StoreKey, types.StoreKey,
 	)
 	for _, v := range keys {
 		ms.MountStoreWithDB(v, storetypes.StoreTypeIAVL, db)
 	}
-	memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey, types.MemStoreKey)
+	memKeys := storetypes.NewMemoryStoreKeys(types.MemStoreKey)
 	for _, v := range memKeys {
 		ms.MountStoreWithDB(v, storetypes.StoreTypeMemory, db)
 	}
@@ -349,26 +346,19 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		authtypes.NewModuleAddress(upgradetypes.ModuleName).String(),
 	)
 
-	capabilityKeeper := capabilitykeeper.NewKeeper(
-		appCodec,
-		keys[capabilitytypes.StoreKey],
-		memKeys[capabilitytypes.MemStoreKey],
-	)
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedWasmKeeper := capabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
-
 	ibcKeeper := ibckeeper.NewKeeper(
 		appCodec,
-		keys[ibcexported.StoreKey],
+		runtime.NewKVStoreService(keys[ibcexported.StoreKey]),
 		paramsKeeper.Subspace(ibcexported.ModuleName),
-		stakingKeeper,
 		upgradeKeeper,
-		scopedIBCKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	cfg = sdk.GetConfig() // Restore original config
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+
+	// Create a mock transfer keeper for testing IBC transfer functionality
+	mockTransferKeeper := &wasmtesting.MockIBCTransferKeeper{}
 
 	wasmKeeper := wasmkeeper.NewKeeper(
 		appCodec,
@@ -379,9 +369,7 @@ func NewTestKeepers(t testing.TB) TestKeepers {
 		distributionkeeper.NewQuerier(distKeeper),
 		ibcKeeper.ChannelKeeper,
 		ibcKeeper.ChannelKeeper,
-		ibcKeeper.PortKeeper,
-		scopedWasmKeeper,
-		wasmtesting.MockIBCTransferKeeper{},
+		mockTransferKeeper,
 		msgRouter,
 		querier,
 		t.TempDir(),

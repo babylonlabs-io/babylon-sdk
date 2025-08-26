@@ -38,6 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## Unreleased
 
+### Improvements
+
+- [#215](https://github.com/babylonlabs-io/babylon-sdk/pull/215) chore: bump
+  dependencies cosmos v0.53, wasmd v0.55, ibc v10
+
 ## v0.20.0
 
 ### Improvements
