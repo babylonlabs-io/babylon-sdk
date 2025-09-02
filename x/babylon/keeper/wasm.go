@@ -129,8 +129,10 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 		return
 	}
 
-	// Create a gas-limited context
-	gasCtx := ctx.WithGasMeter(storetypes.NewGasMeter(maxGas))
+	// Create a cache context to ensure atomicity; commit only on success
+	cacheCtx, write := ctx.CacheContext()
+	// Create a gas-limited context on top of the cache context
+	gasCtx := cacheCtx.WithGasMeter(storetypes.NewGasMeter(maxGas))
 
 	// Use defer to recover from panics that might occur during contract execution
 	defer func() {
@@ -151,6 +153,8 @@ func (k Keeper) doSudoCallWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddr
 		return
 	}
 
+	// Commit cached writes only after successful execution
+	write()
 	gasConsumed = gasCtx.GasMeter().GasConsumed()
 
 	return
