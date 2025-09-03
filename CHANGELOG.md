@@ -40,6 +40,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ### Improvements
 
+- [#219](https://github.com/babylonlabs-io/babylon-sdk/pull/219) bugfix: 
+  cacheContext not passed to sudo
 - [#217](https://github.com/babylonlabs-io/babylon-sdk/pull/217) chore: fix go
   mod
 - [#215](https://github.com/babylonlabs-io/babylon-sdk/pull/215) chore: bump
