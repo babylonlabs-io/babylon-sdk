@@ -8,7 +8,7 @@ on:
     tags:
     - '*'
   workflow_dispatch:
-  
+
 permissions:
   contents: read
 
@@ -17,9 +17,9 @@ jobs:
     uses: babylonlabs-io/.github/.github/workflows/reusable_go_lint_test.yml@v0.11.2
     with:
       run-unit-tests: true
-      
+
   docker_pipeline:
-    uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@v0.11.2
+    uses: babylonlabs-io/.github/.github/workflows/reusable_docker_pipeline.yml@a5bf0dd12c945ee8fb95cd18765f134928de3e32 # v0.16.0
     needs: ["test"]
     secrets: inherit
     with:
