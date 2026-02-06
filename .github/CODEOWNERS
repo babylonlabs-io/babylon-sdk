@@ -1,6 +1,4 @@
 # CODEOWNERS: https://help.github.com/articles/about-codeowners/
 
-# DevOps team owns CI/CD and container configuration
-/.github/ @babylonlabs-io/devops
-/.github/CODEOWNERS @babylonlabs-io/devops
-**/Dockerfile @babylonlabs-io/devops
+# DevOps team owns CI/CD workflows
+/.github/workflows/ @babylonlabs-io/devops
