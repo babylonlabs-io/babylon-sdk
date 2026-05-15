@@ -15,8 +15,8 @@ ARG LEDGER_ENABLED="false"
 
 
 # Install cli tools for building and final image
-RUN apk add --update --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq
-RUN apk add --no-cache musl-dev
+# hadolint ignore=DL3018
+RUN apk add --no-cache make git bash gcc linux-headers eudev-dev ncurses-dev openssh curl jq musl-dev
 
 # Build
 WORKDIR /go/src/github.com/babylonlabs-io/babylon
@@ -35,12 +35,13 @@ RUN if [ -n "${VERSION}" ]; then \
     fi
 
 # Cosmwasm - Download correct libwasmvm version
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm/v2 | cut -d ' ' -f 2) && \
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/libwasmvm_muslc.$(uname -m).a \
-    -O /lib/libwasmvm_muslc.$(uname -m).a && \
+    wget -q https://github.com/CosmWasm/wasmvm/releases/download/"$WASMVM_VERSION"/libwasmvm_muslc."$(uname -m)".a \
+    -O /lib/libwasmvm_muslc."$(uname -m)".a && \
     # verify checksum
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$WASMVM_VERSION/checksums.txt -O /tmp/checksums.txt && \
-    sha256sum /lib/libwasmvm_muslc.$(uname -m).a | grep $(cat /tmp/checksums.txt | grep libwasmvm_muslc.$(uname -m) | cut -d ' ' -f 1)
+    wget -q https://github.com/CosmWasm/wasmvm/releases/download/"$WASMVM_VERSION"/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc."$(uname -m)".a | grep "$(cat /tmp/checksums.txt | grep libwasmvm_muslc."$(uname -m)" | cut -d ' ' -f 1)"
 
 RUN LEDGER_ENABLED=$LEDGER_ENABLED \
     BABYLON_BUILD_OPTIONS=$BABYLON_BUILD_OPTIONS \
@@ -49,10 +50,10 @@ RUN LEDGER_ENABLED=$LEDGER_ENABLED \
     LINK_STATICALLY=true \
     make build
 
-FROM alpine:3.14 AS run
+FROM alpine:3.21 AS run
 # Create a user
 RUN addgroup --gid 1137 -S babylon && adduser --uid 1137 -S babylon -G babylon
-RUN apk add bash curl jq
+RUN apk add --no-cache bash=5.2.37-r0 curl=8.14.1-r2 jq=1.7.1-r0
 
 # Label should match your github repo
 ARG VERSION
